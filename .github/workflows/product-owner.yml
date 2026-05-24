@@ -79,4 +79,5 @@ jobs:
           else
             git commit -m "[NEXT:feature-reviewer]"
           fi
+          git pull --rebase origin "feature/${{ steps.branch.outputs.feature_name }}"
           git push
