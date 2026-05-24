@@ -40,7 +40,31 @@ If `STATUS: STOP`, include FAILURE REASON, IMPACT, and REQUIRED FIX naming the u
 
 Use `===FILE: path=== / ===END FILE===` delimiters for each generated file.
 
+## run-e2e.sh contract
+
+`run-e2e.sh` is the single entry point the pipeline uses to execute E2E tests. It must:
+- Be placed at `run-e2e.sh` in the repo root
+- Build the application if needed
+- Start the application server on port 3000
+- Run all E2E tests
+- Stop the server and clean up
+- Exit 0 on success, non-zero on failure
+- Use `set -e` and trap to ensure the server is always stopped
+
+Example for a Next.js frontend with Cucumber + Playwright:
+```bash
+#!/usr/bin/env bash
+set -e
+cd frontend && npm install && npm run build && cd ..
+npx serve frontend/out -p 3000 &
+SERVER_PID=$!
+trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+sleep 3
+cd e2e && npx cucumber-js
+```
+
 ## Output files
+- `run-e2e.sh` — E2E entry point script at repo root (required)
 - Step definitions: `e2e/<feature-name>/<feature-name>.steps.ts`
 - World setup: `e2e/<feature-name>/world.ts` (if needed)
 - `features/<feature-name>/work/tester-summary.md` — use this structure:

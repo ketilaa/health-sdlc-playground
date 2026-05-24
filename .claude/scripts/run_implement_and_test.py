@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Implementation and Test: Developer (TDD loop) and Code Reviewer in an iteration loop."""
+"""Implement and Test: Developer (TDD) + Code Reviewer + Tester + E2E in an iteration loop."""
 import glob
 import os
 import subprocess
@@ -12,17 +12,28 @@ from base_agent import (
     require_files, strip_file_blocks, write_file,
 )
 
-MAX_OUTER_ITERATIONS = 3  # code-reviewer feedback loops
-MAX_TDD_ITERATIONS = 3    # test-fix loops per developer attempt
+MAX_OUTER_ITERATIONS = 3  # full cycle: developer + code review + tester + E2E
+MAX_TDD_ITERATIONS = 3    # unit-test-fix loops per developer attempt
 
 
-def run_tests():
+def run_unit_tests():
     if not os.path.exists('run-tests.sh'):
         return False, 'ERROR: run-tests.sh not found — developer must provide it'
     result = subprocess.run(
         ['bash', 'run-tests.sh'],
         capture_output=True, text=True,
         env={**os.environ, 'CI': 'true'},
+    )
+    return result.returncode == 0, result.stdout + result.stderr
+
+
+def run_e2e_tests():
+    if not os.path.exists('run-e2e.sh'):
+        return False, 'ERROR: run-e2e.sh not found — tester must provide it'
+    result = subprocess.run(
+        ['bash', 'run-e2e.sh'],
+        capture_output=True, text=True,
+        env={**os.environ, 'CI': 'true', 'APP_URL': 'http://localhost:3000'},
     )
     return result.returncode == 0, result.stdout + result.stderr
 
@@ -48,12 +59,12 @@ def run_developer_phase(feature_name, messages):
             print('ERROR: Developer did not write a scope file')
             return False, messages
 
-        passed, test_output = run_tests()
+        passed, test_output = run_unit_tests()
         if passed:
-            print('  Tests passed.')
+            print('  Unit tests passed.')
             return True, messages
 
-        print('  Tests failed.')
+        print('  Unit tests failed.')
         if tdd_iter < MAX_TDD_ITERATIONS:
             truncated = test_output[-3000:] if len(test_output) > 3000 else test_output
             messages.append({'role': 'user', 'content': (
@@ -62,7 +73,7 @@ def run_developer_phase(feature_name, messages):
                 f'Test output:\n{truncated}'
             )})
 
-    print(f'Tests still failing after {MAX_TDD_ITERATIONS} TDD iterations.')
+    print(f'Unit tests still failing after {MAX_TDD_ITERATIONS} TDD iterations.')
     return False, messages
 
 
@@ -106,6 +117,48 @@ Start your response with STATUS: OK or STATUS: STOP.
     return is_ok(response), response
 
 
+def run_tester_phase(feature_name):
+    system_prompt = read_prompt('tester')
+    feature_spec = read_file(f'features/{feature_name}/{feature_name}.feature')
+    ux_spec = read_file(f'features/{feature_name}/ux.md')
+    scope = (read_file(f'features/{feature_name}/scope') or '').strip()
+    dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
+
+    user_message = f"""Feature name: {feature_name}
+Scope: {scope}
+
+## Gherkin Feature Specification (do NOT recreate)
+{feature_spec}
+
+## UX Specification
+{ux_spec}
+
+## Developer Summary
+{dev_summary}
+
+Generate Cucumber + Playwright E2E tests and run-e2e.sh.
+Use ===FILE: path=== / ===END FILE=== delimiters for every file.
+Start your response with STATUS: OK or STATUS: STOP.
+"""
+    response = call_claude(system_prompt, user_message, max_tokens=16384)
+
+    for path, content in extract_files(response).items():
+        write_file(path, content)
+
+    summary = strip_file_blocks(response)
+    write_file(f'features/{feature_name}/work/tester-summary.md', summary)
+
+    if not is_ok(response):
+        print(f'Tester STOP:\n{summary}')
+        return False
+
+    if not os.path.exists('run-e2e.sh'):
+        print('ERROR: run-e2e.sh not found — tester must provide it')
+        return False
+
+    return True
+
+
 def main():
     feature_name = get_feature_name()
     feature_path = f'features/{feature_name}/{feature_name}.feature'
@@ -134,29 +187,50 @@ Start your response with STATUS: OK or STATUS: STOP.
 """}]
 
     for outer_iter in range(1, MAX_OUTER_ITERATIONS + 1):
-        print(f'--- Implementation iteration {outer_iter}/{MAX_OUTER_ITERATIONS} ---')
+        print(f'--- Implement and Test iteration {outer_iter}/{MAX_OUTER_ITERATIONS} ---')
 
+        # Phase 1: Developer with TDD loop
         dev_ok, dev_messages = run_developer_phase(feature_name, dev_messages)
         if not dev_ok:
             sys.exit(1)
 
+        # Phase 2: Code review
         cr_ok, cr_summary = run_code_reviewer(feature_name)
         write_file(f'features/{feature_name}/work/code-reviewer-summary.md', cr_summary)
 
-        if cr_ok:
-            print(f'Code review passed on iteration {outer_iter}.')
-            sys.exit(0)
+        if not cr_ok:
+            print(f'Code Reviewer STOP on iteration {outer_iter}.')
+            if outer_iter == MAX_OUTER_ITERATIONS:
+                sys.exit(1)
+            truncated = cr_summary[-3000:] if len(cr_summary) > 3000 else cr_summary
+            dev_messages.append({'role': 'user', 'content': (
+                'The code reviewer rejected the implementation. Fix it.\n\n'
+                f'Code review feedback:\n{truncated}\n\n'
+                'Output only changed files using ===FILE: path=== blocks.'
+            )})
+            continue
 
-        print(f'Code Reviewer STOP on iteration {outer_iter}.')
-
-        if outer_iter == MAX_OUTER_ITERATIONS:
-            print(f'Code review not passed after {MAX_OUTER_ITERATIONS} iterations.')
+        # Phase 3: Tester generates E2E tests + run-e2e.sh
+        if not run_tester_phase(feature_name):
             sys.exit(1)
 
-        truncated = cr_summary[-3000:] if len(cr_summary) > 3000 else cr_summary
+        # Phase 4: E2E tests
+        print('  Running E2E tests...')
+        e2e_ok, e2e_output = run_e2e_tests()
+
+        if e2e_ok:
+            print(f'E2E tests passed on iteration {outer_iter}.')
+            sys.exit(0)
+
+        print(f'E2E tests failed on iteration {outer_iter}.')
+        if outer_iter == MAX_OUTER_ITERATIONS:
+            print(f'E2E tests still failing after {MAX_OUTER_ITERATIONS} iterations.')
+            sys.exit(1)
+
+        truncated = e2e_output[-3000:] if len(e2e_output) > 3000 else e2e_output
         dev_messages.append({'role': 'user', 'content': (
-            'The code reviewer rejected the implementation. Fix it based on this feedback.\n\n'
-            f'Code review feedback:\n{truncated}\n\n'
+            'E2E tests failed after code review passed. Fix the implementation.\n\n'
+            f'E2E test output:\n{truncated}\n\n'
             'Output only changed files using ===FILE: path=== blocks.'
         )})
 

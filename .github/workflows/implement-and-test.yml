@@ -1,4 +1,4 @@
-name: Implementation and Test
+name: Implement and Test
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   issues: write
 
 jobs:
-  implementation-and-test:
+  implement-and-test:
     if: contains(github.event.head_commit.message, '[NEXT:implementation-and-test]')
     runs-on: ubuntu-latest
 
@@ -23,11 +23,14 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - run: pip install anthropic
 
-      - name: Run Implementation and Test
+      - name: Run Implement and Test
         id: agent
-        run: python .claude/scripts/run_implementation_and_test.py
+        run: python .claude/scripts/run_implement_and_test.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -36,11 +39,12 @@ jobs:
         run: |
           if [ -f features/.pipeline_context.json ]; then
             ISSUE=$(python3 -c "import json; print(json.load(open('features/.pipeline_context.json'))['issue_number'])")
-            SUMMARY=$(cat features/*/work/code-reviewer-summary.md 2>/dev/null \
+            SUMMARY=$(cat features/*/work/tester-summary.md 2>/dev/null \
+              || cat features/*/work/code-reviewer-summary.md 2>/dev/null \
               || cat features/*/work/developer-summary.md 2>/dev/null \
               | head -30 \
               || echo "See workflow logs for details.")
-            BODY=$(printf '**Pipeline STOP at: Implementation and Test**\n\n%s' "$SUMMARY")
+            BODY=$(printf '**Pipeline STOP at: Implement and Test**\n\n%s' "$SUMMARY")
             gh issue comment "$ISSUE" --body "$BODY"
           fi
         env:
@@ -53,13 +57,15 @@ jobs:
           git config user.email "ai@bot.com"
           git add features/
           git add run-tests.sh 2>/dev/null || true
+          git add run-e2e.sh 2>/dev/null || true
           git add frontend/ 2>/dev/null || true
           git add backend/ 2>/dev/null || true
           git add infrastructure/ 2>/dev/null || true
+          git add e2e/ 2>/dev/null || true
           if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:tester]"
+            git commit --allow-empty -m "[NEXT:create-pr]"
           else
-            git commit -m "[NEXT:tester]"
+            git commit -m "[NEXT:create-pr]"
           fi
           git pull --rebase
           git push

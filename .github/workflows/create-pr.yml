@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   create-pr:
-    if: contains(github.event.head_commit.message, '[TESTS:PASSED]')
+    if: contains(github.event.head_commit.message, '[NEXT:create-pr]')
     runs-on: ubuntu-latest
 
     steps:
