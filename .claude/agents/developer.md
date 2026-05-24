@@ -32,16 +32,9 @@ Record your decision by writing `features/<feature-name>/scope` using the `===FI
 8. Only modify files within the directories chosen in your scope decision
 9. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
 
-## Next.js / Jest testing conventions
+## Stack-specific skills
 
-When the tech stack is Next.js with Jest and React Testing Library, follow these rules exactly:
-
-- The correct Jest config key to run a setup file after the test framework is installed is **`setupFilesAfterEnv`** (not `setupFilesAfterEach`, which does not exist)
-- Prefer importing `@testing-library/jest-dom` directly in each test file (`import '@testing-library/jest-dom'`) rather than relying on a jest config setup file — this avoids the `setupFilesAfterEnv` lookup entirely and is more portable
-- Use `jest.config.js` (CommonJS `module.exports = {}`) or `jest.config.ts`, not `jest.config.mjs`, unless the project already uses ESM
-- When using `next/jest`, call `createJestConfig` and `await` it only if using an async wrapper; for synchronous configs use: `module.exports = createJestConfig(customConfig)`
-- Do not add `transform` overrides — `next/jest` already handles TypeScript and JSX transforms
-- Test files live alongside their source files (`*.test.tsx` next to `*.tsx`) following Next.js conventions unless the existing codebase uses a different pattern
+Stack conventions are injected below by the pipeline. Apply any skill marked as relevant to your detected tech stack.
 
 ## run-tests.sh contract
 

@@ -161,6 +161,16 @@ Start your response with STATUS: OK or STATUS: STOP.
     return True
 
 
+def collect_skills():
+    """Read all files from .claude/skills/ and return them as a combined string."""
+    parts = []
+    for path in sorted(glob.glob('.claude/skills/*.md')):
+        content = read_file(path)
+        if content:
+            parts.append(content)
+    return '\n\n---\n\n'.join(parts)
+
+
 def main():
     feature_name = get_feature_name()
     feature_path = f'features/{feature_name}/{feature_name}.feature'
@@ -171,6 +181,7 @@ def main():
     feature_spec = read_file(feature_path)
     ux_spec = read_file(ux_path)
     uxr_summary = read_file(uxr_summary_path)
+    skills = collect_skills()
 
     dev_messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
@@ -182,6 +193,9 @@ def main():
 
 ## UX Reviewer Summary (spec approval)
 {uxr_summary}
+
+## Stack-specific Skills
+{skills}
 
 Write the scope file first, then run-tests.sh, then tests, then implementation.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
