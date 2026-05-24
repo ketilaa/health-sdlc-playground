@@ -47,5 +47,10 @@ jobs:
           git add frontend/ 2>/dev/null || true
           git add backend/ 2>/dev/null || true
           git add infrastructure/ 2>/dev/null || true
-          git commit -m "[NEXT:code-reviewer]"
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "[NEXT:code-reviewer]"
+          else
+            git commit -m "[NEXT:code-reviewer]"
+          fi
+          git pull --rebase
           git push

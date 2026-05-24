@@ -45,5 +45,10 @@ jobs:
           git config user.email "ai@bot.com"
           git add features/
           git add e2e/ 2>/dev/null || true
-          git commit -m "[AGENT:tester]"
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "[AGENT:tester]"
+          else
+            git commit -m "[AGENT:tester]"
+          fi
+          git pull --rebase
           git push

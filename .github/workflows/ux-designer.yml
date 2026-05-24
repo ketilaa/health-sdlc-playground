@@ -44,5 +44,10 @@ jobs:
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
           git add features/
-          git commit -m "[NEXT:ux-reviewer]"
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "[NEXT:ux-reviewer]"
+          else
+            git commit -m "[NEXT:ux-reviewer]"
+          fi
+          git pull --rebase
           git push
