@@ -38,8 +38,9 @@ jobs:
 
       - name: Save input and pipeline context
         run: |
-          mkdir -p features
-          printf '%s' "$ISSUE_BODY" > feature.txt
+          FEATURE="${{ steps.branch.outputs.feature_name }}"
+          mkdir -p "features/$FEATURE"
+          printf '%s' "$ISSUE_BODY" > "features/$FEATURE/feature.txt"
           printf '{"issue_number":%s,"feature_name":"%s","issue_author":"%s"}\n' \
             "${{ github.event.issue.number }}" \
             "${{ steps.branch.outputs.feature_name }}" \
@@ -78,7 +79,7 @@ jobs:
         run: |
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
-          git add features/ feature.txt
+          git add features/
           if git diff --staged --quiet; then
             git commit --allow-empty -m "[NEXT:ux-design]"
           else
