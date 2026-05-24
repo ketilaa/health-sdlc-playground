@@ -2,6 +2,20 @@
 
 Apply these conventions when the tech stack is Next.js.
 
+## next.config.js
+
+The app is deployed to GitHub Pages as a static export. Always include this in `next.config.js`:
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'export',
+}
+module.exports = nextConfig
+```
+
+Without `output: 'export'`, `npm run build` does not produce an `out/` directory and the deploy workflow fails.
+
 ## Jest configuration
 
 - The correct Jest config key to run a setup file after the test framework is installed is **`setupFilesAfterEnv`** — `setupFilesAfterEach` does not exist
