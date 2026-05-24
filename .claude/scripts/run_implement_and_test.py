@@ -16,26 +16,38 @@ MAX_OUTER_ITERATIONS = 3  # full cycle: developer + code review + tester + E2E
 MAX_TDD_ITERATIONS = 3    # unit-test-fix loops per developer attempt
 
 
+UNIT_TEST_TIMEOUT = 300   # 5 minutes
+E2E_TEST_TIMEOUT  = 600   # 10 minutes
+
+
 def run_unit_tests():
     if not os.path.exists('run-tests.sh'):
         return False, 'ERROR: run-tests.sh not found — developer must provide it'
-    result = subprocess.run(
-        ['bash', 'run-tests.sh'],
-        capture_output=True, text=True,
-        env={**os.environ, 'CI': 'true'},
-    )
-    return result.returncode == 0, result.stdout + result.stderr
+    try:
+        result = subprocess.run(
+            ['bash', 'run-tests.sh'],
+            capture_output=True, text=True,
+            env={**os.environ, 'CI': 'true'},
+            timeout=UNIT_TEST_TIMEOUT,
+        )
+        return result.returncode == 0, result.stdout + result.stderr
+    except subprocess.TimeoutExpired:
+        return False, f'ERROR: unit tests timed out after {UNIT_TEST_TIMEOUT}s'
 
 
 def run_e2e_tests():
     if not os.path.exists('run-e2e.sh'):
         return False, 'ERROR: run-e2e.sh not found — tester must provide it'
-    result = subprocess.run(
-        ['bash', 'run-e2e.sh'],
-        capture_output=True, text=True,
-        env={**os.environ, 'CI': 'true', 'APP_URL': 'http://localhost:3000'},
-    )
-    return result.returncode == 0, result.stdout + result.stderr
+    try:
+        result = subprocess.run(
+            ['bash', 'run-e2e.sh'],
+            capture_output=True, text=True,
+            env={**os.environ, 'CI': 'true', 'APP_URL': 'http://localhost:3000'},
+            timeout=E2E_TEST_TIMEOUT,
+        )
+        return result.returncode == 0, result.stdout + result.stderr
+    except subprocess.TimeoutExpired:
+        return False, f'ERROR: E2E tests timed out after {E2E_TEST_TIMEOUT}s'
 
 
 def run_developer_phase(feature_name, messages):
