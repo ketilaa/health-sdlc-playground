@@ -75,8 +75,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and trigger next
-        if: success()
+      - name: Commit agent work (always)
+        if: always()
         run: |
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
@@ -87,10 +87,13 @@ jobs:
           git add backend/ 2>/dev/null || true
           git add infrastructure/ 2>/dev/null || true
           git add e2e/ 2>/dev/null || true
-          if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:calibrate]"
-          else
-            git commit -m "[NEXT:calibrate]"
-          fi
+          git diff --staged --quiet || git commit -m "chore: agent work output [no-trigger]"
+          git pull --rebase
+          git push
+
+      - name: Trigger next stage
+        if: success()
+        run: |
+          git commit --allow-empty -m "[NEXT:calibrate]"
           git pull --rebase
           git push
