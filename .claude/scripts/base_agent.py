@@ -34,7 +34,9 @@ def read_file(path):
 
 def write_file(path, content):
     """Write content to path, creating parent directories as needed."""
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     with open(path, 'w') as f:
         f.write(content)
 
