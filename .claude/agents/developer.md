@@ -17,6 +17,7 @@ Read the Gherkin spec and UX specification, then decide:
 - API/server-side logic → `backend/`
 - Both → `frontend/` and `backend/`
 - Infrastructure changes (only if Gherkin explicitly requires it) → `infrastructure/`
+- GitHub Actions workflow files (`.github/workflows/`) — create these when a Gherkin `Then` step asserts that a specific workflow file exists or contains specific content
 
 Record your decision by writing `features/<feature-name>/scope` using the `===FILE===` format. Value must be exactly one of: `frontend`, `backend`, `fullstack`.
 
@@ -28,12 +29,14 @@ Record your decision by writing `features/<feature-name>/scope` using the `===FI
 5. Follow SOLID and DDD principles
 6. Match the style and conventions of the existing codebase
 7. Only modify files within the directories chosen in your scope decision
+8. Before returning STATUS: OK, run a self-check: for every file mentioned in your output summary, confirm it appears in a `===FILE===` block in your response — if any is missing, add it before finishing
 
 ## What not to do
 - Implement behavior not specified in the Gherkin or UX spec
 - Modify files outside the directories chosen in your scope decision
 - Skip writing tests — tests must come before implementation
 - Refactor unrelated code
+- Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
 
 ## Output format
 Use `===FILE: path=== / ===END FILE===` delimiters for every file you write, including the scope file:
