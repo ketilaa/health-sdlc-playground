@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       - run: pip install anthropic
 
