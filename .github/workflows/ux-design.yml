@@ -1,4 +1,4 @@
-name: Feature Reviewer
+name: UX Design
 
 on:
   push:
@@ -10,8 +10,8 @@ permissions:
   issues: write
 
 jobs:
-  feature-reviewer:
-    if: contains(github.event.head_commit.message, '[NEXT:feature-reviewer]')
+  ux-design:
+    if: contains(github.event.head_commit.message, '[NEXT:ux-design]')
     runs-on: ubuntu-latest
 
     steps:
@@ -21,9 +21,9 @@ jobs:
 
       - run: pip install anthropic
 
-      - name: Run Feature Reviewer agent
+      - name: Run UX Design
         id: agent
-        run: python .claude/scripts/run_feature_reviewer.py
+        run: python .claude/scripts/run_ux_design.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -32,9 +32,11 @@ jobs:
         run: |
           if [ -f features/.pipeline_context.json ]; then
             ISSUE=$(python3 -c "import json; print(json.load(open('features/.pipeline_context.json'))['issue_number'])")
-            SUMMARY=$(cat features/*/work/feature-reviewer-summary.md 2>/dev/null | head -30 \
+            SUMMARY=$(cat features/*/work/ux-reviewer-summary.md 2>/dev/null \
+              || cat features/*/work/ux-designer-summary.md 2>/dev/null \
+              | head -30 \
               || echo "See workflow logs for details.")
-            BODY=$(printf '**Pipeline STOP at: Feature Reviewer**\n\n%s' "$SUMMARY")
+            BODY=$(printf '**Pipeline STOP at: UX Design**\n\n%s' "$SUMMARY")
             gh issue comment "$ISSUE" --body "$BODY"
           fi
         env:
@@ -47,9 +49,9 @@ jobs:
           git config user.email "ai@bot.com"
           git add features/
           if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:ux-designer]"
+            git commit --allow-empty -m "[NEXT:implementation-and-test]"
           else
-            git commit -m "[NEXT:ux-designer]"
+            git commit -m "[NEXT:implementation-and-test]"
           fi
           git pull --rebase
           git push

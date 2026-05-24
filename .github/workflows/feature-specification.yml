@@ -1,4 +1,4 @@
-name: Product Owner
+name: Feature Specification
 
 on:
   issues:
@@ -9,7 +9,7 @@ permissions:
   issues: write
 
 jobs:
-  product-owner:
+  feature-specification:
     runs-on: ubuntu-latest
 
     steps:
@@ -50,9 +50,9 @@ jobs:
 
       - run: pip install anthropic
 
-      - name: Run Product Owner agent
+      - name: Run Feature Specification
         id: agent
-        run: python .claude/scripts/run_po.py
+        run: python .claude/scripts/run_feature_specification.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -61,12 +61,14 @@ jobs:
         run: |
           FEATURE="${{ steps.branch.outputs.feature_name }}"
           if [ -n "$FEATURE" ]; then
-            SUMMARY=$(head -30 "features/$FEATURE/work/product-owner-summary.md" 2>/dev/null \
+            SUMMARY=$(cat "features/$FEATURE/work/feature-reviewer-summary.md" 2>/dev/null \
+              || cat "features/$FEATURE/work/product-owner-summary.md" 2>/dev/null \
+              | head -30 \
               || echo "See workflow logs for details.")
           else
             SUMMARY="Pipeline failed at branch creation. See workflow logs for details."
           fi
-          BODY=$(printf '**Pipeline STOP at: Product Owner**\n\n%s' "$SUMMARY")
+          BODY=$(printf '**Pipeline STOP at: Feature Specification**\n\n%s' "$SUMMARY")
           gh issue comment "${{ github.event.issue.number }}" --body "$BODY"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,9 +80,9 @@ jobs:
           git config user.email "ai@bot.com"
           git add features/ feature.txt
           if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:feature-reviewer]"
+            git commit --allow-empty -m "[NEXT:ux-design]"
           else
-            git commit -m "[NEXT:feature-reviewer]"
+            git commit -m "[NEXT:ux-design]"
           fi
           git pull --rebase origin "feature/${{ steps.branch.outputs.feature_name }}"
           git push

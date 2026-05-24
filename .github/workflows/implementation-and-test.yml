@@ -1,4 +1,4 @@
-name: UX Designer
+name: Implementation and Test
 
 on:
   push:
@@ -10,8 +10,8 @@ permissions:
   issues: write
 
 jobs:
-  ux-designer:
-    if: contains(github.event.head_commit.message, '[NEXT:ux-designer]')
+  implementation-and-test:
+    if: contains(github.event.head_commit.message, '[NEXT:implementation-and-test]')
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +19,15 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - run: pip install anthropic
 
-      - name: Run UX Designer agent
+      - name: Run Implementation and Test
         id: agent
-        run: python .claude/scripts/run_ux_designer.py
+        run: python .claude/scripts/run_implementation_and_test.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
@@ -32,9 +36,11 @@ jobs:
         run: |
           if [ -f features/.pipeline_context.json ]; then
             ISSUE=$(python3 -c "import json; print(json.load(open('features/.pipeline_context.json'))['issue_number'])")
-            SUMMARY=$(cat features/*/work/ux-designer-summary.md 2>/dev/null | head -30 \
+            SUMMARY=$(cat features/*/work/code-reviewer-summary.md 2>/dev/null \
+              || cat features/*/work/developer-summary.md 2>/dev/null \
+              | head -30 \
               || echo "See workflow logs for details.")
-            BODY=$(printf '**Pipeline STOP at: UX Designer**\n\n%s' "$SUMMARY")
+            BODY=$(printf '**Pipeline STOP at: Implementation and Test**\n\n%s' "$SUMMARY")
             gh issue comment "$ISSUE" --body "$BODY"
           fi
         env:
@@ -46,10 +52,14 @@ jobs:
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
           git add features/
+          git add run-tests.sh 2>/dev/null || true
+          git add frontend/ 2>/dev/null || true
+          git add backend/ 2>/dev/null || true
+          git add infrastructure/ 2>/dev/null || true
           if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:ux-reviewer]"
+            git commit --allow-empty -m "[NEXT:tester]"
           else
-            git commit -m "[NEXT:ux-reviewer]"
+            git commit -m "[NEXT:tester]"
           fi
           git pull --rebase
           git push
