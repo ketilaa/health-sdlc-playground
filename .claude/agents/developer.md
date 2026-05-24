@@ -23,13 +23,44 @@ Record your decision by writing `features/<feature-name>/scope` using the `===FI
 
 ## What to do
 1. Decide and record scope (see above) — this is the first file you write
-2. Inspect existing files in the relevant directories to determine tech stack and conventions
-3. Write failing unit tests first, covering every Gherkin scenario
-4. Implement the minimum code to make all tests pass
-5. Follow SOLID and DDD principles
-6. Match the style and conventions of the existing codebase
-7. Only modify files within the directories chosen in your scope decision
-8. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
+2. Write `run-tests.sh` at the repo root — this is the second file you write (see below)
+3. Inspect existing files in the relevant directories to determine tech stack and conventions
+4. Write failing unit tests first, covering every Gherkin scenario
+5. Implement the minimum code to make all tests pass
+6. Follow SOLID and DDD principles
+7. Match the style and conventions of the existing codebase
+8. Only modify files within the directories chosen in your scope decision
+9. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
+
+## run-tests.sh contract
+
+`run-tests.sh` is the single entry point the pipeline uses to verify your work. It must:
+- Be placed at `run-tests.sh` in the repo root
+- Install all required dependencies
+- Run the full test suite
+- Exit 0 on success, non-zero on failure
+- Use `set -e` so any failing command propagates
+
+You choose the commands based on the tech stack. Examples:
+
+Node.js frontend:
+```bash
+#!/usr/bin/env bash
+set -e
+cd frontend
+npm install
+npm test -- --watchAll=false --forceExit
+```
+
+Python backend:
+```bash
+#!/usr/bin/env bash
+set -e
+pip install -r backend/requirements.txt
+pytest backend/
+```
+
+The pipeline runs this script and feeds failures back to you — you will get up to 3 attempts.
 
 ## What not to do
 - Implement behavior not specified in the Gherkin or UX spec

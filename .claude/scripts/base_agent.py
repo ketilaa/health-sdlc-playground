@@ -2,6 +2,7 @@
 import json
 import os
 import subprocess
+import sys
 
 
 def get_feature_name():
@@ -36,6 +37,23 @@ def write_file(path, content):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
         f.write(content)
+
+
+def call_claude_messages(system, messages, model='claude-opus-4-7', max_tokens=8192):
+    """Call the Claude API with a multi-turn messages list."""
+    import anthropic
+    client = anthropic.Anthropic()
+    response = client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=[{
+            'type': 'text',
+            'text': system,
+            'cache_control': {'type': 'ephemeral'},
+        }],
+        messages=messages,
+    )
+    return response.content[0].text
 
 
 def call_claude(system, user, model='claude-opus-4-7', max_tokens=8192):
