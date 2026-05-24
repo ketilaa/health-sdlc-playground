@@ -90,13 +90,15 @@ Return `STATUS: STOP` if the specs are insufficient to implement — list what i
 - Code and tests under `frontend/` (if frontend scope) — internal structure follows the tech stack's conventions
 - Code and tests under `backend/` (if backend scope) — internal structure follows the tech stack's conventions
 - Infrastructure changes under `infrastructure/` (only if Gherkin explicitly requires it)
-- `features/<feature-name>/work/developer-summary.md` — use this structure:
+- `features/<feature-name>/work/developer-summary.md` — this summary is read by a calibrator agent that analyses the full feature pipeline and suggests improvements to agent prompts. Write it to be useful for that purpose: be specific, include rationale, and flag anything that was unclear, required guesswork, or caused test failures.
+
+  Required structure:
   - **Status:** OK | STOP
-  - **Input summary:** compressed description of the feature and specs received
-  - **Interpretation:** assumptions made during implementation
-  - **Decisions:** key implementation choices and why (including scope decision)
-  - **Alternatives considered:** what was ruled out (one line each)
-  - **Output summary:** e.g. "3 files created, 8 unit tests written"
+  - **Input summary:** what feature, UX spec, and constraints were received
+  - **Assumptions:** explicit list of every assumption made — about data shapes, API contracts, missing spec details, framework behaviour, or test setup. Each assumption on its own line.
+  - **Decisions:** each key implementation choice with a one-sentence rationale (scope, architecture, testing approach, libraries chosen)
+  - **Alternatives considered:** each alternative with why it was ruled out — not just a label, but the actual reason
+  - **Output summary:** files created, tests written, iterations needed (including how many TDD cycles were required)
 
 ## Tone and language
 Use concise, technical, and implementation-focused language aligned with TDD and DDD, prioritizing correctness and minimal scope.

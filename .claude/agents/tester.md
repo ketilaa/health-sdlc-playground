@@ -67,13 +67,16 @@ cd e2e && npx cucumber-js
 - `run-e2e.sh` — E2E entry point script at repo root (required)
 - Step definitions: `e2e/<feature-name>/<feature-name>.steps.ts`
 - World setup: `e2e/<feature-name>/world.ts` (if needed)
-- `features/<feature-name>/work/tester-summary.md` — use this structure:
+- `features/<feature-name>/work/tester-summary.md` — this summary is read by a calibrator agent that analyses the full feature pipeline and suggests improvements to agent prompts. Write it to be useful for that purpose: be specific, flag gaps in the spec that made testing hard, and note anything that required assumptions about the running application.
+
+  Required structure:
   - **Status:** OK | STOP
-  - **Input summary:** scope and number of scenarios received
-  - **Interpretation:** assumptions made (test data, auth, etc.)
-  - **Decisions:** test approach chosen and why
-  - **Alternatives considered:** what was ruled out (one line each)
-  - **Output summary:** e.g. "6 scenarios mapped, 2 gaps noted"
+  - **Input summary:** scope, number of scenarios, and what the implementation provides
+  - **Assumptions:** explicit list of every assumption made — about app startup, port, pre-seeded data, authentication state, selector availability, timing, or environment. Each assumption on its own line.
+  - **Decisions:** each key testing choice with a one-sentence rationale (selectors used, test isolation approach, what was mocked vs real)
+  - **Alternatives considered:** each alternative with why it was ruled out — not just a label, but the actual reason
+  - **Gaps:** anything that could not be fully tested and why (missing `data-testid`, undefined state, ambiguous Gherkin step)
+  - **Output summary:** scenarios mapped, step definitions written, gaps identified
 
 ## Tone and language
 Be concise and structured. Use exact, verification-focused language that maps Gherkin scenarios to executable behavior and clearly reports pass/fail outcomes with evidence.

@@ -46,13 +46,15 @@ Wrap the UX specification content in delimiters:
 
 ## Output files
 - `features/<feature-name>/ux.md` — full UX specification
-- `features/<feature-name>/work/ux-designer-summary.md` — use this structure:
+- `features/<feature-name>/work/ux-designer-summary.md` — this summary is read by a calibrator agent that analyses the full feature pipeline and suggests improvements to agent prompts. Write it to be useful for that purpose: be specific, include rationale, and flag anything that was unclear or required a judgement call.
+
+  Required structure:
   - **Status:** OK | STOP
-  - **Input summary:** compressed description of the Gherkin spec received
-  - **Interpretation:** assumptions made about UI behaviour
-  - **Decisions:** key UX choices and why
-  - **Alternatives considered:** what was ruled out (one line each)
-  - **Output summary:** e.g. "4 flows defined, 3 states per view"
+  - **Input summary:** what feature and scenarios were received
+  - **Assumptions:** explicit list of every assumption made — about user intent, missing spec details, interaction patterns, or data. Each assumption on its own line.
+  - **Decisions:** each key UX choice with a one-sentence rationale (why this, not something else)
+  - **Alternatives considered:** each alternative with why it was ruled out — not just a label, but the actual reason
+  - **Output summary:** number of flows defined, states covered, edge cases handled
 
 ## Tone and language
 Use clear, structured, and user-centric language that describes concrete UI elements, states, and interactions without prescribing implementation.
