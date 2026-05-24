@@ -78,13 +78,34 @@ def run_developer_phase(feature_name, messages):
     return False, messages
 
 
+SKIP_DIRS = {'.next', 'node_modules', '__pycache__', '.git', 'dist', 'build', 'out', '.pytest_cache'}
+SKIP_EXTENSIONS = {'.lock', '.map', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg',
+                   '.woff', '.woff2', '.ttf', '.eot', '.zip', '.gz'}
+MAX_FILE_CHARS = 20_000
+MAX_TOTAL_CHARS = 80_000
+
+
 def collect_dir(pattern):
     parts = []
+    total = 0
     for path in sorted(glob.glob(pattern, recursive=True)):
-        if os.path.isfile(path):
-            content = read_file(path)
-            if content:
-                parts.append(f'### {path}\n```\n{content}\n```')
+        if not os.path.isfile(path):
+            continue
+        if any(seg in SKIP_DIRS for seg in path.split(os.sep)):
+            continue
+        if os.path.splitext(path)[1].lower() in SKIP_EXTENSIONS:
+            continue
+        content = read_file(path)
+        if not content:
+            continue
+        if len(content) > MAX_FILE_CHARS:
+            content = content[:MAX_FILE_CHARS] + '\n... [truncated]'
+        entry = f'### {path}\n```\n{content}\n```'
+        if total + len(entry) > MAX_TOTAL_CHARS:
+            parts.append('... [additional files omitted — total size limit reached]')
+            break
+        parts.append(entry)
+        total += len(entry)
     return '\n\n'.join(parts)
 
 
