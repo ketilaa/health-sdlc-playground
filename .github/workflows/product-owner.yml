@@ -25,7 +25,7 @@ jobs:
             | sed 's/^-\|-$//g')
           echo "feature_name=$FEATURE" >> $GITHUB_OUTPUT
           git checkout -b "feature/$FEATURE"
-          git push origin "feature/$FEATURE"
+          git push -u origin "feature/$FEATURE"
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
 
