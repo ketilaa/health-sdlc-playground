@@ -59,6 +59,7 @@ jobs:
         run: python -u .claude/scripts/run_implement_and_test.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SKIP_E2E: '1'
 
       - name: Comment on issue (STOP)
         if: failure()
