@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       - name: Read pipeline context
         id: ctx
@@ -39,4 +41,4 @@ jobs:
             --base main \
             --head "$BRANCH"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}

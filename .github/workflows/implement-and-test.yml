@@ -90,12 +90,12 @@ jobs:
           git add infrastructure/ 2>/dev/null || true
           git add e2e/ 2>/dev/null || true
           git diff --staged --quiet || git commit -m "chore: agent work output [no-trigger]"
-          git pull --rebase
+          git pull --no-rebase -X ours
           git push
 
       - name: Trigger next stage
         if: success()
         run: |
           git commit --allow-empty -m "[NEXT:calibrate]"
-          git pull --rebase
+          git pull --no-rebase -X ours
           git push
