@@ -24,7 +24,8 @@ jobs:
             | sed 's/-\{2,\}/-/g' \
             | sed 's/^-\|-$//g')
           echo "feature_name=$FEATURE" >> $GITHUB_OUTPUT
-          if git ls-remote --exit-code origin "refs/heads/feature/$FEATURE" > /dev/null 2>&1; then
+          git fetch origin "feature/$FEATURE" 2>/dev/null || true
+          if git show-ref --verify --quiet "refs/remotes/origin/feature/$FEATURE"; then
             git checkout -b "feature/$FEATURE" "origin/feature/$FEATURE"
           else
             git checkout -b "feature/$FEATURE"
