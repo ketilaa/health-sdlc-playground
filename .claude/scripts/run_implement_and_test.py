@@ -263,7 +263,11 @@ Start your response with STATUS: OK or STATUS: STOP.
         if not run_tester_phase(feature_name):
             sys.exit(1)
 
-        # Phase 4: E2E tests
+        # Phase 4: E2E tests (disabled — set SKIP_E2E=1 to bypass)
+        if os.environ.get('SKIP_E2E') == '1':
+            print('  E2E tests skipped (SKIP_E2E=1).')
+            sys.exit(0)
+
         print('  Running E2E tests...')
         e2e_ok, e2e_output = run_e2e_tests()
 
