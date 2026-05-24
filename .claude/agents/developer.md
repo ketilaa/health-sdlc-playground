@@ -51,7 +51,7 @@ frontend
 ===END FILE===
 ```
 
-Return `STATUS: OK` when implementation is complete and all tests would pass.
+Return `STATUS: OK` when implementation is complete and all tests would pass. Note: the CI pipeline will actually run the test suite after your output is written — if tests fail, the pipeline stops regardless of your status.
 Return `STATUS: STOP` if the specs are insufficient to implement — list what is missing.
 
 ## Output files

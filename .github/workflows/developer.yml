@@ -27,6 +27,50 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
+      - name: Run tests
+        run: |
+          FEATURE_NAME=$(git rev-parse --abbrev-ref HEAD | sed 's|feature/||')
+          SCOPE=$(cat "features/$FEATURE_NAME/scope" 2>/dev/null | tr -d '[:space:]')
+
+          run_node_tests() {
+            local dir=$1
+            [ -d "$dir" ] || return 0
+            grep -q '"test"' "$dir/package.json" 2>/dev/null || return 0
+            echo "--- Running Node tests in $dir ---"
+            (
+              cd "$dir"
+              [ -f package-lock.json ] && npm ci || npm install
+              npm test
+            )
+          }
+
+          run_python_tests() {
+            local dir=$1
+            [ -d "$dir" ] || return 0
+            [ -f "$dir/requirements.txt" ] || return 0
+            echo "--- Running Python tests in $dir ---"
+            pip install -r "$dir/requirements.txt" pytest
+            pytest "$dir"
+          }
+
+          run_tests() {
+            local dir=$1
+            if [ -f "$dir/package.json" ]; then
+              run_node_tests "$dir"
+            elif [ -f "$dir/requirements.txt" ]; then
+              run_python_tests "$dir"
+            else
+              echo "No recognized test runner in $dir, skipping"
+            fi
+          }
+
+          case "$SCOPE" in
+            frontend)  run_tests frontend ;;
+            backend)   run_tests backend ;;
+            fullstack) run_tests frontend; run_tests backend ;;
+            *)         echo "Scope '$SCOPE' not recognized, skipping test run" ;;
+          esac
+
       - name: Comment on issue (STOP)
         if: failure()
         run: |
