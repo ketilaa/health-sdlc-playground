@@ -135,7 +135,7 @@ Scope: {scope}
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, max_tokens=4096)
+    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=4096)
     return is_ok(response), response
 
 
@@ -162,7 +162,7 @@ Generate Cucumber + Playwright E2E tests and run-e2e.sh.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, max_tokens=16384)
+    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=16384)
 
     files = extract_files(response)
     summary_path = f'features/{feature_name}/work/tester-summary.md'
