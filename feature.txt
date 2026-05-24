@@ -1,0 +1,1 @@
+Set up scaffolding for a Next.js application titled "Health Playground". It must have a bar at the top with the title, and in the future a way to select the current data set.
