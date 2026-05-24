@@ -1,0 +1,9 @@
+{
+  "default": {
+    "paths": ["../features/**/*.feature"],
+    "require": ["scaffolding-attempt-6/world.ts", "scaffolding-attempt-6/scaffolding-attempt-6.steps.ts"],
+    "requireModule": ["ts-node/register"],
+    "format": ["progress-bar", "html:reports/cucumber-report.html"],
+    "publishQuiet": true
+  }
+}
