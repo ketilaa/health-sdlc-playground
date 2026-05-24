@@ -42,9 +42,9 @@ Start your response with STATUS: OK or STATUS: STOP.
 
 
 def main():
-    require_files('feature.txt')
     feature_name = get_feature_name()
-    feature_request = read_file('feature.txt') or ''
+    require_files(f'features/{feature_name}/feature.txt')
+    feature_request = read_file(f'features/{feature_name}/feature.txt') or ''
 
     messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
