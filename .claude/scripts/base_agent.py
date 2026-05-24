@@ -25,10 +25,13 @@ def read_prompt(agent_name):
 
 
 def read_file(path):
-    """Read file if it exists; return None otherwise."""
+    """Read file if it exists and is valid UTF-8; return None otherwise."""
     if os.path.exists(path):
-        with open(path) as f:
-            return f.read()
+        try:
+            with open(path, encoding='utf-8') as f:
+                return f.read()
+        except (UnicodeDecodeError, IsADirectoryError):
+            return None
     return None
 
 
