@@ -1,3 +1,0 @@
-{
-  "_note": "Added material-nextjs dependency separately to avoid package.json conflicts"
-}
