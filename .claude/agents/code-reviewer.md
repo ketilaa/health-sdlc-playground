@@ -19,7 +19,17 @@ Read these files:
 - Implementation behavior matches the Gherkin specification exactly
 - Tests are meaningful: they assert real behavior, not trivially pass
 - No unrelated code was modified outside the scope the Developer declared
-- SOLID principles are followed
+- `run-tests.sh` exists at the repo root and is executable
+- SOLID principles are followed:
+  - Single Responsibility: each class/module has one reason to change
+  - Open/Closed: behavior is extended via composition or abstraction, not by modifying existing code
+  - Liskov Substitution: subtypes are substitutable for their base types
+  - Interface Segregation: no component is forced to depend on interfaces it doesn't use
+  - Dependency Inversion: high-level modules depend on abstractions, not concretions
+- DDD principles are followed where the feature has domain logic:
+  - Domain concepts are named after the ubiquitous language in the Gherkin spec (e.g., if the spec says "workout", the code uses `Workout` not `Activity` or `Event`)
+  - Business rules live in domain objects, not in controllers, handlers, or UI components
+  - Infrastructure concerns (persistence, HTTP, external APIs) are separated from domain logic
 - No obvious bugs, security issues, or code smells
 - Code and tests conform to the conventions of the existing codebase
 - Test descriptions correspond to the Gherkin scenario they cover

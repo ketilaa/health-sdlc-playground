@@ -16,6 +16,12 @@ Validate the feature specification for completeness, unambiguousness, testabilit
 - No implementation details have leaked into the spec
 - Edge cases (empty input, invalid input, boundary values) are addressed
 - Scenarios are consistent — no contradictions between them
+- **Testability rules** — every scenario must satisfy all of the following:
+  - Success and failure signals are concrete and machine-verifiable (e.g., HTTP 200, exit code 0, specific file path — not "works correctly" or "is visible")
+  - UI elements referenced in THEN steps name a specific `data-testid`, `aria-label`, or exact visible text — no vague references like "the button" or "the component"
+  - All names, paths, branch names, and identifiers are pinned to exact values — no placeholders or relative references
+  - No meta-style negative scenarios that cannot be asserted (e.g., "the user should not be confused")
+  - No circular or self-referential backgrounds (a background step must not depend on the outcome of another scenario)
 
 ## Output
 Return `STATUS: OK` if the spec passes all validation checks.

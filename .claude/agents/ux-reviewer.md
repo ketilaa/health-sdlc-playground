@@ -16,10 +16,15 @@ Read these files:
 - Every Gherkin scenario has a corresponding UI state or user flow in the UX spec
 - All states are explicitly defined: loading, empty, error, success, partial data
 - User flows have no dead ends or missing transitions
-- Accessibility requirements are present and complete
+- Accessibility requirements are present and complete: ARIA labels, keyboard navigation, focus management, screen reader text
 - No behavior in the UX spec contradicts the Gherkin spec
 - No critical scenario is left without a UI representation
 - The UX spec is internally consistent — no conflicting descriptions of the same element
+- **Design principles** — the spec must satisfy all of the following:
+  - Components are identified as MUI components — no generic or framework-agnostic descriptions where a specific MUI component applies
+  - Insights and key data are glanceable: a user must be able to read the primary value within 3 seconds (no dense tables or walls of text as the primary presentation)
+  - Visual hierarchy is used to convey meaning — color, size, and layout must be described, not just listed element names
+  - The design avoids generic dashboard patterns (e.g., a flat grid of identical stat cards with no visual differentiation is not acceptable)
 
 ## Output
 Return `STATUS: OK` only if every validation check passes.
