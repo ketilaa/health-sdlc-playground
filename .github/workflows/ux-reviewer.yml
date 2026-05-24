@@ -1,0 +1,48 @@
+name: UX Reviewer
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  ux-reviewer:
+    if: contains(github.event.head_commit.message, '[NEXT:ux-reviewer]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: pip install anthropic
+
+      - name: Run UX Reviewer agent
+        id: agent
+        run: python .claude/scripts/run_ux_reviewer.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Comment on issue (STOP)
+        if: failure()
+        run: |
+          if [ -f features/.pipeline_context.json ]; then
+            ISSUE=$(python3 -c "import json; print(json.load(open('features/.pipeline_context.json'))['issue_number'])")
+            SUMMARY=$(cat features/*/work/ux-reviewer-summary.md 2>/dev/null | head -30 \
+              || echo "See workflow logs for details.")
+            BODY=$(printf '**Pipeline STOP at: UX Reviewer**\n\n%s' "$SUMMARY")
+            gh issue comment "$ISSUE" --body "$BODY"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and trigger next
+        if: success()
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai@bot.com"
+          git add features/
+          git commit -m "[NEXT:developer]"
+          git push

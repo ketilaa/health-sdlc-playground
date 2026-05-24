@@ -1,0 +1,74 @@
+name: Product Owner
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  product-owner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create feature branch
+        id: branch
+        run: |
+          FEATURE=$(echo "$ISSUE_TITLE" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's/[^a-z0-9]/-/g' \
+            | sed 's/-\{2,\}/-/g' \
+            | sed 's/^-\|-$//g')
+          echo "feature_name=$FEATURE" >> $GITHUB_OUTPUT
+          git checkout -b "feature/$FEATURE"
+          git push origin "feature/$FEATURE"
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+
+      - name: Save input and pipeline context
+        run: |
+          mkdir -p features
+          printf '%s' "$ISSUE_BODY" > feature.txt
+          printf '{"issue_number":%s,"feature_name":"%s","issue_author":"%s"}\n' \
+            "${{ github.event.issue.number }}" \
+            "${{ steps.branch.outputs.feature_name }}" \
+            "${{ github.event.issue.user.login }}" \
+            > features/.pipeline_context.json
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+
+      - run: pip install anthropic
+
+      - name: Run Product Owner agent
+        id: agent
+        run: python .claude/scripts/run_po.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Comment on issue (STOP)
+        if: failure()
+        run: |
+          FEATURE="${{ steps.branch.outputs.feature_name }}"
+          if [ -n "$FEATURE" ]; then
+            SUMMARY=$(head -30 "features/$FEATURE/work/product-owner-summary.md" 2>/dev/null \
+              || echo "See workflow logs for details.")
+          else
+            SUMMARY="Pipeline failed at branch creation. See workflow logs for details."
+          fi
+          BODY=$(printf '**Pipeline STOP at: Product Owner**\n\n%s' "$SUMMARY")
+          gh issue comment "${{ github.event.issue.number }}" --body "$BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and trigger next
+        if: success()
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai@bot.com"
+          git add features/ feature.txt
+          git commit -m "[NEXT:feature-reviewer]"
+          git push
