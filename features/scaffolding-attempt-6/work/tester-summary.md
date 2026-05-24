@@ -1,50 +1,53 @@
-# Tester Summary
+# Tester Summary — scaffolding-attempt-6
 
 ## Status
 OK
 
 ## Input Summary
-- **Scope:** `frontend`
-- **Scenarios:** 5 Gherkin scenarios covering HTTP status codes (200, 404) and browser-rendered DOM assertions (header visibility, text content, nested placeholder, document title)
-- **Implementation provides:** Next.js App Router application with `AppBar` component carrying `data-testid="app-header"`, a nested `data-testid="dataset-selector-placeholder"`, `metadata.title = 'Health Playground'` in the root layout, and `not-found.tsx` returning HTTP 404 for unmatched routes
+- **Scope:** frontend
+- **Scenarios:** 5 (Background shared across all)
+- **Implementation:** Next.js static export served by `npx serve`. Two browser-based scenarios (app header title, dataset-selector placeholder), one document-title scenario, and two HTTP-level scenarios (200 for `/`, 404 for unknown route).
 
 ## Assumptions
-- The application is running and reachable at `http://localhost:3000` (or `APP_URL`) before any test step executes
-- `npm run build && npm start` in the `frontend/` directory produces a production server on port 3000; `run-e2e.sh` performs this before launching tests
-- `[data-testid="app-header"]` is placed on the root element of the `AppBar` component, not on an inner element — confirmed by developer summary
-- `[data-testid="dataset-selector-placeholder"]` is a DOM descendant of `[data-testid="app-header"]` — confirmed by developer summary (placed inside Toolbar, which is inside AppBar)
-- Next.js production server (`next start`) returns genuine HTTP 404 status codes for unmatched routes, as guaranteed by App Router behaviour
-- No authentication or session state is required for any route
-- No pre-seeded data is required for the scaffold scenarios
-- The `<title>` element equals exactly "Health Playground" with no suffix/prefix — Next.js App Router `metadata.title` without a `template` satisfies this
-- `ts-node` is available in the `e2e/` node_modules for TypeScript step definition compilation at runtime
-- Playwright's `chromium` browser binary is installed (via `@playwright/test` post-install)
+
+- The application is served on `http://localhost:3000` (overridable via `APP_URL` env var).
+- `run-e2e.sh` builds the Next.js app with `npm run build` inside `frontend/`, producing a static export in `frontend/out/`.
+- `npx serve frontend/out` is available and correctly serves HTTP 404 for unmatched paths when a `404.html` exists in the output directory (produced by Next.js `next export`).
+- No authentication or cookies are required to access `/` or any route.
+- `data-testid="app-header"` and `data-testid="dataset-selector-placeholder"` are present in the server-rendered or hydrated HTML as stated in the developer summary.
+- The document `<title>` is set to exactly `"Health Playground"` with no suffix or prefix on any route.
+- `ts-node` is available in the `e2e/` node_modules for TypeScript step definitions (or is added by the e2e `package.json`).
+- The Background steps (`repository is checked out`, `dependencies have been installed`) are environmental preconditions satisfied by `run-e2e.sh` before tests run; they are implemented as no-ops.
+- Playwright's `request` context with `failOnStatusCode: false` accurately captures the raw HTTP status from `npx serve`.
 
 ## Decisions
-- **`next start` over `npx serve`:** Used `next start` (SSR mode) in `run-e2e.sh` rather than a static file server so that HTTP 404 status codes are returned by Next.js itself for unknown routes, not inferred from a static server's 404.html handling. This is more faithful to the Gherkin intent ("the response has HTTP status 404").
-- **`maxRedirects: 0` on API requests:** Set to prevent Playwright's request context from silently following a redirect and returning a 200 when the original response was a 404 or vice versa.
-- **`domcontentloaded` wait strategy:** Used `waitUntil: 'domcontentloaded'` for page navigation to ensure the DOM is parsed and `data-testid` attributes are present before assertions. `networkidle` was avoided as it can be slow/flaky with Next.js hydration requests.
-- **Playwright `expect` for all DOM assertions:** Used `@playwright/test`'s `expect` rather than Node's `assert` to get automatic retry logic and readable failure messages.
-- **Separate `Before`/`After` hooks instantiate browser per scenario:** Each scenario gets a fresh browser context for isolation. This is slightly slower than sharing a context but prevents state leakage between the HTTP-only and browser scenarios.
-- **`data-testid` selector style:** Used `[data-testid="…"]` CSS attribute selectors throughout, matching the Gherkin specification exactly and the developer's implementation.
-- **Parent→child assertion for placeholder:** Used `parentLocator.locator('[data-testid="dataset-selector-placeholder"]')` to assert DOM nesting, directly matching the Gherkin "is present inside" wording.
+
+- **HTTP tests via Playwright `request` fixture** (not browser navigation): Captures raw HTTP status codes reliably, matching the Gherkin intent of "a GET request is made to …" — a browser `goto` masks status codes.
+- **Browser tests use `domcontentloaded` wait**: Sufficient for a statically exported app where the title and `data-testid` attributes are in the initial HTML; avoids unnecessary `networkidle` waits that could time out in CI.
+- **Descendant CSS selector for nesting assertion**: `[data-testid="app-header"] [data-testid="dataset-selector-placeholder"]` directly encodes the nesting requirement from the Gherkin without fragile parent-traversal logic.
+- **`waitFor({ state: 'attached' })` for placeholder**: The Gherkin says "is present" not "is visible" — the placeholder could be `opacity: 0` or off-screen per UX spec (reduced opacity), so `attached` is the correct assertion.
+- **Separate `apiRequest` context per scenario**: Created fresh in `Before` hook, disposed in `After` — prevents state leakage between scenarios.
+- **TypeScript for step definitions**: Consistent with the project's likely TypeScript frontend; provides type safety on the World interface.
 
 ## Alternatives Considered
-- **`npx serve` as static file server:** Ruled out because static servers handle 404 status codes inconsistently depending on configuration; `next start` guarantees the correct HTTP semantics from the framework itself.
-- **`networkidle` wait strategy:** Ruled out because Next.js App Router makes background fetch requests during hydration that keep the network busy, causing `networkidle` waits to take longer than necessary and occasionally time out in CI.
-- **Shared browser context across scenarios:** Ruled out because the HTTP-only scenarios (GET requests) do not use the browser, and sharing context between them and browser scenarios would add unnecessary coupling and potential state contamination.
-- **Using `page.waitForSelector` instead of `expect(locator).toBeVisible()`:** Ruled out because Playwright's `expect` assertions include built-in retry logic with configurable timeouts, making them more robust than one-shot `waitForSelector` calls.
-- **`page.evaluate(() => document.title)` for title assertion:** Ruled out in favour of `expect(page).toHaveTitle()` which is the idiomatic Playwright assertion and includes retry logic.
+
+- **Using `page.goto` for HTTP status assertions**: Ruled out because Playwright's browser navigation does not expose the raw HTTP response status — it would always appear successful from the test's perspective even on a 404 route in a SPA that returns 200 with client-side routing.
+- **Using `networkidle` waitUntil**: Ruled out because static exports load fast and `networkidle` can be flaky in CI environments with slow DNS or CDN; `domcontentloaded` is deterministic for SSG output.
+- **Polling document.title with `page.evaluate`**: Ruled out in favour of `expect(page).toHaveTitle()` which is Playwright's built-in polling assertion — more idiomatic and has automatic retry.
+- **Single shared browser context across all scenarios**: Ruled out to avoid test pollution (cookies, navigation state, page title from previous test leaking).
+- **Jest + Playwright** instead of Cucumber: Out of scope — the pipeline mandates Cucumber + Playwright.
 
 ## Gaps
-- **Loading/skeleton state (UX §4.4):** The UX spec defines a pre-hydration skeleton state. This state is not asserted by any Gherkin scenario and is extremely difficult to capture reliably with Playwright (it is transient and may not be observable after `domcontentloaded`). No test written; flagged as a UX spec → Gherkin gap.
-- **Error boundary state (UX §4.4):** The UX spec defines a client-side rendering failure state ("Something went wrong." + Reload button). Not covered by Gherkin; would require deliberate injection of a React error, which is out of scope for E2E black-box testing. No test written.
-- **Not-found page visual content:** Gherkin asserts only the HTTP 404 status for unknown routes. The UX spec defines a full visual surface (404 glyph, "Page not found" heading, "Go home" button). No Gherkin scenarios cover these elements, so no tests are written for them.
-- **Responsive behaviour (UX §6):** The UX spec defines layout requirements at desktop, tablet, and mobile breakpoints. No Gherkin scenarios assert responsive behaviour; no viewport-switching tests are written.
-- **`data-testid` availability at runtime:** The tests assume `data-testid` attributes survive the Next.js production build. If the build strips test IDs (e.g. via a babel plugin), the DOM assertions will fail. This is a configuration risk, not a test design gap.
+
+1. **Static server 404 behaviour depends on `next export` producing `404.html`**: If the frontend uses a different build strategy (e.g. `next start` server-side rendering), `npx serve` would not handle 404s correctly and the HTTP 404 scenario would fail. The `run-e2e.sh` assumes static export. **Required fix if not static export: use `next start` and adjust `run-e2e.sh` accordingly.**
+2. **No coverage of loading/skeleton state**: The UX spec defines a loading skeleton for the App Header, but no Gherkin scenario covers it. Intentionally untested.
+3. **No coverage of error boundary state**: UX spec §4.4 defines a client-side error state ("Something went wrong."), but no Gherkin scenario covers it. Intentionally untested.
+4. **No coverage of Not Found surface UI content**: The Gherkin only asserts HTTP 404 status, not the visual 404 page content (glyph, heading, "Go home" link). The UX spec describes it in detail but it is not tested. Intentionally untested per scope.
+5. **`ts-node` dependency**: The step definitions are TypeScript and require `ts-node` to be available in `e2e/node_modules`. If the base `e2e/package.json` does not include it, `run-e2e.sh`'s `npm install` will not add it automatically. This should be declared as a dev dependency in `e2e/package.json`.
 
 ## Output Summary
-- **Scenarios mapped:** 5/5 — all Gherkin scenarios covered
-- **Step definitions written:** 9 step definitions across 2 categories (HTTP API assertions, browser DOM assertions)
-- **Files produced:** `run-e2e.sh`, `e2e/scaffolding-attempt-6/world.ts`, `e2e/scaffolding-attempt-6/scaffolding-attempt-6.steps.ts`, `e2e/cucumber.json`, `e2e/tsconfig.json`
-- **Gaps identified:** 4 (loading state, error state, not-found visual content, responsive layout) — all stem from UX spec content not reflected in Gherkin scenarios
+
+- **Scenarios mapped:** 5 / 5
+- **Step definitions written:** 9 step handlers across 2 files (`world.ts`, `scaffolding-attempt-6.steps.ts`)
+- **Gaps identified:** 5 (4 intentional/out-of-scope, 1 environmental dependency on build strategy)
+- **Files produced:** `run-e2e.sh`, `e2e/scaffolding-attempt-6/world.ts`, `e2e/scaffolding-attempt-6/scaffolding-attempt-6.steps.ts`, `e2e/scaffolding-attempt-6/cucumber.config.ts`

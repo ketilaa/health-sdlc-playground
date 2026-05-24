@@ -1,14 +1,18 @@
 import '@testing-library/jest-dom';
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { render, screen, within } from '@testing-library/react';
 import NotFound from './not-found';
 
 describe('NotFound page', () => {
-  it('shows "Page not found" heading and a "Go home" action', () => {
+  it('renders the app header with the application title', () => {
     render(<NotFound />);
-    expect(
-      screen.getByRole('heading', { name: /page not found/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /go home/i })).toBeInTheDocument();
+    const header = screen.getByTestId('app-header');
+    expect(within(header).getByText('Health Playground')).toBeInTheDocument();
+  });
+
+  it('renders the "Page not found" heading and Go home link', () => {
+    render(<NotFound />);
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go home' })).toBeInTheDocument();
   });
 });

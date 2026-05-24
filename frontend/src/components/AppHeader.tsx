@@ -4,33 +4,21 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-export const APP_TITLE = 'Health Playground';
-
-export default function AppHeader() {
+export function AppHeader() {
   return (
-    <AppBar
-      position="sticky"
-      color="default"
-      elevation={1}
-      data-testid="app-header"
-    >
+    <AppBar position="sticky" data-testid="app-header" color="default" elevation={1}>
       <Toolbar>
         <Box
+          component="span"
           aria-hidden="true"
-          sx={{
-            width: 24,
-            height: 24,
-            mr: 1,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg,#ff8a65,#ba68c8)'
-          }}
+          sx={{ display: 'inline-block', width: 24, height: 24, mr: 1 }}
         />
         <Typography
-          component="h1"
           variant="h6"
+          component="h1"
           sx={{ fontWeight: 600, letterSpacing: '0.02em' }}
         >
-          {APP_TITLE}
+          Health Playground
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <Box
@@ -40,17 +28,17 @@ export default function AppHeader() {
             minWidth: { xs: 100, sm: 140, md: 180 },
             height: 36,
             px: 2,
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             border: '1px dashed',
             borderColor: 'text.disabled',
             borderRadius: 999,
             opacity: 0.6,
-            cursor: 'default',
-            fontSize: 12,
             color: 'text.secondary',
-            userSelect: 'none'
+            fontSize: '0.875rem',
+            cursor: 'default',
+            userSelect: 'none',
           }}
         >
           Dataset selector — coming soon
@@ -59,3 +47,5 @@ export default function AppHeader() {
     </AppBar>
   );
 }
+
+export default AppHeader;
