@@ -1,0 +1,12 @@
+{
+  "name": "e2e",
+  "private": true,
+  "scripts": {
+    "test": "cucumber-js"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^11.0.0",
+    "@playwright/test": "^1.49.0",
+    "playwright": "^1.49.0"
+  }
+}

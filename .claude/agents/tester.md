@@ -62,8 +62,10 @@ npx serve frontend/out -p 3000 &
 SERVER_PID=$!
 trap "kill $SERVER_PID 2>/dev/null || true" EXIT
 sleep 3
-cd e2e && npx cucumber-js
+cd e2e && npm install && ./node_modules/.bin/cucumber-js
 ```
+
+The `e2e/` directory has a committed `package.json` with `@cucumber/cucumber` and `@playwright/test` — do not re-declare these dependencies. The `npm install` in `run-e2e.sh` is for any feature-specific packages the tester adds; `./node_modules/.bin/cucumber-js` uses the locally installed binary.
 
 ## Output files
 - `run-e2e.sh` — E2E entry point script at repo root (required)
