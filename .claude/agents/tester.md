@@ -38,6 +38,8 @@ If `STATUS: OK`, include:
 
 If `STATUS: STOP`, include FAILURE REASON, IMPACT, and REQUIRED FIX naming the upstream agent responsible.
 
+Write the agent summary (STATUS, COVERAGE, ASSUMPTIONS, GAPS, etc.) as free text at the top of your response, before any FILE blocks. Do not put the summary inside a FILE block — it will be captured separately.
+
 Use `===FILE: path=== / ===END FILE===` delimiters for each generated file.
 
 ## run-e2e.sh contract

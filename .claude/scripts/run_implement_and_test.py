@@ -45,11 +45,12 @@ def run_developer_phase(feature_name, messages):
         assistant_text = call_claude_messages(system_prompt, messages, max_tokens=16384)
         messages.append({'role': 'assistant', 'content': assistant_text})
 
-        for path, content in extract_files(assistant_text).items():
+        files = extract_files(assistant_text)
+        summary_path = f'features/{feature_name}/work/developer-summary.md'
+        summary = files.pop(summary_path, None) or strip_file_blocks(assistant_text)
+        for path, content in files.items():
             write_file(path, content)
-
-        summary = strip_file_blocks(assistant_text)
-        write_file(f'features/{feature_name}/work/developer-summary.md', summary)
+        write_file(summary_path, summary)
 
         if not is_ok(assistant_text):
             print(f'Developer STOP:\n{summary}')
@@ -142,11 +143,12 @@ Start your response with STATUS: OK or STATUS: STOP.
 """
     response = call_claude(system_prompt, user_message, max_tokens=16384)
 
-    for path, content in extract_files(response).items():
+    files = extract_files(response)
+    summary_path = f'features/{feature_name}/work/tester-summary.md'
+    summary = files.pop(summary_path, None) or strip_file_blocks(response)
+    for path, content in files.items():
         write_file(path, content)
-
-    summary = strip_file_blocks(response)
-    write_file(f'features/{feature_name}/work/tester-summary.md', summary)
+    write_file(summary_path, summary)
 
     if not is_ok(response):
         print(f'Tester STOP:\n{summary}')

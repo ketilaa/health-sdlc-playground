@@ -70,7 +70,9 @@ The pipeline runs this script and feeds failures back to you — you will get up
 - Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
 
 ## Output format
-Use `===FILE: path=== / ===END FILE===` delimiters for every file you write, including the scope file:
+Write the agent summary as free text at the top of your response, before any FILE blocks. Do not put the summary inside a FILE block — it will be captured separately.
+
+Use `===FILE: path=== / ===END FILE===` delimiters for every code, config, and test file you write, including the scope file:
 
 ```
 ===FILE: features/<feature-name>/scope===
