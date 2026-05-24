@@ -52,7 +52,7 @@ jobs:
 
       - name: Run Feature Specification
         id: agent
-        run: python .claude/scripts/run_feature_specification.py
+        run: python -u .claude/scripts/run_feature_specification.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
