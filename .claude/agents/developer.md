@@ -29,7 +29,7 @@ Record your decision by writing `features/<feature-name>/scope` using the `===FI
 5. Follow SOLID and DDD principles
 6. Match the style and conventions of the existing codebase
 7. Only modify files within the directories chosen in your scope decision
-8. Before returning STATUS: OK, run a self-check: for every file mentioned in your output summary, confirm it appears in a `===FILE===` block in your response — if any is missing, add it before finishing
+8. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
 
 ## What not to do
 - Implement behavior not specified in the Gherkin or UX spec
@@ -51,7 +51,7 @@ frontend
 ===END FILE===
 ```
 
-Return `STATUS: OK` when implementation is complete and all tests would pass. Note: the CI pipeline will actually run the test suite after your output is written — if tests fail, the pipeline stops regardless of your status.
+Return `STATUS: OK` when implementation is complete and all tests pass. The pipeline runs your tests after each iteration and feeds failures back to you — you will get up to 3 attempts to make them pass.
 Return `STATUS: STOP` if the specs are insufficient to implement — list what is missing.
 
 ## Output files
