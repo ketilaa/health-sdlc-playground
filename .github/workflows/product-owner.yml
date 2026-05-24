@@ -24,8 +24,12 @@ jobs:
             | sed 's/-\{2,\}/-/g' \
             | sed 's/^-\|-$//g')
           echo "feature_name=$FEATURE" >> $GITHUB_OUTPUT
-          git checkout -b "feature/$FEATURE"
-          git push -u origin "feature/$FEATURE"
+          if git ls-remote --exit-code origin "refs/heads/feature/$FEATURE" > /dev/null 2>&1; then
+            git checkout -b "feature/$FEATURE" "origin/feature/$FEATURE"
+          else
+            git checkout -b "feature/$FEATURE"
+            git push -u origin "feature/$FEATURE"
+          fi
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
 
@@ -70,5 +74,9 @@ jobs:
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
           git add features/ feature.txt
-          git commit -m "[NEXT:feature-reviewer]"
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "[NEXT:feature-reviewer]"
+          else
+            git commit -m "[NEXT:feature-reviewer]"
+          fi
           git push
