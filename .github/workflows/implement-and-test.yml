@@ -63,9 +63,9 @@ jobs:
           git add infrastructure/ 2>/dev/null || true
           git add e2e/ 2>/dev/null || true
           if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:create-pr]"
+            git commit --allow-empty -m "[NEXT:calibrate]"
           else
-            git commit -m "[NEXT:create-pr]"
+            git commit -m "[NEXT:calibrate]"
           fi
           git pull --rebase
           git push

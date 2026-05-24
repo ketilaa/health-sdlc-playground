@@ -1,0 +1,42 @@
+name: Calibrator
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  calibrate:
+    if: contains(github.event.head_commit.message, '[NEXT:calibrate]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - run: pip install anthropic
+
+      - name: Run Calibrator
+        run: python .claude/scripts/run_calibrator.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit and trigger next
+        if: success()
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai@bot.com"
+          git add features/
+          git add calibration/
+          if git diff --staged --quiet; then
+            git commit --allow-empty -m "[NEXT:create-pr]"
+          else
+            git commit -m "[NEXT:create-pr]"
+          fi
+          git pull --rebase
+          git push
