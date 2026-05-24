@@ -22,7 +22,7 @@ jobs:
       - run: pip install anthropic
 
       - name: Run Calibrator
-        run: python .claude/scripts/run_calibrator.py
+        run: python -u .claude/scripts/run_calibrator.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 

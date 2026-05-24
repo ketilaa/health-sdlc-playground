@@ -55,7 +55,7 @@ jobs:
 
       - name: Run Implement and Test
         id: agent
-        run: python .claude/scripts/run_implement_and_test.py
+        run: python -u .claude/scripts/run_implement_and_test.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 

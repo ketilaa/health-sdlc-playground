@@ -23,7 +23,7 @@ jobs:
 
       - name: Run UX Design
         id: agent
-        run: python .claude/scripts/run_ux_design.py
+        run: python -u .claude/scripts/run_ux_design.py
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
