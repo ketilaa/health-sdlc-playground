@@ -26,6 +26,7 @@ Read these files:
   - Visual hierarchy is used to convey meaning — color, size, and layout must be described, not just listed element names
   - The design avoids generic dashboard patterns (e.g., a flat grid of identical stat cards with no visual differentiation is not acceptable)
 - **Experimental UX** — apply the **Reviewer checklist** from `.claude/skills/experimental-ux.md`; every item is blocking
+- **Accessibility** — apply the **Reviewer checklist** from `.claude/skills/accessibility.md`; every item is blocking
 
 ## Output
 Return `STATUS: OK` only if every validation check passes.

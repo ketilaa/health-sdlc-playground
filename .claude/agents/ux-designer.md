@@ -12,6 +12,8 @@ Translate a validated Gherkin feature specification into a complete, unambiguous
 
 Apply the **Designer principles** from `.claude/skills/experimental-ux.md` — these override the bullet points above where they conflict and set the bar for what "good" looks like.
 
+Apply the **Designer principles** from `.claude/skills/accessibility.md` — these are non-negotiable constraints that run alongside the experimental-ux principles. Where experimental-ux and accessibility appear to conflict (e.g. icon-only labels vs. text), the accessibility principle defines the floor; the experimental-ux principle defines the approach above that floor.
+
 ## Input
 Read these files:
 - Feature specification: `features/<feature-name>/<feature-name>.feature`
