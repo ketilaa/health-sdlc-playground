@@ -57,15 +57,32 @@ Example for a Next.js frontend with Cucumber + Playwright:
 ```bash
 #!/usr/bin/env bash
 set -e
+SERVER_PID=""
+cleanup() { [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true; }
+trap cleanup EXIT
+
 cd frontend && npm install && npm run build && cd ..
 npx serve frontend/out -p 3000 &
 SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null || true" EXIT
-sleep 3
-cd e2e && npm install && ./node_modules/.bin/cucumber-js
+
+for i in $(seq 1 20); do
+  curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -qE "^[2345]" && break
+  sleep 2
+done
+
+cd e2e && npm install
+./node_modules/.bin/cucumber-js \
+  --require-module ts-node/register \
+  --require '<feature-name>/**/*.steps.ts' \
+  '../features/<feature-name>/**/*.feature' \
+  --format progress
 ```
 
-The `e2e/` directory has a committed `package.json` with `@cucumber/cucumber` and `@playwright/test` — do not re-declare these dependencies. The `npm install` in `run-e2e.sh` is for any feature-specific packages the tester adds; `./node_modules/.bin/cucumber-js` uses the locally installed binary.
+Key rules:
+- The app is a **static export** — use `npx serve frontend/out` not `next start` (which fails with `output: 'export'`)
+- Feature files live in `features/<feature-name>/` at the repo root — reference them as `'../features/<feature-name>/**/*.feature'` from inside `e2e/`
+- `ts-node`, `typescript`, and `@types/node` are already in `e2e/package.json` — do not re-declare them
+- The `e2e/` directory has a committed `package.json` — read it before adding dependencies to avoid duplicates
 
 ## Output files
 - `run-e2e.sh` — E2E entry point script at repo root (required)

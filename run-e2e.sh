@@ -20,10 +20,11 @@ npm install
 echo "[run-e2e.sh] Building frontend..."
 npm run build
 
-echo "[run-e2e.sh] Starting production server on port 3000..."
-npx next start -p 3000 &
-SERVER_PID=$!
+echo "[run-e2e.sh] Starting static server on port 3000..."
 cd ..
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+npx serve "$APP_DIR/out" -p 3000 --no-clipboard &
+SERVER_PID=$!
 
 echo "[run-e2e.sh] Waiting for server to be ready..."
 for i in $(seq 1 20); do
@@ -38,8 +39,13 @@ done
 echo "[run-e2e.sh] Installing E2E dependencies..."
 cd "$E2E_DIR"
 npm install
+npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium
 
 echo "[run-e2e.sh] Running Cucumber E2E tests..."
-./node_modules/.bin/cucumber-js --require-module ts-node/register --require 'scaffolding-attempt-7/**/*.steps.ts' 'scaffolding-attempt-7/**/*.feature' --format progress
+./node_modules/.bin/cucumber-js \
+  --require-module ts-node/register \
+  --require 'scaffolding-attempt-7/**/*.steps.ts' \
+  '../features/scaffolding-attempt-7/**/*.feature' \
+  --format progress
 
 echo "[run-e2e.sh] E2E tests completed."
