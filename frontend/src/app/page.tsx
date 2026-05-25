@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import TrainingOverview from '../components/TrainingOverview'
+import WeeklyDashboard from '../components/WeeklyDashboard'
 
 export default function HomePage() {
-  return <TrainingOverview />
+  return <WeeklyDashboard />
 }

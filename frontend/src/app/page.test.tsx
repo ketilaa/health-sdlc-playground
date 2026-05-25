@@ -1,24 +1,33 @@
 import '@testing-library/jest-dom'
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import HomePage from './page'
 
-describe('HomePage', () => {
-  test('renders the training overview with the preselected dataset', async () => {
+// Scenario 1: Root route renders Weekly Dashboard (HTTP 200 deferred to E2E)
+// Scenario 2: Root route does not render Training Overview
+
+describe('HomePage (root route)', () => {
+  test('renders the Weekly Dashboard heading (Scenario 1)', () => {
     render(<HomePage />)
-    expect(screen.getByTestId('dataset-loading')).toBeInTheDocument()
-    await waitFor(() => {
-      expect(screen.queryAllByTestId('activity-row').length).toBeGreaterThan(0)
-    })
-    expect(screen.getByTestId('dataset-selector')).toHaveTextContent(
-      'Half-Marathon Build-Up — 8 Week Consistent Plan'
-    )
+    expect(
+      screen.getByRole('heading', { name: /weekly dashboard/i })
+    ).toBeInTheDocument()
   })
 
-  test('renders the Training Overview heading', async () => {
+  test('renders the weekly-dashboard-container (Scenario 1)', () => {
     render(<HomePage />)
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /training overview/i })).toBeInTheDocument()
-    })
+    expect(screen.getByTestId('weekly-dashboard-container')).toBeInTheDocument()
+  })
+
+  test('does not render a training-overview element (Scenario 2)', () => {
+    render(<HomePage />)
+    expect(screen.queryByTestId('training-overview')).not.toBeInTheDocument()
+  })
+
+  test('does not render the Training Overview heading (Scenario 2)', () => {
+    render(<HomePage />)
+    expect(
+      screen.queryByRole('heading', { name: /^training overview$/i })
+    ).not.toBeInTheDocument()
   })
 })

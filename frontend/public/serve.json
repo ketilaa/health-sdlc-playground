@@ -1,0 +1,25 @@
+{
+  "redirects": [
+    {
+      "source": "/health-sdlc-playground/weekly-dashboard",
+      "destination": "/health-sdlc-playground/",
+      "type": 308
+    },
+    {
+      "source": "/health-sdlc-playground/weekly-dashboard/",
+      "destination": "/health-sdlc-playground/",
+      "type": 308
+    }
+  ],
+  "headers": [
+    {
+      "source": "**/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}
