@@ -61,7 +61,7 @@ def run_developer_phase(feature_name, messages, outer_iter):
     system_prompt = read_prompt('developer')
     for tdd_iter in range(1, MAX_TDD_ITERATIONS + 1):
         print(f'  TDD iteration {tdd_iter}/{MAX_TDD_ITERATIONS}')
-        assistant_text = call_claude_messages(system_prompt, messages, max_tokens=16384)
+        assistant_text = call_claude_messages(system_prompt, messages, max_tokens=32768)
         messages.append({'role': 'assistant', 'content': assistant_text})
 
         files = extract_files(assistant_text)
