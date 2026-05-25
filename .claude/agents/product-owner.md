@@ -56,6 +56,15 @@ Do not use a Background step that assumes the very thing the scenarios are verif
 **Each scenario must be self-contained.**
 Do not rely on state set up by a previous scenario. Include all required preconditions in the scenario's own Given steps or in the Background.
 
+**CLI-level scenarios must not duplicate pipeline preconditions.**
+Scenarios for `npm run build`, `npm run lint`, `tsc --noEmit`, or equivalent CLI commands are often also run as preconditions in the E2E runner script (e.g. to build before serving). Writing them as standalone Gherkin scenarios causes the command to execute twice, adding 1–2 minutes of redundant runtime.
+
+When a CLI check is a natural precondition for serving or running the app, do one of the following:
+- Omit the scenario and add a comment in the feature file noting it is covered by the pipeline setup step.
+- Tag the scenario `@pipeline-precondition` to signal that the tester should satisfy it via the runner script rather than re-running it inside a Cucumber step.
+
+Only write an explicit CLI scenario when the goal is to assert that command behavior itself (e.g. a specific exit code, a specific output file) is the feature under test — not when it is merely a precondition for something else.
+
 ## Output format
 Produce your response using this exact structure:
 
