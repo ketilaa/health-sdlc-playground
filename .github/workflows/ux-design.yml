@@ -42,16 +42,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and trigger next
-        if: success()
+      - name: Commit agent work (always)
+        if: always()
         run: |
           git config user.name "AI Bot"
           git config user.email "ai@bot.com"
           git add features/
-          if git diff --staged --quiet; then
-            git commit --allow-empty -m "[NEXT:implementation-and-test]"
-          else
-            git commit -m "[NEXT:implementation-and-test]"
-          fi
+          git diff --staged --quiet || git commit -m "chore: agent work output [no-trigger]"
+          git pull --rebase || true
+          git push || true
+
+      - name: Trigger next stage
+        if: success()
+        run: |
+          git commit --allow-empty -m "[NEXT:implementation-and-test]"
           git pull --rebase
           git push
