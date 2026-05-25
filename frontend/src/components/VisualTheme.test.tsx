@@ -40,9 +40,10 @@ function computeLuminance(rgb: string): number {
 
 describe('Visual theme overhaul — Gherkin scenarios', () => {
   beforeEach(() => {
-    // Reset doc styles between tests.
+    // Reset doc styles and layout-injected <style> elements between tests.
     document.documentElement.removeAttribute('style')
     document.body.removeAttribute('style')
+    document.head.innerHTML = ''
   })
 
   test('Background: at least one element with each activity type and exactly one skipped marker', async () => {
@@ -54,26 +55,25 @@ describe('Visual theme overhaul — Gherkin scenarios', () => {
     expect(screen.getAllByTestId('skipped-activity-marker')).toHaveLength(1)
   })
 
-  test('Dark body background — WCAG luminance < 0.2', () => {
-    document.body.style.backgroundColor = themeTokens['--color-background']
-    const bg = window.getComputedStyle(document.body).backgroundColor
-    expect(computeLuminance(bg)).toBeLessThan(0.2)
+  test('RootLayout applies dark background to document.body via inline style', () => {
+    // jsdom hoists <html>/<body> to the actual document when RootLayout renders.
+    // This confirms layout.tsx actually sets the inline style on <body>.
+    render(<RootLayout>{null}</RootLayout>)
+    expect(document.body.style.backgroundColor).toBe(themeTokens['--color-background'])
+    expect(computeLuminance(themeTokens['--color-background'])).toBeLessThan(0.2)
   })
 
-  test('Theme custom properties resolve to non-empty values on documentElement', () => {
-    const root = document.documentElement
-    root.style.setProperty('--color-activity-long-run', themeTokens['--color-activity-long-run'])
-    root.style.setProperty('--color-activity-restorative-run', themeTokens['--color-activity-restorative-run'])
-    root.style.setProperty('--color-activity-intervals', themeTokens['--color-activity-intervals'])
-    root.style.setProperty('--color-activity-skipped', themeTokens['--color-activity-skipped'])
-    root.style.setProperty('--color-background', themeTokens['--color-background'])
-
-    const cs = window.getComputedStyle(root)
-    expect(cs.getPropertyValue('--color-activity-long-run').trim()).not.toBe('')
-    expect(cs.getPropertyValue('--color-activity-restorative-run').trim()).not.toBe('')
-    expect(cs.getPropertyValue('--color-activity-intervals').trim()).not.toBe('')
-    expect(cs.getPropertyValue('--color-activity-skipped').trim()).not.toBe('')
-    expect(cs.getPropertyValue('--color-background').trim()).not.toBe('')
+  test('RootLayout injects all five CSS custom properties into document.head <style>', () => {
+    // The <style dangerouslySetInnerHTML> in layout.tsx ends up in document.head in jsdom.
+    render(<RootLayout>{null}</RootLayout>)
+    const styleEl = document.head.querySelector('style')
+    expect(styleEl).not.toBeNull()
+    const css = styleEl!.innerHTML
+    expect(css).toContain('--color-activity-long-run')
+    expect(css).toContain('--color-activity-restorative-run')
+    expect(css).toContain('--color-activity-intervals')
+    expect(css).toContain('--color-activity-skipped')
+    expect(css).toContain('--color-background')
   })
 
   test.each([

@@ -14,6 +14,9 @@ Read these files:
   - `backend/` (if scope is `backend` or `fullstack`)
   - `infrastructure/` (if scope includes infrastructure)
 
+## Evidence rule
+Only flag elements, functions, routes, or behaviors that are **explicitly visible in the source files provided**. Do not infer the existence of code from test files, git history, prior-feature patterns, or assumptions. If you cannot point to the exact file and line, do not raise a finding.
+
 ## What to validate
 - Every Gherkin scenario is covered by at least one test — map each explicitly
 - No implementation exists without a corresponding Gherkin scenario — flag any data, UI state, route, or behavior that has no Gherkin backing as a blocking failure; placeholder datasets, stub arrays, speculative UI states, and "future extension" content all fall into this category
