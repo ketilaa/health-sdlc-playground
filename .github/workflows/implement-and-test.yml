@@ -52,7 +52,7 @@ jobs:
         run: npx playwright install-deps chromium
         working-directory: e2e
 
-      - run: pip install anthropic
+      - run: pip install -r requirements.txt
 
       - name: Run Implement and Test
         id: agent

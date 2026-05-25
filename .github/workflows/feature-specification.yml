@@ -49,7 +49,7 @@ jobs:
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
 
-      - run: pip install anthropic
+      - run: pip install -r requirements.txt
 
       - name: Run Feature Specification
         id: agent
