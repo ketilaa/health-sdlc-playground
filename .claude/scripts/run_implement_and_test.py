@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
     call_claude, call_claude_messages, extract_files,
-    get_feature_name, is_ok, read_file, read_prompt,
+    format_test_output, get_feature_name, is_ok, read_file, read_prompt,
     require_files, strip_file_blocks, write_file,
 )
 
@@ -87,11 +87,10 @@ def run_developer_phase(feature_name, messages, outer_iter):
 
         print('  Unit tests failed.')
         if tdd_iter < MAX_TDD_ITERATIONS:
-            truncated = test_output[-3000:] if len(test_output) > 3000 else test_output
             messages.append({'role': 'user', 'content': (
                 'Tests failed. Fix the code. '
                 'Output only changed files using ===FILE: path=== blocks.\n\n'
-                f'Test output:\n{truncated}'
+                f'Test output:\n{format_test_output(test_output)}'
             )})
 
     print(f'Unit tests still failing after {MAX_TDD_ITERATIONS} TDD iterations.')
@@ -408,10 +407,9 @@ Start your response with STATUS: OK or STATUS: STOP.
             print(f'E2E tests still failing after {MAX_OUTER_ITERATIONS} iterations.')
             sys.exit(1)
 
-        truncated = e2e_output[-3000:] if len(e2e_output) > 3000 else e2e_output
         dev_messages.append({'role': 'user', 'content': (
             'E2E tests failed after code review passed. Fix the implementation.\n\n'
-            f'E2E test output:\n{truncated}\n\n'
+            f'E2E test output:\n{format_test_output(e2e_output)}\n\n'
             'Output only changed files using ===FILE: path=== blocks.'
         )})
 
