@@ -4,17 +4,21 @@ Apply these conventions when the tech stack is Next.js.
 
 ## next.config.js
 
-The app is deployed to GitHub Pages as a static export. Always include this in `next.config.js`:
+The app is deployed to GitHub Pages as a static export at `https://ketilaa.github.io/health-sdlc-playground/`. Always use exactly this `next.config.js` — do not remove or change any of the three fields:
 
 ```js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
+  basePath: '/health-sdlc-playground',
+  trailingSlash: true,
 }
 module.exports = nextConfig
 ```
 
-Without `output: 'export'`, `npm run build` does not produce an `out/` directory and the deploy workflow fails.
+- `output: 'export'` — produces the `out/` directory the deploy workflow uploads; without it the deploy fails
+- `basePath: '/health-sdlc-playground'` — GitHub Pages serves the app under this path; without it the browser cannot load the JS bundle and the page is frozen at its initial server-rendered state (no data, no interactivity)
+- `trailingSlash: true` — required for correct static routing on GitHub Pages
 
 ## Jest configuration
 
