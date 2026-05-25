@@ -125,6 +125,36 @@ def collect_existing_tests():
     return '\n\n'.join(parts) if parts else '(none found)'
 
 
+def collect_existing_sources():
+    """Collect all existing non-test source files from frontend/ and backend/."""
+    parts = []
+    total = 0
+    MAX_SOURCE_CHARS = 60_000
+    for pattern in ['frontend/**/*', 'backend/**/*']:
+        for path in sorted(glob.glob(pattern, recursive=True)):
+            if not os.path.isfile(path):
+                continue
+            if any(seg in SKIP_DIRS for seg in path.split(os.sep)):
+                continue
+            if os.path.splitext(path)[1].lower() in SKIP_EXTENSIONS:
+                continue
+            name = os.path.basename(path)
+            if '.test.' in name or '.spec.' in name:
+                continue
+            content = read_file(path)
+            if not content:
+                continue
+            if len(content) > MAX_FILE_CHARS:
+                content = content[:MAX_FILE_CHARS] + '\n... [truncated]'
+            entry = f'### {path}\n```\n{content}\n```'
+            if total + len(entry) > MAX_SOURCE_CHARS:
+                parts.append('... [additional source files omitted — size limit reached]')
+                break
+            parts.append(entry)
+            total += len(entry)
+    return '\n\n'.join(parts) if parts else '(none found)'
+
+
 def collect_dir(pattern):
     parts = []
     total = 0
@@ -152,8 +182,10 @@ def collect_dir(pattern):
 def run_code_reviewer(feature_name):
     system_prompt = read_prompt('code-reviewer')
     feature_spec = read_file(f'features/{feature_name}/{feature_name}.feature')
+    ux_spec = read_file(f'features/{feature_name}/ux.md')
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
+    skills = collect_skills()
 
     parts = []
     if scope in ('frontend', 'fullstack'):
@@ -167,8 +199,14 @@ Scope: {scope}
 ## Gherkin Feature Specification
 {feature_spec}
 
+## UX Specification
+{ux_spec}
+
 ## Developer Summary
 {dev_summary}
+
+## Stack-specific Skills
+{skills}
 
 ## Implementation Files
 {chr(10).join(filter(None, parts))}
@@ -185,7 +223,7 @@ def run_tester_phase(feature_name):
     ux_spec = read_file(f'features/{feature_name}/ux.md')
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
-
+    e2e_package_json = read_file('e2e/package.json') or '(not found)'
     skills = collect_skills()
 
     user_message = f"""Feature name: {feature_name}
@@ -202,6 +240,11 @@ Scope: {scope}
 
 ## Stack-specific Skills
 {skills}
+
+## e2e/package.json (reuse these versions — do not re-declare or upgrade)
+```json
+{e2e_package_json}
+```
 
 Generate Cucumber + Playwright E2E tests and run-e2e.sh.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
@@ -248,6 +291,7 @@ def main():
     ux_spec = read_file(ux_path)
     uxr_summary = read_file(uxr_summary_path)
     skills = collect_skills()
+    existing_sources = collect_existing_sources()
     existing_tests = collect_existing_tests()
 
     dev_messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
@@ -263,6 +307,13 @@ def main():
 
 ## Stack-specific Skills
 {skills}
+
+## Existing Source Files
+These are all current non-test source files in the codebase. Use them to infer
+tech stack, conventions, and structure. If your implementation changes or removes
+anything these files depend on, update those files too.
+
+{existing_sources}
 
 ## Existing Test Files
 These are all current test files in the codebase. If your implementation changes what

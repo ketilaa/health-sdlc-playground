@@ -45,10 +45,14 @@ def main():
     feature_name = get_feature_name()
     require_files(f'features/{feature_name}/feature.txt')
     feature_request = read_file(f'features/{feature_name}/feature.txt') or ''
+    project_context = read_file('CLAUDE.md') or ''
 
     messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
-Feature request:
+## Project Context
+{project_context}
+
+## Feature request
 {feature_request}
 
 Produce your response using this exact structure:
