@@ -22,12 +22,12 @@ Read these files:
 - Tests are meaningful: they assert real behavior, not trivially pass
 - No unrelated code was modified outside the scope the Developer declared
 - `run-tests.sh` exists at the repo root and is executable
-- SOLID principles are followed:
-  - Single Responsibility: each class/module has one reason to change
-  - Open/Closed: behavior is extended via composition or abstraction, not by modifying existing code
-  - Liskov Substitution: subtypes are substitutable for their base types
-  - Interface Segregation: no component is forced to depend on interfaces it doesn't use
-  - Dependency Inversion: high-level modules depend on abstractions, not concretions
+- SOLID principles are applied where the feature's scale and complexity justify them — flag clear, deliberate violations with a rationale; do not block features solely for missing abstractions in small-scope UI changes:
+  - Single Responsibility: flag modules that visibly mix unrelated concerns
+  - Open/Closed: prefer extension over modification when adding behavior alongside existing behavior; direct edits to existing UI components are not violations
+  - Liskov Substitution: only relevant where inheritance or interface substitution is present — skip if neither applies
+  - Interface Segregation: flag only where a forced dependency causes a concrete coupling or testability problem
+  - Dependency Inversion: flag only where a concrete dependency creates a meaningful coupling or testability problem
 - DDD principles are followed where the feature has domain logic:
   - Domain concepts are named after the ubiquitous language in the Gherkin spec (e.g., if the spec says "workout", the code uses `Workout` not `Activity` or `Event`)
   - Business rules live in domain objects, not in controllers, handlers, or UI components
