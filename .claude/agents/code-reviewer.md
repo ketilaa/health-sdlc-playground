@@ -17,8 +17,11 @@ Read these files:
 ## Evidence rule
 Only flag elements, functions, routes, or behaviors that are **explicitly visible in the source files provided**. Do not infer the existence of code from test files, git history, prior-feature patterns, or assumptions. If you cannot point to the exact file and line, do not raise a finding.
 
+If any file that is imported, depended on, or mentioned in the developer summary is missing or visibly truncated in the provided implementation files, treat that as a **blocking concern** — do not infer correctness from test assertions or the developer summary. A truncated domain or data module cannot be reviewed and must not be approved.
+
 ## What to validate
 - Every Gherkin scenario is covered by at least one test — map each explicitly
+- Any Gherkin scenario whose GIVEN includes a viewport width, device type, or rendering-environment constraint must either (a) have a unit test that actually sets that constraint, or (b) have an explicit "deferred to E2E" note in the developer summary. A DOM-presence check without viewport configuration does not satisfy a viewport GIVEN. Flag the absence of a deferral note as a blocking gap.
 - No implementation exists without a corresponding Gherkin scenario — flag any data, UI state, route, or behavior that has no Gherkin backing as a blocking failure; placeholder datasets, stub arrays, speculative UI states, and "future extension" content all fall into this category
 - `run-tests.sh` and `run-e2e.sh` (if present) exist and are executable — verify by reading each file directly; do not accept the developer's attestation as a substitute. A missing or unreadable script is a blocking failure.
 - Implementation behavior matches the Gherkin specification exactly

@@ -16,6 +16,7 @@ Validate the feature specification for completeness, unambiguousness, testabilit
 - No implementation details have leaked into the spec
 - Edge cases (empty input, invalid input, boundary values) are addressed
 - Scenarios are consistent — no contradictions between them
+- **Arithmetic consistency** — for any THEN assertion that depends on a computed value (percentage change, threshold comparison, aggregate, ratio), verify that the numeric values stated in the Background and scenario steps are mathematically consistent with the assertion. For example: if the Background states W09 avg HR = 145 and a scenario asserts "↑ Increasing" for a 2% threshold, compute (W10 − W09) / W09 and confirm it exceeds 2%. Include a one-line calculation in your review for every such assertion. Flag any inconsistency as a blocking spec error.
 - **Testability rules** — every scenario must satisfy all of the following:
   - Success and failure signals are concrete and machine-verifiable (e.g., HTTP 200, exit code 0, specific file path — not "works correctly" or "is visible")
   - UI elements referenced in THEN steps name a specific `data-testid`, `aria-label`, or exact visible text — no vague references like "the button" or "the component"

@@ -86,6 +86,9 @@ Apply the **Developer checklist** and **run-tests.sh additions** from `.claude/s
 ## HTTP-status scenarios
 When a Gherkin scenario asserts an HTTP status code (e.g. "the page returns HTTP 200", "returns 404 for unknown routes"), you must provide an explicit assertion at a test layer you own — an integration test, a `supertest`-style request, or a Playwright `request` fixture call. Satisfying it structurally via framework conventions (e.g. "a `page.tsx` exists therefore 200 is guaranteed") is only acceptable when explicitly noted as deferred to E2E in your summary. Do not accept structural correctness as a substitute for an observable assertion without documenting the deferral.
 
+## Viewport and device scenarios
+When a Gherkin scenario's GIVEN includes a viewport width, device type, or rendering-environment constraint (e.g. "a viewport width of 375 pixels", "a mobile device"), you cannot satisfy it with a unit test that does not actually set that constraint. Either write a test that configures the viewport/environment, or explicitly label the scenario as "deferred to E2E" in your developer summary. A DOM-presence test without viewport configuration does not satisfy a viewport GIVEN — note the gap and hand it off.
+
 ## Output format
 Write the agent summary as free text at the top of your response, before any FILE blocks. Do not put the summary inside a FILE block — it will be captured separately.
 
@@ -116,6 +119,9 @@ Return `STATUS: STOP` if the specs are insufficient to implement — list what i
   - **Input summary:** what feature, UX spec, and constraints were received
   - **Assumptions:** explicit list of every assumption made — about data shapes, API contracts, missing spec details, framework behaviour, or test setup. Each assumption on its own line.
   - **Decisions:** each key implementation choice with a one-sentence rationale (scope, architecture, testing approach, libraries chosen)
+  - **Widget choices:** for every UI widget where the UX spec offered multiple implementation options (e.g. "MUI Select or ToggleButtonGroup"), state which option was chosen, its ARIA role, and its key DOM structure (e.g. `role="combobox"`, `<select>` element). This is required input for the tester's step definitions.
+  - **data-testid inventory:** a table of every `data-testid` attribute present in the implementation — one row per testid — with the element type and its parent context. Example: `| activity-row | `<div>` | inside `<ul data-testid="activity-list">` |`. Omitting this table forces the tester to guess selectors.
+  - **E2E deferrals:** list every Gherkin scenario deferred to E2E (viewport scenarios, device constraints, CSS rendering checks) with a one-line reason for each.
   - **Alternatives considered:** each alternative with why it was ruled out — not just a label, but the actual reason
   - **Output summary:** files created, tests written, iterations needed (including how many TDD cycles were required)
 

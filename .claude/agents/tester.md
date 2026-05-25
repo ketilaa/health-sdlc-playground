@@ -47,9 +47,10 @@ Use `===FILE: path=== / ===END FILE===` delimiters for each generated file.
 
 `run-e2e.sh` is the single entry point the pipeline uses to execute E2E tests. It must:
 - Be placed at `run-e2e.sh` in the repo root
+- **Read the existing `run-e2e.sh` before writing** — if one already exists, preserve all existing feature step paths and append the current feature's paths. Do not overwrite prior features' paths with only the current feature.
 - Build the application if needed
 - Start the application server on port 3000
-- Run all E2E tests
+- Run all E2E tests (all accumulated feature step paths, not just the current feature)
 - Stop the server and clean up
 - Exit 0 on success, non-zero on failure
 - Use `set -e` and trap to ensure the server is always stopped
