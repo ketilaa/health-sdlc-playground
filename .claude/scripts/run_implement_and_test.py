@@ -13,7 +13,7 @@ from base_agent import (
 )
 
 MAX_OUTER_ITERATIONS = 3  # full cycle: developer + code review + tester + E2E
-MAX_TDD_ITERATIONS = 3    # unit-test-fix loops per developer attempt
+MAX_TDD_ITERATIONS = 5    # unit-test-fix loops per developer attempt
 
 
 UNIT_TEST_TIMEOUT = 300   # 5 minutes
