@@ -314,7 +314,10 @@ def main():
     existing_sources = collect_existing_sources()
     existing_tests = collect_existing_tests()
 
-    dev_messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
+    dev_messages = [{'role': 'user', 'content': [
+        {
+            'type': 'text',
+            'text': f"""Feature name: {feature_name}
 
 ## Gherkin Feature Specification (source of truth for behavior)
 {feature_spec}
@@ -345,7 +348,10 @@ for invisible or removed content.
 Write the scope file first, then run-tests.sh, then tests, then implementation.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
 Start your response with STATUS: OK or STATUS: STOP.
-"""}]
+""",
+            'cache_control': {'type': 'ephemeral'},
+        }
+    ]}]
 
     # Clear any summary files left from a previous run so appends start fresh
     for agent in ['developer', 'code-reviewer', 'tester']:
