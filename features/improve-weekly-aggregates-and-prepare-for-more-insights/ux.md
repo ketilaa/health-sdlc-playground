@@ -1,281 +1,400 @@
 # UX Specification: Improve Weekly Aggregates and Prepare for More Insights
 
-**Feature:** `improve-weekly-aggregates-and-prepare-for-more-insights`
-**Version:** 1.2 (revised — all 6 blocking issues resolved)
-**Date:** 2025
+## Overview
+
+This specification covers the full UI for a weekly training dashboard. The interface allows users to browse weeks, view aggregated weekly metrics, inspect individual activity details, and understand training trends at a glance.
+
+All data is synchronous and mocked. No async loading states are required unless otherwise noted. The interface must function correctly at both standard desktop widths and a minimum viewport width of 375px.
 
 ---
 
-## 1. Overview
+## Component Inventory
 
-This specification covers the UI states, components, and user flows required to display enriched weekly training summaries. It encompasses:
-
-- Activity-level fields: average heart rate, cadence (with explicit null handling)
-- Weekly-level fields: VO2max, resting HR, aggregated avg HR, aggregated avg cadence
-- Derived indicators: intensity balance (low/high session split), week-over-week trend indicators
-- Responsive layout at 375px viewport width
-- Full keyboard navigation, focus management, and screen reader support
-
-All data is synchronous and mocked. No async loading states are required unless the spec is later extended.
+| Component | data-testid | MUI Base |
+|---|---|---|
+| Week Selector | `week-selector` | MUI Select / ToggleButtonGroup |
+| Weekly Summary Card | `weekly-summary-card` | MUI Card |
+| VO2max Display | `weekly-vo2max` | MUI Typography within Card |
+| Resting HR Display | `weekly-resting-hr` | MUI Typography within Card |
+| Avg HR Display | `weekly-avg-hr` | MUI Typography within Card |
+| Avg Cadence Display | `weekly-avg-cadence` | MUI Typography within Card |
+| Intensity Balance | `intensity-balance` | MUI Box / Chip group within Card |
+| Trend: Training Load | `trend-training-load` | MUI Chip within Card |
+| Trend: Avg HR | `trend-avg-hr` | MUI Chip within Card |
+| Trend: Resting HR | `trend-resting-hr` | MUI Chip within Card |
+| Activity List | `activity-list` | MUI List |
+| Activity Detail | `activity-detail` | MUI Card / Drawer |
+| Activity Avg HR | `activity-avg-hr` | MUI Typography within Detail |
+| Activity Cadence | `activity-cadence` | MUI Typography within Detail |
 
 ---
 
-## 2. Component Inventory
+## Page Layout
 
-### 2.1 Week Selector (`data-testid="week-selector"`)
+### Desktop (≥600px)
 
-**Component:** MUI `Select`
-**Purpose:** Allows the user to navigate between weeks
-**Placement:** Top of page; `width: 100%` on mobile (xs), `minWidth: 240` on desktop (sm+)
+```
+┌─────────────────────────────────────────────────────────┐
+│  [Week Selector]                                        │
+├──────────────────────────┬──────────────────────────────┤
+│  Weekly Summary Card     │  Activity List               │
+│  ─────────────────────   │  ─────────────────────────   │
+│  VO2max | Resting HR     │  • Morning Run               │
+│  Avg HR | Avg Cadence    │  • Interval Session          │
+│  Intensity Balance       │  • Recovery Jog              │
+│  Trends                  │  • Long Run                  │
+└──────────────────────────┴──────────────────────────────┘
+│  Activity Detail (expands below or inline on click)     │
+└─────────────────────────────────────────────────────────┘
+```
 
-**States:**
+### Mobile (375px)
 
-| State | Appearance |
+Single-column stacked layout:
+1. Week Selector (full width)
+2. Weekly Summary Card (full width, all metrics visible, scrollable if needed)
+3. Activity List (full width)
+4. Activity Detail (full width, expands inline below the list item or replaces list)
+
+---
+
+## UI States
+
+### 1. Default / Week Selected State
+
+**Trigger:** User lands on the page or selects a week.
+
+**Visible elements:**
+- Week Selector showing the selected week label (e.g. "Week 10, 2024")
+- Weekly Summary Card fully populated
+- Activity List showing all activities for the selected week
+- No Activity Detail visible (collapsed / hidden)
+
+### 2. Activity Detail Expanded State
+
+**Trigger:** User clicks an activity in the Activity List.
+
+**Visible elements:**
+- Week Selector (unchanged)
+- Weekly Summary Card (unchanged, still visible)
+- Activity List (unchanged, selected item visually highlighted)
+- Activity Detail visible, showing the selected activity's metrics
+
+### 3. Missing Metric State (Dash Display)
+
+**Trigger:** An activity has no `avg_hr` or `cadence` value.
+
+**Visible elements:**
+- Activity Detail is open
+- `activity-avg-hr` displays "—" (em dash)
+- `activity-cadence` displays "—" (em dash)
+- All other populated fields display normally
+
+### 4. No Prior Week State (Earliest Week)
+
+**Trigger:** User selects the earliest week in the dataset (no prior week for comparison).
+
+**Visible elements:**
+- Trend indicators (`trend-training-load`, `trend-avg-hr`, `trend-resting-hr`) all display "—"
+- All other weekly metrics display normally
+- No error state; this is an expected, informational state
+
+### 5. Stable Trend State
+
+**Trigger:** Week-over-week change for a metric is within ±2%.
+
+**Visible elements:**
+- Affected trend indicators display "→ Stable"
+- Visual treatment: neutral color (MUI `default` or grey chip)
+
+---
+
+## User Flows
+
+### Flow 1: Browse Weeks and View Weekly Summary
+
+**Entry point:** User navigates to `http://localhost:3000`
+
+**Steps:**
+
+1. **Page load** — Week Selector is visible. The most recent week is pre-selected (or the user sees an initial state). Weekly Summary Card and Activity List are populated for the default week.
+
+2. **User interacts with Week Selector** (`data-testid="week-selector"`) — Selects "2024-W10" from a dropdown or toggle group. Options are labeled by human-readable week names (e.g. "W10 2024") but the underlying value maps to ISO week codes.
+
+3. **Weekly Summary Card updates** — The following metrics are immediately visible within `data-testid="weekly-summary-card"`:
+
+   | Metric | data-testid | Displayed value |
+   |---|---|---|
+   | VO2max | `weekly-vo2max` | "54" |
+   | Resting HR | `weekly-resting-hr` | "52" |
+   | Avg HR | `weekly-avg-hr` | "147" |
+   | Avg Cadence | `weekly-avg-cadence` | "170" |
+
+4. **Intensity Balance is visible** — `data-testid="intensity-balance"` shows "Low: 3" and "High: 1" with `aria-label="Intensity balance: 3 low-intensity sessions, 1 high-intensity session"`.
+
+5. **Trend indicators are visible** — All three trend elements show their computed direction for 2024-W10 vs 2024-W09:
+   - `trend-training-load` → "↑ Increasing"
+   - `trend-avg-hr` → "↑ Increasing"
+   - `trend-resting-hr` → "↓ Decreasing"
+
+6. **Activity List is visible** — `data-testid="activity-list"` contains the names of all activities for the selected week (e.g. "Morning Run", "Interval Session", etc.)
+
+---
+
+### Flow 2: Drill Down Into an Activity
+
+**Entry point:** Week is selected; Activity List is visible.
+
+**Steps:**
+
+1. **User clicks an activity** (e.g. "Morning Run") within `data-testid="activity-list"`.
+
+2. **Activity Detail appears** — `data-testid="activity-detail"` becomes visible. It contains the activity name "Morning Run" as a heading.
+
+3. **Activity metrics are shown** — For a fully populated activity:
+   - `data-testid="activity-avg-hr"` contains "148"
+   - `data-testid="activity-cadence"` contains "172"
+
+4. **User can return** — Back navigation (e.g. a Close button, back arrow, or clicking elsewhere) collapses the Activity Detail. Activity List remains visible and the selected activity highlight is cleared.
+
+---
+
+### Flow 3: View Activity With Missing Metrics
+
+**Entry point:** Week 2024-W10 selected; Activity List visible.
+
+**Steps:**
+
+1. **User clicks "Strength Cross-Train"** in `data-testid="activity-list"`.
+
+2. **Activity Detail appears** — `data-testid="activity-detail"` is visible.
+
+3. **Missing metrics display gracefully:**
+   - `data-testid="activity-avg-hr"` contains "—"
+   - `data-testid="activity-cadence"` contains "—"
+
+4. **All other available fields** (e.g. duration, type) display normally.
+
+---
+
+### Flow 4: Browse to Earliest Week (No Trend Data)
+
+**Entry point:** User is on the dashboard.
+
+**Steps:**
+
+1. **User selects "2024-W08"** via `data-testid="week-selector"`.
+
+2. **Weekly Summary Card updates** with W08 data.
+
+3. **Trend indicators show no comparison:**
+   - `trend-training-load` contains "—"
+   - `trend-avg-hr` contains "—"
+   - `trend-resting-hr` contains "—"
+
+4. **No error message or warning** is shown. The "—" is the complete, correct presentation.
+
+---
+
+### Flow 5: View Stable Trends (Week 2024-W09)
+
+**Entry point:** User is on the dashboard.
+
+**Steps:**
+
+1. **User selects "2024-W09"** via `data-testid="week-selector"`.
+
+2. **Trend indicators reflect ±2% threshold:**
+   - `trend-training-load` contains "→ Stable"
+   - `trend-avg-hr` contains "→ Stable"
+   - `trend-resting-hr` contains "→ Stable"
+
+---
+
+### Flow 6: Responsive View at 375px
+
+**Entry point:** User opens the app on a 375px-wide viewport.
+
+**Steps:**
+
+1. **User selects "2024-W10"** via `data-testid="week-selector"`.
+
+2. **Weekly Summary Card** (`data-testid="weekly-summary-card"`) is visible without horizontal scroll or overflow clipping.
+
+3. **All key metrics remain visible:**
+   - `weekly-vo2max`
+   - `weekly-resting-hr`
+   - `intensity-balance`
+   - `trend-training-load`
+
+4. **Metrics reflow into a tighter grid** — 2-column grid collapses to 1-column or 2-column with smaller typography. No metric is hidden or truncated. Labels and values are legible.
+
+---
+
+## Component Specifications
+
+### Week Selector (`data-testid="week-selector"`)
+
+- **Type:** MUI Select (dropdown) or horizontal ToggleButtonGroup
+- **Options:** Each week in the dataset rendered as a human-readable label (e.g. "W10 · 2024")
+- **Behavior:** Selecting a week immediately updates the Weekly Summary Card and Activity List
+- **Keyboard:** Fully navigable via keyboard (arrow keys for ToggleButtonGroup, or standard Select keyboard behavior)
+- **ARIA:** `role="listbox"` or native `<select>`; each option has a descriptive label
+- **Default selected:** Most recent week
+
+---
+
+### Weekly Summary Card (`data-testid="weekly-summary-card"`)
+
+- **Type:** MUI Card with CardContent
+- **Layout:** Metrics grid (2×2 or 2×3), Intensity Balance row, Trends row
+- **Responsive:** At 375px, grid cells stack or shrink; no horizontal scroll
+
+#### Metric Tiles (within the card)
+
+Each metric tile contains:
+- A label (e.g. "VO2max", "Resting HR", "Avg HR", "Avg Cadence")
+- A prominent numeric value
+- An optional unit label (e.g. "bpm", "spm")
+
+| Metric | data-testid | Label | Unit |
+|---|---|---|---|
+| VO2max | `weekly-vo2max` | "VO2max" | "ml/kg/min" |
+| Resting HR | `weekly-resting-hr` | "Resting HR" | "bpm" |
+| Avg HR | `weekly-avg-hr` | "Avg HR" | "bpm" |
+| Avg Cadence | `weekly-avg-cadence` | "Avg Cadence" | "spm" |
+
+- **Typography hierarchy:** Label in small muted text; value in large bold text
+- **Screen reader:** Each tile has a visually-implied but programmatically-explicit label via `aria-label` or associated `<label>` / heading element (e.g. `aria-label="VO2max: 54 ml/kg/min"`)
+
+---
+
+### Intensity Balance (`data-testid="intensity-balance"`)
+
+- **Type:** MUI Box containing two MUI Chips or two labeled counts
+- **Content:**
+  - Chip/label: "Low: 3" (count of low-intensity sessions)
+  - Chip/label: "High: 1" (count of high-intensity sessions)
+- **Visual treatment:**
+  - Low intensity: cool/muted color (e.g. MUI `info` or `default`)
+  - High intensity: warm/accent color (e.g. MUI `warning` or `error`)
+- **ARIA:** `aria-label="Intensity balance: 3 low-intensity sessions, 1 high-intensity session"` on the container element
+- **Keyboard:** No interaction required (display-only); chips are non-interactive
+- **Screen reader:** The `aria-label` on the container provides full context; individual chip text is supplementary
+
+---
+
+### Trend Indicators
+
+Three trend chips, one per metric. Each shares the same visual grammar.
+
+| Metric | data-testid |
 |---|---|
-| Default | Shows currently selected week label, e.g. "Week 10 · Mar 2024" |
-| Open | Dropdown lists available weeks, most recent first |
-| Selected | Active week highlighted; dropdown closes |
+| Training Load | `trend-training-load` |
+| Avg HR | `trend-avg-hr` |
+| Resting HR | `trend-resting-hr` |
 
-**Behaviour:**
-- Selecting a new week simultaneously updates the Weekly Summary Card and Activity List
-- Any open Activity Detail panel is dismissed without user action when the week changes
-- After the new week's content renders, focus is programmatically moved to the `Select` trigger element (see §3.5 for the complete focus flow)
-- The live announcement region (§2.5) is updated with the new week label
+**States and visual treatment:**
+
+| State | Text content | Icon | MUI Chip color | Meaning |
+|---|---|---|---|---|
+| Increasing | "↑ Increasing" | ↑ arrow | `success` (green) or `error` (red) depending on metric | Change > +2% |
+| Decreasing | "↓ Decreasing" | ↓ arrow | Opposite of Increasing | Change < −2% |
+| Stable | "→ Stable" | → arrow | `default` (grey) | Change within ±2% |
+| No data | "—" | None | `default` (grey) | Earliest week, no prior comparison |
+
+> **Note on color semantics for trends:** The spec does not prescribe whether "increasing" is good or bad per metric. Color is used for direction only (up = one color, down = another). If the product adds valence (e.g. decreasing resting HR is good), color assignment should be revisited. For now, directional color only — no positive/negative valence applied.
+
+- **ARIA:** Each chip has `aria-label` describing the metric and direction, e.g. `aria-label="Training load trend: Increasing"`, `aria-label="Average HR trend: Stable"`, `aria-label="Resting HR trend: no comparison available"` (for "—")
+- **Keyboard:** Display-only; no interaction required
+
+---
+
+### Activity List (`data-testid="activity-list"`)
+
+- **Type:** MUI List with MUI ListItem / ListItemButton per activity
+- **Content per item:** Activity name, type badge (optional), duration
+- **Interaction:** Each item is clickable/tappable and opens Activity Detail
+- **Selected state:** Active/selected item is visually highlighted (MUI `selected` prop on ListItemButton)
+- **Keyboard:** Arrow keys navigate list items; Enter/Space activates an item
+- **ARIA:** `role="list"`; each item is `role="listitem"`; the clickable button within each item has `aria-label="Open [activity name] details"`
+- **Focus management:** When an activity is clicked, focus moves to the Activity Detail heading
+
+---
+
+### Activity Detail (`data-testid="activity-detail"`)
+
+- **Type:** MUI Card (inline expansion below list item) or MUI Drawer (mobile)
+- **Trigger:** Opens on activity click; closes on close button, Escape key, or second click on the same activity
+- **Content:**
+  - Activity name as heading (`<h2>` or equivalent heading level in context)
+  - Type, duration, distance
+  - Avg HR field (`data-testid="activity-avg-hr"`)
+  - Cadence field (`data-testid="activity-cadence"`)
+  - Close/back control
+
+**Metric rows within Activity Detail:**
+
+Each metric row contains:
+- Label (e.g. "Avg HR", "Cadence")
+- Value (`data-testid` as specified) — either a number or "—" (em dash)
+- Unit label (e.g. "bpm", "spm") — hidden when value is "—"
+
+**Missing value display:**
+- Value shown: "—" (em dash character U+2014)
+- Unit label: not shown alongside "—"
+- Screen reader text for missing value: `aria-label="Average heart rate: not available"` / `aria-label="Cadence: not available"` on the value element
+
+**Focus management:**
+- On open: focus moves to the Activity Detail container or its heading
+- On close: focus returns to the list item that triggered the detail
 
 **Keyboard:**
-- `Tab` to focus the `Select` trigger
-- `Enter` or `Space` to open the dropdown
-- `ArrowUp` / `ArrowDown` to navigate `MenuItem` options
-- `Enter` to confirm selection
-- `Escape` to dismiss without change; focus remains on the trigger
-
-**Accessibility:**
-- `aria-label="Select training week"` on the `Select` element
-- Each `MenuItem` labelled as human-readable text, e.g. "Week 10, March 2024"
-- Selected option carries `aria-selected="true"` via MUI's native `Select` behaviour
+- Escape closes Activity Detail and returns focus to the triggering list item
+- Tab navigates within the detail before cycling back to the list
 
 ---
 
-### 2.2 Weekly Summary Card (`data-testid="weekly-summary-card"`)
+## Accessibility Requirements Summary
 
-**Component:** MUI `Card` containing a MUI `Grid container`
-**Purpose:** Single-glance overview of the selected week's key metrics
-**Placement:** Directly below week selector; always visible when a week is selected
-
-#### 2.2.1 Grid Structure
-
-The card interior uses `Grid container spacing={2}`. Column assignments change at the MUI `sm` breakpoint (600px):
-
-| Region | xs (< 600px) | sm (≥ 600px) |
-|---|---|---|
-| Each metric tile (4 tiles) | `xs={6}` (2 per row) | `sm={3}` (all 4 in one row) |
-| Intensity Balance | `xs={12}` (full width) | `sm={5}` |
-| Trend Indicators | `xs={12}` (full width) | `sm={7}` |
-
-At 375px (below the MUI `sm` breakpoint of 600px):
-- Row 1: VO2max tile + Resting HR tile (`xs={6}` each)
-- Row 2: Avg HR tile + Avg Cadence tile (`xs={6}` each)
-- Row 3: Intensity Balance (`xs={12}`)
-- Row 4: Trend Indicators (`xs={12}`)
-
-No content is hidden or truncated at any viewport width ≥ 320px.
-
-#### 2.2.2 Mobile Layout Diagram (375px)
-
-```
-┌──────────────────────┐
-│  Week 10 · Mar 2024  │  ← Typography variant="subtitle1"
-├──────────┬───────────┤
-│ VO2max   │ Resting HR│  ← Grid xs={6} + xs={6}
-│   54     │  52 bpm   │
-├──────────┼───────────┤
-│ Avg HR   │ Avg Cad   │  ← Grid xs={6} + xs={6}
-│ 147 bpm  │ 170 spm   │
-├──────────┴───────────┤
-│  Intensity Balance   │  ← Grid xs={12}
-│  Low: 3 ████░  Hi: 1 │
-├──────────────────────┤
-│  Trend Indicators    │  ← Grid xs={12}
-│  Training Load   ↑   │
-│  Avg HR          ↑   │
-│  Resting HR      ↓   │
-└──────────────────────┘
-```
-
-#### 2.2.3 Metric Tiles
-
-Each metric tile is a `Grid item` wrapping a borderless MUI `Box`. Internal layout uses `Stack direction="column" spacing={0.5}`.
-
-Each tile contains:
-- **Label** — `Typography variant="caption"` `color="text.secondary"`: e.g. "VO2max", "Resting HR"
-- **Value** — `Typography variant="h5"` `color="text.primary"`: numeric value or "—"
-- **Unit** — `Typography variant="caption"` `color="text.secondary"` rendered inline after value; omitted for VO2max (unitless) and omitted entirely when value is "—"
-
-**Specific tiles:**
-
-| Tile | `data-testid` | Label text | Unit |
-|---|---|---|---|
-| VO2max | `weekly-vo2max` | "VO2max" | — |
-| Resting HR | `weekly-resting-hr` | "Resting HR" | "bpm" |
-| Average HR | `weekly-avg-hr` | "Avg HR" | "bpm" |
-| Average Cadence | `weekly-avg-cadence` | "Avg Cadence" | "spm" |
-
-**Null / missing value display:** The `Typography variant="h5"` element renders "—" (U+2014 em dash). The unit element is not rendered when value is "—".
-
-**Accessibility per tile:**
-- Each tile `Box` has `role="region"` and `aria-label`:
-  - Value present: `aria-label="VO2max: 54"`, `aria-label="Resting HR: 52 beats per minute"`, `aria-label="Average heart rate: 147 beats per minute"`, `aria-label="Average cadence: 170 steps per minute"`
-  - Value absent: `aria-label="[Metric name]: not available"`
-- Tiles are display-only and not keyboard focusable
-
----
-
-### 2.3 Intensity Balance Indicator (`data-testid="intensity-balance"`)
-
-**Component:** MUI `Box` in `Grid item` (xs={12} / sm={5})
-**Purpose:** Shows the split between low and high intensity sessions at a glance
-
-#### 2.3.1 Activity Type Classification
-
-The following table defines which activity types map to which intensity category. This classification is exhaustive; any type not listed is treated as "low" by default.
-
-| Activity type value | Intensity category |
+| Requirement | Implementation |
 |---|---|
-| `run` | Low |
-| `recovery` | Low |
-| `long_run` | Low |
-| `intervals` | High |
-| `other` | Low (default) |
-
-#### 2.3.2 Visual Structure
-
-Internal layout: MUI `Stack direction="column" spacing={1}`:
-
-1. **Count row** — `Stack direction="row" justifyContent="space-between"`:
-   - Left: `Typography variant="body2"` `color="success.main"` — text `"Low: 3"`
-   - Right: `Typography variant="body2"` `color="warning.main"` — text `"High: 1"`
-
-2. **Proportional bar** — MUI `LinearProgress` variant `"determinate"`, `value={(lowCount / totalCount) * 100}`, `aria-hidden="true"` (decorative). The filled portion represents the low-intensity fraction; default MUI `LinearProgress` `color="success"` is used, with the track (`warning.light`) representing the high-intensity fraction.
-
-**Displayed text (exact strings required by Gherkin spec):**
-- `"Low: 3"` — total count of activities whose type maps to Low
-- `"High: 1"` — total count of activities whose type maps to High
-
-**Accessibility:**
-- Outermost container `Box` has `aria-label="Intensity balance: 3 low-intensity sessions, 1 high-intensity session"`
-- `LinearProgress` bar has `aria-hidden="true"`
-- Screen readers announce the container `aria-label` directly; visual text is supplementary
-
-**Edge cases:**
-
-| Scenario | Low count | High count | Bar value | Colour behaviour |
-|---|---|---|---|---|
-| All low intensity | n | 0 | 100% | Low: `success.main`; High: `text.disabled` |
-| All high intensity | 0 | n | 0% | High: `warning.main`; Low: `text.disabled` |
-| No sessions recorded | 0 | 0 | 0% | Both: `text.disabled`; bar greyed |
-
-When both counts are 0: `aria-label="Intensity balance: no sessions recorded"`.
+| All interactive elements keyboard-accessible | Week Selector, Activity List items, Activity Detail close button |
+| Focus management on drill-down open/close | Focus to detail heading on open; focus to list item on close |
+| ARIA labels on display-only data elements | `intensity-balance`, all trend chips, metric tiles, missing value fields |
+| Screen reader text for "—" values | `aria-label="[Metric]: not available"` |
+| Color is not the sole means of conveying information | Trend chips include directional arrow and text label alongside color |
+| Sufficient color contrast | All text/background combinations meet WCAG AA (4.5:1 for normal text, 3:1 for large text) |
+| Responsive layout does not hide required elements | All `data-testid` elements remain visible at 375px |
+| Heading hierarchy maintained | Activity name in detail is a logical heading; summary card section is labelled |
 
 ---
 
-### 2.4 Trend Indicators
+## Edge Cases Covered
 
-**Container:** `Grid item` (xs={12} / sm={7}) wrapping `Stack direction="column" spacing={1}`
-**Purpose:** Show week-over-week directional change for three metrics
-
-Each indicator is a `Stack direction="row" alignItems="center" spacing={1}` containing:
-1. **Metric label** — `Typography variant="body2"` `color="text.secondary"` with `sx={{ minWidth: 120 }}`
-2. **Trend chip** — MUI `Chip size="small"` with `label` and `color` determined by the state table below
-
-**Indicators and testids:**
-
-| Indicator | `data-testid` | Metric label text |
-|---|---|---|
-| Training Load | `trend-training-load` | "Training Load" |
-| Average HR | `trend-avg-hr` | "Avg HR" |
-| Resting HR | `trend-resting-hr` | "Resting HR" |
-
-#### 2.4.1 MUI Colour Token Assignment per State and Metric
-
-`error` / red is never used for any trend state. The most alarming colour in use is MUI `warning` (amber).
-
-| Metric | State | Chip label text | MUI `Chip color` prop | Rationale |
-|---|---|---|---|---|
-| Training Load | Increasing | "↑ Increasing" | `warning` | Higher load = increased stress; amber signals attention without alarm |
-| Training Load | Decreasing | "↓ Decreasing" | `info` | Lower load = informational; not inherently positive or negative |
-| Training Load | Stable | "→ Stable" | `default` | Neutral; no meaningful change |
-| Training Load | No data | "—" | `default` | No prior week to compare |
-| Avg HR | Increasing | "↑ Increasing" | `warning` | Rising avg HR may indicate fatigue; amber |
-| Avg HR | Decreasing | "↓ Decreasing" | `info` | Informational; context-dependent |
-| Avg HR | Stable | "→ Stable" | `default` | Neutral |
-| Avg HR | No data | "—" | `default` | No prior week to compare |
-| Resting HR | Increasing | "↑ Increasing" | `warning` | Rising resting HR may signal fatigue or illness; amber |
-| Resting HR | Decreasing | "↓ Decreasing" | `success` | Decreasing resting HR = positive fitness adaptation; green |
-| Resting HR | Stable | "→ Stable" | `default` | Neutral |
-| Resting HR | No data | "—" | `default` | No prior week to compare |
-
-#### 2.4.2 Stability Threshold
-
-Change within ±2% (inclusive) of the previous week's value renders as "Stable". Change exceeding +2% renders as "Increasing". Change exceeding −2% renders as "Decreasing".
-
-**Text rendering (exact strings required by Gherkin spec):**
-- `"↑ Increasing"` — U+2191 up arrow, space, word
-- `"↓ Decreasing"` — U+2193 down arrow, space, word
-- `"→ Stable"` — U+2192 right arrow, space, word
-- `"—"` — U+2014 em dash (no arrow, no word)
-
-**Accessibility per indicator:**
-- The outer `Stack` row has `aria-label`:
-  - `aria-label="Training load trend: Increasing compared to last week"`
-  - `aria-label="Average heart rate trend: Stable compared to last week"`
-  - `aria-label="Resting heart rate trend: Decreasing compared to last week"`
-  - `aria-label="Training load trend: No comparison available"` (earliest week — no prior week exists)
-- The arrow Unicode character inside each `Chip` label is wrapped in `<span aria-hidden="true">` so screen readers announce only the word ("Increasing", "Decreasing", "Stable"), not the glyph
-- For the no-data state the `Chip` label is "—"; `aria-label` on the row communicates "No comparison available"
-- Trend indicators are display-only and not keyboard focusable
-
----
-
-### 2.5 Live Announcement Region
-
-**Component:** MUI `Box` rendered visually off-screen using MUI `sx` utility pattern (equivalent to `position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); whiteSpace: nowrap`)
-**`aria-live="polite"`**, **`aria-atomic="true"`**
-**Purpose:** Announces the newly selected week to screen readers after every week change
-
-**Announced text format:** `"Now showing week 10, March 2024"` — updated on every week selector change.
-
-This region is always present in the DOM, never visible, and not part of the tab order.
-
----
-
-### 2.6 Activity List (`data-testid="activity-list"`)
-
-**Component:** MUI `List` rendered as `<ul>`
-**Purpose:** Shows all activities for the selected week
-**Placement:** Below Weekly Summary Card; full width on mobile
-
-**Each activity row** is a MUI `ListItemButton` rendered as `<li>` containing:
-- **Primary text:** `ListItemText primary={activityName}` — bold
-- **Secondary text:** `ListItemText secondary="{duration} min · {distance} km"` — e.g. "45 min · 8.2 km"
-- **Type badge:** `Chip size="small"` labelled with the activity type string (e.g. "run", "intervals", "recovery", "long_run", "other")
-
-**States:**
-
-| State | Appearance |
+| Edge case | Handling |
 |---|---|
-| Default | All `ListItemButton` rows visible |
-| Row hovered | MUI `action.hover` background |
-| Row focused | Visible MUI focus ring (not suppressed) |
-| Row active (detail open) | `selected={true}` on `ListItemButton`; `action.selected` background; `aria-expanded="true"` |
-| Empty week | `Typography variant="body2"` centred: "No activities recorded for this week" |
+| Activity has no `avg_hr` | `activity-avg-hr` shows "—"; unit label hidden; ARIA says "not available" |
+| Activity has no `cadence` | `activity-cadence` shows "—"; unit label hidden; ARIA says "not available" |
+| Earliest week selected (no prior week) | All three trend indicators show "—"; no error or warning |
+| Week change within ±2% | Trend indicator shows "→ Stable" with neutral visual treatment |
+| 375px viewport | All required elements visible; layout reflows to single column |
+| Week switch while detail open | Activity Detail closes (or resets); new week's Activity List is shown |
 
-**Keyboard navigation:**
-- `Tab` moves focus into the list at the first `ListItemButton`
-- `Tab` / `Shift+Tab` move between rows
-- `Enter` or `Space` on a focused row opens the Activity Detail panel (see §3.3 for focus management)
-- Each `ListItemButton` is natively in the tab order; no roving `tabindex` is used
+---
 
-**Accessibility:**
-- `List` has `aria-label="Activities for [week label]"` updated on each week change, e.g. `aria-label="Activities for week 10, March 2024"`
-- Each `ListItemButton` has `aria-label` combining all available fields, e.g. `aria-label="Morning Run, run, 45 minutes, 8.2 kilometres"`
-- Active row (detail open): `
+## Scenario-to-UI-State Mapping
+
+| Gherkin Scenario | UI State / Flow |
+|---|---|
+| Activity records expose cadence and avg HR fields | Flow 2: Drill Down → Activity Detail expanded, fields populated |
+| Activity detail displays dash when fields absent | Flow 3: Missing Metrics → "—" in `activity-avg-hr` and `activity-cadence` |
+| Weekly summary displays VO2max and resting HR | Flow 1: Weekly Summary Card, metric tiles `weekly-vo2max` and `weekly-resting-hr` |
+| Weekly summary shows avg HR aggregated from activities | Flow 1: Metric tile `weekly-avg-hr` = "147" |
+| Weekly summary shows avg cadence aggregated from activities | Flow 1: Metric tile `weekly-avg-cadence` = "170" |
+| Weekly summary shows intensity balance | Flow 1: `intensity-balance` shows "Low: 3" and "High: 1" with ARIA label |
+| Trend indicators for increasing load, avg HR, decreasing resting HR | Flow 1 (W10): Trend chips show "↑ Increasing", "↑ Increasing", "↓ Decreasing" |
+| Trend indicators show stable within 2% | Flow 5 (W09): All trend chips show "→ Stable" |
+| Trend indicators show no comparison for earliest week | Flow 4 (W08): All trend chips show "—" |
+| User can browse weeks and drill down into a workout | Flow 1 + Flow 2 combined; week selector switches content; activity detail opens |
+| Weekly summary card readable at 375px | Flow 6: Responsive layout; all required elements visible at 375px viewport |
