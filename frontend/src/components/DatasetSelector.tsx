@@ -1,54 +1,66 @@
-"use client";
-
-import React, { useState, useRef, useEffect } from "react";
-import { Dataset } from "../domain/dataset";
+import React, { useState } from 'react'
+import { getSelectableDatasets, type Dataset } from '@/data/datasets'
 
 interface Props {
-  currentName: string;
-  options: Dataset[];
+  currentDatasetName: string
 }
 
-export function DatasetSelector({ currentName, options }: Props) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, []);
-
-  // Filter out any test fixture from the visible dropdown options.
-  const visibleOptions = options.filter((o) => !o.isTestFixture);
+export function DatasetSelector({ currentDatasetName }: Props) {
+  const [open, setOpen] = useState(false)
+  const options: Dataset[] = getSelectableDatasets()
 
   return (
-    <div ref={rootRef} className="dataset-selector-root">
+    <div style={{ position: 'relative' }}>
       <button
         type="button"
         data-testid="dataset-selector"
+        aria-label="Select dataset"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Select dataset"
         onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setOpen(false);
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          background: '#fff',
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+          cursor: 'pointer',
         }}
       >
-        {currentName} <span aria-hidden="true">▾</span>
+        <span>{currentDatasetName}</span>
+        <span aria-hidden="true">▾</span>
       </button>
       {open && (
-        <ul role="listbox" className="dataset-selector-list">
-          {visibleOptions.map((opt) => (
-            <li key={opt.id} role="option" aria-selected={false}>
+        <ul
+          role="listbox"
+          aria-label="Available datasets"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            margin: 0,
+            padding: '0.25rem 0',
+            background: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            listStyle: 'none',
+            minWidth: '100%',
+          }}
+        >
+          {options.map((opt) => (
+            <li
+              key={opt.id}
+              role="option"
+              aria-selected={opt.name === currentDatasetName}
+              style={{ padding: '0.5rem 1rem' }}
+            >
               {opt.name}
             </li>
           ))}
         </ul>
       )}
     </div>
-  );
+  )
 }
