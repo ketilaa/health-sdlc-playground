@@ -31,7 +31,12 @@ Read these files:
   - Domain concepts are named after the ubiquitous language in the Gherkin spec (e.g., if the spec says "workout", the code uses `Workout` not `Activity` or `Event`)
   - Business rules live in domain objects, not in controllers, handlers, or UI components
   - Infrastructure concerns (persistence, HTTP, external APIs) are separated from domain logic
-- No obvious bugs, security issues, or code smells
+- No security issues — check each of the following explicitly and flag any violation as blocking:
+  - **Injection:** user input is not interpolated into shell commands, SQL, or `eval`; `dangerouslySetInnerHTML` / `innerHTML` is not used with untrusted data
+  - **Secrets:** no API keys, tokens, or passwords are hardcoded; secrets come from environment variables only
+  - **Dependencies:** `npm audit --audit-level=high` (or `pip-audit`) would pass with the packages introduced; flag any new dependency without a stated reason in the developer summary
+  - **Auth bypass:** no endpoint or page skips an auth check present elsewhere in the codebase
+  - **Data exposure:** responses do not include fields beyond what the Gherkin requires; error messages do not leak stack traces or internal paths to the client
 - Code and tests conform to the conventions of the existing codebase
 - Test descriptions correspond to the Gherkin scenario they cover
 
