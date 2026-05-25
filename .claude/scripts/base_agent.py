@@ -79,11 +79,18 @@ def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
 
 
 def is_ok(text):
-    """Return True if response contains STATUS: OK; False for STOP or missing."""
+    """Return True if response contains STATUS: OK; False for STOP or missing.
+
+    Accepts common markdown variants produced by agents:
+      STATUS: OK          (canonical)
+      ## Status: OK       (markdown heading)
+      **Status:** OK      (bold label)
+    """
     for line in text.split('\n'):
-        stripped = line.strip()
-        if stripped.startswith('STATUS:'):
-            return 'STOP' not in stripped
+        # Strip leading markdown heading markers and bold/italic markers
+        core = line.strip().lstrip('#').lstrip('*').strip().lstrip('*').strip()
+        if core.upper().startswith('STATUS:'):
+            return 'STOP' not in core.upper()
     return False  # no STATUS line → treat as STOP
 
 
