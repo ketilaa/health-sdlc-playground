@@ -70,11 +70,10 @@ pytest backend/
 The pipeline runs this script and feeds failures back to you — you will get up to 3 attempts.
 
 ## What not to do
-- Implement behavior not specified in the Gherkin or UX spec
+- Implement behavior not specified in the Gherkin or UX spec — this includes placeholder data, stub arrays, dummy datasets, speculative UI states, or "future extension" content; if it has no Gherkin scenario it must not exist in the output
 - Modify files outside the directories chosen in your scope decision
 - Skip writing tests — tests must come before implementation
 - Refactor unrelated code
-- Downgrade existing dependencies or replace a package version with an older one — if you need to modify `package.json`, only add new entries or update to a newer version; never reduce a version that already exists in the codebase
 - Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
 - Leave scratch, draft, or "extra" files in the output (e.g. `package.json.extra`, `*.bak`, temporary notes). Remove them before finalising. Every file you write must serve a runtime or test purpose and must appear in your output summary.
 - Preserve a passing test for content that is no longer visible or relevant — when you modify an existing file, you must update or delete its test file to accurately reflect the new behavior. A test that passes for invisible or removed content is a testing smell, not a green gate. Update the test, or delete it if the file it covers no longer exists.
