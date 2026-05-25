@@ -8,7 +8,7 @@ import fs from 'fs'
 // redirect rule (source, destination, type 308).
 
 describe('308 redirect configuration (Scenario 3)', () => {
-  const serveJsonPath = path.resolve(__dirname, '../../../../public/serve.json')
+  const serveJsonPath = path.resolve(__dirname, '../../../public/serve.json')
 
   it('serve.json exists in frontend/public/', () => {
     expect(fs.existsSync(serveJsonPath)).toBe(true)
