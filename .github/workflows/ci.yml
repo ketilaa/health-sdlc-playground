@@ -44,10 +44,10 @@ jobs:
       - uses: dependabot/fetch-metadata@v2
         id: metadata
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
 
       - name: Auto-merge patch and minor updates
         if: steps.metadata.outputs.update-type != 'version-update:semver-major'
         run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
