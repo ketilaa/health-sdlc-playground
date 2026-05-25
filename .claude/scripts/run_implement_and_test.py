@@ -158,6 +158,8 @@ def run_tester_phase(feature_name):
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
 
+    skills = collect_skills()
+
     user_message = f"""Feature name: {feature_name}
 Scope: {scope}
 
@@ -169,6 +171,9 @@ Scope: {scope}
 
 ## Developer Summary
 {dev_summary}
+
+## Stack-specific Skills
+{skills}
 
 Generate Cucumber + Playwright E2E tests and run-e2e.sh.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
