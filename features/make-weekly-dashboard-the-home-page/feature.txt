@@ -1,0 +1,14 @@
+Make the Weekly Dashboard the home page of the app.
+
+   The current landing page at / renders the Training Overview (a flat weekly activity log).
+   Replace it with the Weekly Dashboard — the component already exists at /weekly-dashboard
+   and is the primary user-facing surface for training insights.
+
+   The feature should:
+
+   - Move the Weekly Dashboard to the root route (/)
+   - Remove the Training Overview from the root route
+   - The /weekly-dashboard route should either redirect to / or be removed to avoid a duplicate page
+   - No changes to the Weekly Dashboard component itself — layout, data, and behaviour stay exactly as they are
+
+   The Training Overview (TrainingOverview component) should be deleted from the codebase.
