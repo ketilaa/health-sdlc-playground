@@ -26,6 +26,15 @@ jobs:
           key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: npm-${{ runner.os }}-
 
+      - name: Audit dependencies
+        run: |
+          if [ -f frontend/package.json ]; then
+            cd frontend && npm ci --ignore-scripts && npm audit --audit-level=high
+          fi
+          if [ -f e2e/package.json ]; then
+            cd e2e && npm ci --ignore-scripts && npm audit --audit-level=high
+          fi
+
       - name: Run tests
         run: |
           if [ -f run-tests.sh ]; then
