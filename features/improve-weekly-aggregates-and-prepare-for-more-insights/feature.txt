@@ -1,0 +1,28 @@
+
+extend the data model and weekly aggregation to support richer metrics and future insight capabilities.
+
+The feature should:
+
+- add the following fields:
+  - at activity level:
+    - cadence
+    - average heart rate
+  - at weekly level:
+    - vo2max
+    - average resting heart rate
+
+- update weekly aggregates to include:
+  - average heart rate (from activities)
+  - average cadence (from activities)
+
+- include simple derived indicators in the weekly summary:
+  - intensity balance (low vs high intensity sessions)
+  - trend indicators compared to previous week (e.g. increasing training load, increasing average HR, changes in resting HR)
+
+- ensure all aggregates and indicators are derived consistently from the underlying data
+
+- keep the existing ability to browse weeks and drill down into workouts
+
+Goal:
+- make weekly summaries more insight-ready
+- prepare the dataset for future features such as fatigue detection, training balance, and performance trends
