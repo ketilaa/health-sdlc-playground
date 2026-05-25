@@ -2,5 +2,5 @@
 set -e
 cd frontend
 npm install
-npm audit --audit-level=high || echo "npm audit reported issues; continuing"
+npm audit --audit-level=high || echo "npm audit reported advisories; not blocking this feature (pre-existing baseline)."
 npm test -- --watchAll=false --forceExit

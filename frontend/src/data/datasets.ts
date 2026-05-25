@@ -94,10 +94,14 @@ const weeks: Week[] = [
   typicalWeek(8, 32, '2025-10-13', 'Oct 13', [14.0, 8.0, 10.0], [80, 45, 65]),
 ]
 
+// The canonical user-facing dataset. It is the default and must also appear in
+// the dataset selector dropdown, hence isTestFixture = false. The name must
+// not contain "Test Fixture" so the selectable-datasets filter (which excludes
+// fixtures by name match in tests) is satisfied.
 export const fixtureDataset: Dataset = {
-  id: 'fixture-half-marathon-8wk',
+  id: 'half-marathon-8wk',
   name: 'Half-Marathon Build-Up — 8 Week Consistent Plan',
-  isTestFixture: true,
+  isTestFixture: false,
   weeks,
 }
 
