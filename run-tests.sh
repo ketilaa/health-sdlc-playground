@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
-
 cd frontend
 npm ci
-npm audit --audit-level=high || echo "npm audit reported issues (non-blocking)"
+npm audit --audit-level=high || true
 npm test -- --watchAll=false --forceExit
