@@ -50,8 +50,8 @@ describe('WeeklyDashboard', () => {
 
     // Scenario 6: no horizontal overflow at 390px viewport width
     // Verifies the container has the CSS properties that prevent overflow.
-    // Full scrollWidth assertion is deferred to the HTTP integration test in run-tests.sh.
-    test('weekly-dashboard-container has overflow-x:hidden and max-width:100% at 390px (Scenario 6)', () => {
+    // Full scrollWidth === innerWidth assertion is deferred to E2E (requires real browser viewport).
+    test('weekly-dashboard-container has overflow-x:hidden and max-width:100% (Scenario 6)', () => {
       const originalInnerWidth = window.innerWidth
       Object.defineProperty(window, 'innerWidth', {
         writable: true,

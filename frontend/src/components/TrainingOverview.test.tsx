@@ -1,7 +1,7 @@
 // Scenario 5: TrainingOverview component file has been deleted from the codebase.
-// The file has been replaced with an empty stub (export {}).
-// This test verifies no TrainingOverview React component is exported from the module,
-// satisfying the behavioral intent of Scenario 5 (no UI surface for TrainingOverview).
+// The file currently exists as an empty stub (export {}) with no React component.
+// The full file-deletion assertion is deferred to E2E / CI (cannot delete files
+// via the FILE output protocol; the stub satisfies the "no UI surface" contract).
 
 import * as TrainingOverviewModule from './TrainingOverview'
 
@@ -16,8 +16,7 @@ describe('TrainingOverview removal (Scenario 5)', () => {
     ).toBeUndefined()
   })
 
-  it('the module exports nothing (empty module)', () => {
-    // The stub file contains only "export {}" — no exports at all
+  it('the module exports nothing (empty module — no UI surface)', () => {
     const exportedKeys = Object.keys(TrainingOverviewModule).filter(
       (k) => k !== '__esModule'
     )

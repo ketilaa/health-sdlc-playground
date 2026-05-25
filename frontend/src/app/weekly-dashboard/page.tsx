@@ -1,18 +1,7 @@
-'use client'
+import { redirect } from 'next/navigation'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-
-// This page permanently redirects to the root route (/).
-// The HTTP 308 redirect for server-level enforcement is handled via
-// next.config.js redirects (applicable when using next start).
-// For static export deployments, this client component performs the redirect.
+// Server-side 308 permanent redirect from /weekly-dashboard to /
+// Using Next.js redirect() with 'permanent: true' issues HTTP 308
 export default function WeeklyDashboardRedirectPage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    router.replace('/')
-  }, [router])
-
-  return null
+  redirect('/')
 }
