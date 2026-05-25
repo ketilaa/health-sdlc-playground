@@ -78,29 +78,7 @@ The pipeline runs this script and feeds failures back to you — you will get up
 
 ## Security
 
-Before returning STATUS: OK, review every file you wrote against this checklist. Flag and fix any issue found — do not defer security problems to the code reviewer.
-
-**Injection**
-- User-controlled input is never interpolated into shell commands, SQL queries, or `eval`
-- Dynamic `dangerouslySetInnerHTML` / `innerHTML` is not used with untrusted data
-
-**Secrets**
-- No API keys, tokens, passwords, or credentials are hardcoded in source files
-- Secrets are read from environment variables only
-
-**Dependencies**
-- No new `npm` or `pip` package is added without a clear reason stated in your summary
-- `npm audit --audit-level=high` (or `pip-audit`) passes — if it fails, fix or document why the vulnerability is not exploitable in this context
-
-**Authentication and authorisation**
-- No endpoint or page bypasses an auth check that exists elsewhere in the codebase
-- User-supplied IDs are validated against the authenticated user's scope before use
-
-**Data exposure**
-- Server responses do not include fields beyond what the Gherkin scenario requires
-- Error messages do not leak stack traces, file paths, or internal identifiers to the client
-
-If a finding is out of scope for this feature or not fixable without spec changes, note it explicitly in your summary under an **Security notes** heading.
+Apply the **Developer checklist** and **run-tests.sh additions** from `.claude/skills/security.md`.
 
 ## HTTP-status scenarios
 When a Gherkin scenario asserts an HTTP status code (e.g. "the page returns HTTP 200", "returns 404 for unknown routes"), you must provide an explicit assertion at a test layer you own — an integration test, a `supertest`-style request, or a Playwright `request` fixture call. Satisfying it structurally via framework conventions (e.g. "a `page.tsx` exists therefore 200 is guaranteed") is only acceptable when explicitly noted as deferred to E2E in your summary. Do not accept structural correctness as a substitute for an observable assertion without documenting the deferral.
