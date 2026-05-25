@@ -44,7 +44,7 @@ def write_file(path, content):
         f.write(content)
 
 
-def call_claude_messages(system, messages, model='claude-opus-4-7', max_tokens=8192):
+def call_claude_messages(system, messages, model='claude-sonnet-4-6', max_tokens=8192):
     """Call the Claude API with a multi-turn messages list."""
     import anthropic
     client = anthropic.Anthropic()
@@ -61,7 +61,7 @@ def call_claude_messages(system, messages, model='claude-opus-4-7', max_tokens=8
     return response.content[0].text
 
 
-def call_claude(system, user, model='claude-opus-4-7', max_tokens=8192):
+def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
     """Call the Claude API with prompt caching on the system prompt."""
     import anthropic
     client = anthropic.Anthropic()
