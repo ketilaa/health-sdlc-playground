@@ -45,10 +45,10 @@ def write_file(path, content):
 
 
 def call_claude_messages(system, messages, model='claude-sonnet-4-6', max_tokens=8192):
-    """Call the Claude API with a multi-turn messages list."""
+    """Call the Claude API with a multi-turn messages list (streaming to support large outputs)."""
     import anthropic
     client = anthropic.Anthropic()
-    response = client.messages.create(
+    with client.messages.stream(
         model=model,
         max_tokens=max_tokens,
         system=[{
@@ -57,15 +57,15 @@ def call_claude_messages(system, messages, model='claude-sonnet-4-6', max_tokens
             'cache_control': {'type': 'ephemeral'},
         }],
         messages=messages,
-    )
-    return response.content[0].text
+    ) as stream:
+        return stream.get_final_text()
 
 
 def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
-    """Call the Claude API with prompt caching on the system prompt."""
+    """Call the Claude API with prompt caching on the system prompt (streaming to support large outputs)."""
     import anthropic
     client = anthropic.Anthropic()
-    response = client.messages.create(
+    with client.messages.stream(
         model=model,
         max_tokens=max_tokens,
         system=[{
@@ -74,8 +74,8 @@ def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
             'cache_control': {'type': 'ephemeral'},
         }],
         messages=[{'role': 'user', 'content': user}],
-    )
-    return response.content[0].text
+    ) as stream:
+        return stream.get_final_text()
 
 
 def is_ok(text):
