@@ -186,6 +186,8 @@ def run_code_reviewer(feature_name):
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
     skills = collect_skills()
+    run_tests_sh = read_file('run-tests.sh') or '(not found)'
+    run_e2e_sh = read_file('run-e2e.sh') or '(not found)'
 
     parts = []
     if scope in ('frontend', 'fullstack'):
@@ -207,6 +209,16 @@ Scope: {scope}
 
 ## Stack-specific Skills
 {skills}
+
+## run-tests.sh
+```bash
+{run_tests_sh}
+```
+
+## run-e2e.sh
+```bash
+{run_e2e_sh}
+```
 
 ## Implementation Files
 {chr(10).join(filter(None, parts))}
