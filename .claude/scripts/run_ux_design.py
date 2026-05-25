@@ -15,7 +15,7 @@ MAX_ITERATIONS = 3
 
 def run_ux_designer(messages):
     system_prompt = read_prompt('ux-designer')
-    assistant_text = call_claude_messages(system_prompt, messages, max_tokens=4096)
+    assistant_text = call_claude_messages(system_prompt, messages, max_tokens=8192)
     messages.append({'role': 'assistant', 'content': assistant_text})
 
     ux_spec = extract_between(assistant_text, '===UX SPEC===\n', '===END UX SPEC===')
