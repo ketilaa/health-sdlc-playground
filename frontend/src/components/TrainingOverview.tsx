@@ -1,67 +1,49 @@
-"use client";
+'use client'
 
-import React, { useEffect, useState } from "react";
-import { Dataset, WeekAggregate, sortedWeeksNewestFirst } from "../domain/dataset";
-import { DatasetLoader, defaultLoader } from "../data/loader";
-import { WeekRow } from "./WeekRow";
-import { DatasetSelector } from "./DatasetSelector";
+import React, { useEffect, useState } from 'react'
+import { getDefaultDataset, type Dataset } from '@/data/datasets'
+import { DatasetSelector } from './DatasetSelector'
+import { LoadingState } from './LoadingState'
+import { WeekRow } from './WeekRow'
 
-interface Props {
-  loader?: DatasetLoader;
-}
-
-export function TrainingOverview({ loader = defaultLoader }: Props) {
-  const [dataset, setDataset] = useState<Dataset | null>(null);
-  const [selectableDatasets, setSelectableDatasets] = useState<Dataset[]>([]);
-  const [loading, setLoading] = useState(true);
+export function TrainingOverview() {
+  const [dataset, setDataset] = useState<Dataset | null>(null)
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const [ds, options] = await Promise.all([
-        loader.loadDefault(),
-        loader.listSelectableDatasets(),
-      ]);
-      if (!mounted) return;
-      setDataset(ds);
-      setSelectableDatasets(options);
-      setLoading(false);
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [loader]);
+    const t = setTimeout(() => {
+      setDataset(getDefaultDataset())
+    }, 0)
+    return () => clearTimeout(t)
+  }, [])
 
-  const sortedWeeks: WeekAggregate[] = dataset
-    ? sortedWeeksNewestFirst(dataset.weeks)
-    : [];
+  const sortedWeeks = dataset ? [...dataset.weeks].sort((a, b) => b.weekNumber - a.weekNumber) : []
+  const datasetName = dataset?.name ?? getDefaultDataset().name
 
   return (
     <div>
-      <header className="top-bar">
-        <DatasetSelector
-          currentName={dataset?.name ?? ""}
-          options={selectableDatasets}
-        />
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          padding: '1rem',
+          borderBottom: '1px solid #eee',
+        }}
+      >
+        <DatasetSelector currentDatasetName={datasetName} />
       </header>
-      <main aria-busy={loading} aria-live="polite">
-        <div className="page-header">
-          <h1>Training Overview</h1>
-          <p className="subtitle">8 weeks · most recent first</p>
-        </div>
-        {loading && (
-          <div data-testid="dataset-loading" aria-label="Loading training data">
-            Loading training data…
-          </div>
-        )}
-        {!loading && (
-          <div className="week-list">
-            {sortedWeeks.map((week) => (
-              <WeekRow key={week.weekNumber} week={week} />
+      <main style={{ padding: '1rem' }}>
+        <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Training Overview</h1>
+        <p style={{ color: '#666', marginTop: 0 }}>8 weeks · most recent first</p>
+        {!dataset ? (
+          <LoadingState />
+        ) : (
+          <div>
+            {sortedWeeks.map((w) => (
+              <WeekRow key={w.weekNumber} week={w} />
             ))}
           </div>
         )}
       </main>
     </div>
-  );
+  )
 }

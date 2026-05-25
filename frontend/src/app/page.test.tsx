@@ -1,19 +1,24 @@
-import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
-import HomePage from './page';
+import '@testing-library/jest-dom'
+import React from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
+import HomePage from './page'
 
 describe('HomePage', () => {
-  it('renders the welcome heading', () => {
-    render(<HomePage />);
-    expect(
-      screen.getByRole('heading', { name: /welcome to health playground/i })
-    ).toBeInTheDocument();
-  });
+  test('renders the training overview with the preselected dataset', async () => {
+    render(<HomePage />)
+    expect(screen.getByTestId('dataset-loading')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryAllByTestId('week-row').length).toBeGreaterThan(0)
+    })
+    expect(screen.getByTestId('dataset-selector')).toHaveTextContent(
+      'Half-Marathon Build-Up — 8 Week Consistent Plan'
+    )
+  })
 
-  it('renders the welcome body copy', () => {
-    render(<HomePage />);
-    expect(
-      screen.getByText(/a space to explore health datasets/i)
-    ).toBeInTheDocument();
-  });
-});
+  test('renders the Training Overview heading', async () => {
+    render(<HomePage />)
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /training overview/i })).toBeInTheDocument()
+    })
+  })
+})

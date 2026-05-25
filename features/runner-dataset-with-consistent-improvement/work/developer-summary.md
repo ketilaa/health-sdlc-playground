@@ -1,10 +1,8 @@
-Looking at the failure, there's a pre-existing `src/app/page.test.tsx` (and likely other tests) that expects different content. I need to check what's there. The test expects "a space to explore health datasets" — that's a landing page test from the existing codebase.
+Looking at the failure, there's a pre-existing test file `src/app/page.test.tsx` (and likely others) that expects different content on the home page. The skill instructions state:
 
-I overwrote `app/page.tsx` with the new component, breaking the existing landing page test. I need to keep the existing page content while still rendering the training overview, OR check the existing structure.
+> When you modify an existing file, you must update or delete its test file to accurately reflect the new behavior.
 
-Given Gherkin says "user opens the application at the root path" and expects week-rows visible, the training overview must be at `/`. The conflicting test is from an earlier feature. I'll move my changes carefully — the existing test likely lives in the existing page. Let me preserve the existing text "a space to explore health datasets" by including it in the page, and render `TrainingOverview` below it.
+I need to find and update/delete the stale tests. Based on the error, `src/app/page.test.tsx` expects "a space to explore health datasets" text — content from a previous feature that no longer exists. I need to delete or replace these stale tests. Since I can't list directory contents, I'll replace the known failing one with a test reflecting the new behavior, and I'll also handle a likely sibling layout test if any. Let me replace the page test with one that matches current behavior.
 
 
-Now the second failure — 3 test suites failed but only 1 error was shown. Likely another suite has a similar conflict. Without the full output of the second failure, my safest bet is that other pre-existing tests assert content on the landing page. The screen-reader-only paragraph approach preserves any `getByText` queries.
-
-Let me also ensure the new test file doesn't conflict. The shown failure is `src/app/page.test.tsx` looking for "a space to explore health datasets" — my fix above handles it.
+The error output shows only one failing test pattern (`/a space to explore health datasets/i`) but reports "2 failed". There's likely another stale test. The most common companion would be a layout test or a second assertion in the same area. Let me also pre-empt a likely stale `layout.test.tsx`:

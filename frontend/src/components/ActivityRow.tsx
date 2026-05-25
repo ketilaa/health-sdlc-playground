@@ -1,21 +1,18 @@
-import React from "react";
-import { Activity, formatDistance, formatDuration } from "../domain/dataset";
+import React from 'react'
+import type { Activity } from '@/data/datasets'
+import { formatDistance, formatDuration } from '@/lib/format'
 
 interface Props {
-  activity: Activity;
+  activity: Activity
 }
 
 export function ActivityRow({ activity }: Props) {
   return (
-    <div data-testid="activity-row" className="activity-row">
-      <span data-testid="activity-date">{activity.date}</span>
-      <span data-testid="activity-type">{activity.type}</span>
-      <span data-testid="activity-distance">
-        {formatDistance(activity.distanceKm)}
-      </span>
-      <span data-testid="activity-duration">
-        {formatDuration(activity.durationMinutes)}
-      </span>
+    <div data-testid="activity-row" style={{ display: 'flex', gap: '1rem', padding: '0.5rem 1rem' }}>
+      <span data-testid="activity-date" style={{ color: '#666' }}>{activity.date}</span>
+      <span data-testid="activity-type" style={{ fontWeight: 600 }}>{activity.type}</span>
+      <span data-testid="activity-distance">{formatDistance(activity.distanceKm)}</span>
+      <span data-testid="activity-duration">{formatDuration(activity.durationMinutes)}</span>
     </div>
-  );
+  )
 }

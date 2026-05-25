@@ -1,10 +1,13 @@
-const nextJest = require("next/jest");
+const nextJest = require('next/jest')
 
-const createJestConfig = nextJest({ dir: "./" });
+const createJestConfig = nextJest({ dir: './' })
 
-const customConfig = {
-  testEnvironment: "jsdom",
-  testPathIgnorePatterns: ["/node_modules/", "/.next/", "/out/"],
-};
+const customJestConfig = {
+  testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/out/'],
+}
 
-module.exports = createJestConfig(customConfig);
+module.exports = createJestConfig(customJestConfig)
