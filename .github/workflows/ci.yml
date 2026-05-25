@@ -31,7 +31,7 @@ jobs:
           if [ -f run-tests.sh ]; then
             bash run-tests.sh
           elif [ -f frontend/package.json ]; then
-            cd frontend && npm install && npm test -- --watchAll=false --forceExit
+            cd frontend && npm ci && npm test -- --watchAll=false --forceExit
           else
             echo "No tests found — skipping."
           fi
