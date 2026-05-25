@@ -10,16 +10,23 @@ import {
 } from '../data/weeklyDashboardData'
 
 // Helper to select a specific week via the selector
-async function selectWeek(user: ReturnType<typeof userEvent.setup>, weekId: string) {
+async function selectWeek(
+  user: ReturnType<typeof userEvent.setup>,
+  weekId: string
+) {
   const selector = screen.getByTestId('week-selector')
-  // The select element shows week labels; we find by value
   await user.selectOptions(selector, weekId)
 }
 
 // Helper to click an activity by name in the activity list
-async function clickActivity(user: ReturnType<typeof userEvent.setup>, name: string) {
+async function clickActivity(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string
+) {
   const list = screen.getByTestId('activity-list')
-  const btn = within(list).getByRole('button', { name: `Open ${name} details` })
+  const btn = within(list).getByRole('button', {
+    name: `Open ${name} details`,
+  })
   await user.click(btn)
 }
 
@@ -101,11 +108,15 @@ describe('WeeklyDashboard', () => {
       render(<WeeklyDashboard />)
       await selectWeek(user, '2024-W10')
       expect(screen.getByTestId('trend-training-load')).toBeVisible()
-      expect(screen.getByTestId('trend-training-load')).toHaveTextContent('↑ Increasing')
+      expect(screen.getByTestId('trend-training-load')).toHaveTextContent(
+        '↑ Increasing'
+      )
       expect(screen.getByTestId('trend-avg-hr')).toBeVisible()
       expect(screen.getByTestId('trend-avg-hr')).toHaveTextContent('↑ Increasing')
       expect(screen.getByTestId('trend-resting-hr')).toBeVisible()
-      expect(screen.getByTestId('trend-resting-hr')).toHaveTextContent('↓ Decreasing')
+      expect(screen.getByTestId('trend-resting-hr')).toHaveTextContent(
+        '↓ Decreasing'
+      )
     })
   })
 
@@ -113,20 +124,38 @@ describe('WeeklyDashboard', () => {
     test('W09 vs stable W08 shows all stable trends', async () => {
       const user = userEvent.setup()
       // Build a custom dataset where W09 is within 2% of W08 for all metrics
-      // W08: trainingLoad=148, restingHrAvg=55
-      // W08 avgHr = (142+138+165)/3 = 148.33
-      // W09 within 2% of W08:
-      //   trainingLoad: 148 * 1.01 = 149.48, use 150 (within 2%)
-      //   restingHrAvg: 55 (same, within 2%)
-      //   avgHr: W09 needs to produce 148 avg — set activities to achieve this
       const stableDataset: WeekData[] = [
         {
           weekId: '2024-W08',
           label: 'W08 · 2024',
           activities: [
-            { id: 'w08-s1', name: 'Run A', type: 'run', durationMin: 50, distanceKm: 8.0, avgHr: 148, cadence: 168 },
-            { id: 'w08-s2', name: 'Run B', type: 'recovery', durationMin: 50, distanceKm: 7.0, avgHr: 148, cadence: 165 },
-            { id: 'w08-s3', name: 'Run C', type: 'intervals', durationMin: 50, distanceKm: 6.0, avgHr: 148, cadence: 175 },
+            {
+              id: 'w08-s1',
+              name: 'Run A',
+              type: 'run',
+              durationMin: 50,
+              distanceKm: 8.0,
+              avgHr: 148,
+              cadence: 168,
+            },
+            {
+              id: 'w08-s2',
+              name: 'Run B',
+              type: 'recovery',
+              durationMin: 50,
+              distanceKm: 7.0,
+              avgHr: 148,
+              cadence: 165,
+            },
+            {
+              id: 'w08-s3',
+              name: 'Run C',
+              type: 'intervals',
+              durationMin: 50,
+              distanceKm: 6.0,
+              avgHr: 148,
+              cadence: 175,
+            },
           ],
           restingHrAvg: 55,
           vo2max: 52,
@@ -136,19 +165,45 @@ describe('WeeklyDashboard', () => {
           weekId: '2024-W09',
           label: 'W09 · 2024',
           activities: [
-            { id: 'w09-s1', name: 'Run A', type: 'run', durationMin: 50, distanceKm: 8.0, avgHr: 149, cadence: 168 },
-            { id: 'w09-s2', name: 'Run B', type: 'recovery', durationMin: 50, distanceKm: 7.0, avgHr: 148, cadence: 165 },
-            { id: 'w09-s3', name: 'Run C', type: 'intervals', durationMin: 50, distanceKm: 6.0, avgHr: 148, cadence: 175 },
+            {
+              id: 'w09-s1',
+              name: 'Run A',
+              type: 'run',
+              durationMin: 50,
+              distanceKm: 8.0,
+              avgHr: 149,
+              cadence: 168,
+            },
+            {
+              id: 'w09-s2',
+              name: 'Run B',
+              type: 'recovery',
+              durationMin: 50,
+              distanceKm: 7.0,
+              avgHr: 148,
+              cadence: 165,
+            },
+            {
+              id: 'w09-s3',
+              name: 'Run C',
+              type: 'intervals',
+              durationMin: 50,
+              distanceKm: 6.0,
+              avgHr: 148,
+              cadence: 175,
+            },
           ],
           restingHrAvg: 55,
           vo2max: 52,
-          // W09 trainingLoad within 2% of W08(150): 150 * 1.01 = 151.5, use 151
+          // W09 trainingLoad within 2% of W08 (150): 151 is ~0.67% above → stable
           trainingLoad: 151,
         },
       ]
       render(<WeeklyDashboard overrideDataset={stableDataset} />)
       await selectWeek(user, '2024-W09')
-      expect(screen.getByTestId('trend-training-load')).toHaveTextContent('→ Stable')
+      expect(screen.getByTestId('trend-training-load')).toHaveTextContent(
+        '→ Stable'
+      )
       expect(screen.getByTestId('trend-avg-hr')).toHaveTextContent('→ Stable')
       expect(screen.getByTestId('trend-resting-hr')).toHaveTextContent('→ Stable')
     })
@@ -159,7 +214,9 @@ describe('WeeklyDashboard', () => {
       const user = userEvent.setup()
       render(<WeeklyDashboard />)
       await selectWeek(user, '2024-W08')
-      expect(screen.getByTestId('trend-training-load')).toHaveTextContent('\u2014')
+      expect(screen.getByTestId('trend-training-load')).toHaveTextContent(
+        '\u2014'
+      )
       expect(screen.getByTestId('trend-avg-hr')).toHaveTextContent('\u2014')
       expect(screen.getByTestId('trend-resting-hr')).toHaveTextContent('\u2014')
     })
@@ -174,7 +231,9 @@ describe('WeeklyDashboard', () => {
       expect(screen.getByTestId('activity-list')).toHaveTextContent('Morning Run')
       await clickActivity(user, 'Morning Run')
       expect(screen.getByTestId('activity-detail')).toBeVisible()
-      expect(screen.getByTestId('activity-detail')).toHaveTextContent('Morning Run')
+      expect(screen.getByTestId('activity-detail')).toHaveTextContent(
+        'Morning Run'
+      )
       await selectWeek(user, '2024-W09')
       expect(screen.getByTestId('activity-list')).toBeVisible()
     })
@@ -182,7 +241,6 @@ describe('WeeklyDashboard', () => {
 
   describe('Scenario: Weekly summary card visible at 375px', () => {
     test('all required elements are present in the DOM at 375px', async () => {
-      // jsdom doesn't enforce viewport but we verify elements exist
       const user = userEvent.setup()
       render(<WeeklyDashboard />)
       await selectWeek(user, '2024-W10')
@@ -197,7 +255,9 @@ describe('WeeklyDashboard', () => {
   describe('Default state', () => {
     test('defaults to the most recent week (W10)', () => {
       render(<WeeklyDashboard />)
-      const selector = screen.getByTestId('week-selector') as HTMLSelectElement
+      const selector = screen.getByTestId(
+        'week-selector'
+      ) as HTMLSelectElement
       expect(selector.value).toBe('2024-W10')
     })
 
@@ -214,7 +274,9 @@ describe('WeeklyDashboard', () => {
       await selectWeek(user, '2024-W10')
       await clickActivity(user, 'Morning Run')
       expect(screen.getByTestId('activity-detail')).toBeInTheDocument()
-      const closeBtn = screen.getByRole('button', { name: /close activity details/i })
+      const closeBtn = screen.getByRole('button', {
+        name: /close activity details/i,
+      })
       await user.click(closeBtn)
       expect(screen.queryByTestId('activity-detail')).not.toBeInTheDocument()
     })

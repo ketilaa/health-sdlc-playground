@@ -111,4 +111,24 @@ describe('weeklyDashboardData', () => {
     expect(trendLabel('stable')).toBe('→ Stable')
     expect(trendLabel('none')).toBe('—')
   })
+
+  test('W10 vs W09: training load trend is increasing', () => {
+    const w09 = getWeekById('2024-W09')!
+    const w10 = getWeekById('2024-W10')!
+    expect(computeTrend(w10.trainingLoad, w09.trainingLoad)).toBe('increasing')
+  })
+
+  test('W10 vs W09: avg HR trend is increasing', () => {
+    const w09 = getWeekById('2024-W09')!
+    const w10 = getWeekById('2024-W10')!
+    const w10AvgHr = computeWeeklyAvgHr(w10.activities)
+    const w09AvgHr = computeWeeklyAvgHr(w09.activities)
+    expect(computeTrend(w10AvgHr, w09AvgHr)).toBe('increasing')
+  })
+
+  test('W10 vs W09: resting HR trend is decreasing', () => {
+    const w09 = getWeekById('2024-W09')!
+    const w10 = getWeekById('2024-W10')!
+    expect(computeTrend(w10.restingHrAvg, w09.restingHrAvg)).toBe('decreasing')
+  })
 })
