@@ -43,7 +43,7 @@ def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=2048)
+    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=4096)
     return is_ok(response), response
 
 
