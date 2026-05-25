@@ -28,11 +28,11 @@ Loading skeletons that pulse, rows that expand with a smooth transition, colour 
 
 ## Reviewer checklist
 
-Apply these checks when validating a UX spec. Any failure is a **blocking** issue.
+Apply these checks when validating a UX spec. The goal is to verify that the designer made **intentional, explicit choices** — not to enforce specific outcomes. A designer who deliberately chose a light background, text-only labels, or a simple spinner is fine; a designer who left these decisions unspecified is not.
 
-- [ ] Every recurring entity (activity type, status, category) has a named colour token defined in the spec — not described as "a colour" or left to the developer
-- [ ] The spec defines a background colour token; "white" or "default" is not acceptable as the background without a rationale
-- [ ] Icons are specified for entity types that have a clear visual analogue — text-only labels for recurring types are a gap
-- [ ] Visual hierarchy is described in terms of opacity, colour, size, or weight — not just as an element list
-- [ ] The spec does not use phrases like "show the activity type" without specifying how it is visually distinguished (colour token, icon, or both)
-- [ ] If a loading or transition state is defined, it describes the motion or visual change — not just "show a spinner"
+- [ ] Every recurring entity (activity type, status, category) has an explicit visual distinction — colour token, icon, or both. The spec must say *how* it is distinguished, not just that it appears. Leaving the distinction unspecified is a blocking gap.
+- [ ] The background colour is explicitly defined with a brief rationale. "White/default because the feature lives inside an existing light-background shell" is acceptable. Silence is not.
+- [ ] For entity types that have a clear visual analogue, the spec either specifies an icon or explains why text/colour alone was chosen instead. Omitting the decision entirely is a gap.
+- [ ] Visual hierarchy is described in concrete terms — size, opacity, colour role, or weight — not just as a flat list of elements.
+- [ ] If the designer deviated from the experimental-ux designer principles (e.g. chose a light background, chose text labels over icons), the rationale is stated in the UX designer summary. Undocumented deviations are a gap; documented ones are acceptable.
+- [ ] Loading and transition states describe what the user sees — not just the component name. "MUI Skeleton" is acceptable; "a loading indicator" without further description is not.
