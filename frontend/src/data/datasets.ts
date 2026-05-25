@@ -2,16 +2,21 @@ export type ActivityType = 'Long run' | 'Restorative run' | 'Intervals'
 
 export interface Activity {
   id: string
-  date: string
+  date: string // ISO date
+  displayDate: string // e.g. "Mon, Oct 14"
   type: ActivityType
   distanceKm: number
   durationMinutes: number
 }
 
+export interface SkippedMarker {
+  reason: string
+}
+
 export interface Week {
   weekNumber: number
   activities: Activity[]
-  skipped?: { reason: string }
+  skipped?: SkippedMarker
 }
 
 export interface Dataset {
@@ -21,47 +26,104 @@ export interface Dataset {
   weeks: Week[]
 }
 
-const sicknessWeek: Week = {
-  weekNumber: 4,
-  activities: [
-    { id: 'w4-a1', date: 'Mon, Sep 9', type: 'Restorative run', distanceKm: 5.0, durationMinutes: 30 },
-    { id: 'w4-a2', date: 'Wed, Sep 11', type: 'Intervals', distanceKm: 6.0, durationMinutes: 35 },
-  ],
-  skipped: { reason: 'Skipped due to sickness' },
-}
-
-function buildTypicalWeek(weekNumber: number, longKm: number, dateMonday: string, dateWednesday: string, dateSaturday: string): Week {
+// Helper to build a typical 3-activity week.
+function typicalWeek(weekNumber: number, totalKm: number, baseDateIso: string, baseDateLabel: string, distances: [number, number, number], durations: [number, number, number]): Week {
+  void totalKm
   return {
     weekNumber,
     activities: [
-      { id: `w${weekNumber}-a1`, date: dateMonday, type: 'Restorative run', distanceKm: 5.0 + weekNumber * 0.2, durationMinutes: 30 + weekNumber },
-      { id: `w${weekNumber}-a2`, date: dateWednesday, type: 'Intervals', distanceKm: 7.0 + weekNumber * 0.3, durationMinutes: 40 + weekNumber },
-      { id: `w${weekNumber}-a3`, date: dateSaturday, type: 'Long run', distanceKm: longKm, durationMinutes: 60 + weekNumber * 5 },
+      {
+        id: `w${weekNumber}-long`,
+        date: `${baseDateIso}-long`,
+        displayDate: `${baseDateLabel} (Sun)`,
+        type: 'Long run',
+        distanceKm: distances[0],
+        durationMinutes: durations[0],
+      },
+      {
+        id: `w${weekNumber}-restorative`,
+        date: `${baseDateIso}-rest`,
+        displayDate: `${baseDateLabel} (Tue)`,
+        type: 'Restorative run',
+        distanceKm: distances[1],
+        durationMinutes: durations[1],
+      },
+      {
+        id: `w${weekNumber}-intervals`,
+        date: `${baseDateIso}-int`,
+        displayDate: `${baseDateLabel} (Thu)`,
+        type: 'Intervals',
+        distanceKm: distances[2],
+        durationMinutes: durations[2],
+      },
     ],
   }
 }
 
-const week1 = buildTypicalWeek(1, 8, 'Mon, Aug 19', 'Wed, Aug 21', 'Sat, Aug 24')
-const week2 = buildTypicalWeek(2, 10, 'Mon, Aug 26', 'Wed, Aug 28', 'Sat, Aug 31')
-const week3 = buildTypicalWeek(3, 12, 'Mon, Sep 2', 'Wed, Sep 4', 'Sat, Sep 7')
-const week5 = buildTypicalWeek(5, 13, 'Mon, Sep 16', 'Wed, Sep 18', 'Sat, Sep 21')
-const week6 = buildTypicalWeek(6, 14, 'Mon, Sep 23', 'Wed, Sep 25', 'Sat, Sep 28')
-const week7 = buildTypicalWeek(7, 15, 'Mon, Sep 30', 'Wed, Oct 2', 'Sat, Oct 5')
-const week8 = buildTypicalWeek(8, 16, 'Mon, Oct 7', 'Wed, Oct 9', 'Sat, Oct 12')
+// 8 weeks; week 4 is the sickness week (2 activities + skipped marker).
+// Volumes grow consistently from week 1 (lowest) to week 8 (highest).
+const weeks: Week[] = [
+  typicalWeek(1, 22, '2025-08-25', 'Aug 25', [10.0, 5.0, 7.0], [60, 30, 40]),
+  typicalWeek(2, 24, '2025-09-01', 'Sep 1', [11.0, 5.5, 7.5], [66, 33, 43]),
+  typicalWeek(3, 26, '2025-09-08', 'Sep 8', [12.0, 6.0, 8.0], [72, 36, 46]),
+  {
+    weekNumber: 4,
+    activities: [
+      {
+        id: 'w4-long',
+        date: '2025-09-15-long',
+        displayDate: 'Sep 15 (Sun)',
+        type: 'Long run',
+        distanceKm: 8.0,
+        durationMinutes: 50,
+      },
+      {
+        id: 'w4-restorative',
+        date: '2025-09-17-rest',
+        displayDate: 'Sep 17 (Tue)',
+        type: 'Restorative run',
+        distanceKm: 4.0,
+        durationMinutes: 25,
+      },
+    ],
+    skipped: { reason: 'Skipped due to sickness' },
+  },
+  typicalWeek(5, 28, '2025-09-22', 'Sep 22', [13.0, 6.5, 8.5], [78, 39, 49]),
+  typicalWeek(6, 30, '2025-09-29', 'Sep 29', [13.5, 7.0, 9.5], [80, 42, 55]),
+  typicalWeek(7, 30, '2025-10-06', 'Oct 6', [14.0, 7.0, 9.0], [82, 42, 52]),
+  typicalWeek(8, 32, '2025-10-13', 'Oct 13', [14.0, 8.0, 10.0], [80, 45, 65]),
+]
 
 export const fixtureDataset: Dataset = {
-  id: 'half-marathon-consistent-8w',
+  id: 'fixture-half-marathon-8wk',
   name: 'Half-Marathon Build-Up — 8 Week Consistent Plan',
-  isTestFixture: false,
-  weeks: [week1, week2, week3, sicknessWeek, week5, week6, week7, week8],
+  isTestFixture: true,
+  weeks,
 }
 
-export const allDatasets: Dataset[] = [fixtureDataset]
+// Live (production) datasets visible to end users. Intentionally empty of test
+// fixtures — placeholder live datasets can be added here later.
+const liveDatasets: Dataset[] = [
+  {
+    id: 'live-marathon-16wk',
+    name: 'Marathon Base Block — 16 Week Plan',
+    isTestFixture: false,
+    weeks: [],
+  },
+  {
+    id: 'live-recovery-4wk',
+    name: 'Post-Race Recovery — 4 Week Plan',
+    isTestFixture: false,
+    weeks: [],
+  },
+]
+
+export const allDatasets: Dataset[] = [fixtureDataset, ...liveDatasets]
+
+export function getSelectableDatasets(): Dataset[] {
+  return allDatasets.filter((d) => !d.isTestFixture)
+}
 
 export function getDefaultDataset(): Dataset {
   return fixtureDataset
-}
-
-export function getSelectableDatasets(): Dataset[] {
-  return allDatasets.filter((d) => !d.isTestFixture && !/Test Fixture/i.test(d.name))
 }
