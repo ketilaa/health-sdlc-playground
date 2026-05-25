@@ -144,6 +144,64 @@ def require_files(*paths):
         sys.exit(1)
 
 
+def format_test_output(output, max_chars=3000):
+    """
+    Return a focused view of test output for developer feedback.
+
+    Extracts FAIL suite names and failure detail blocks (● … Expected/Received)
+    so the developer sees exactly what broke without noise from passing suites or
+    console.error chatter.  Falls back to a head+tail slice if no failure blocks
+    are found (e.g. build errors that appear before the test runner starts).
+    """
+    lines = output.splitlines()
+
+    # --- Extract structured failure blocks ---
+    fail_suites = [l for l in lines if l.startswith('FAIL ')]
+    failure_blocks = []
+    in_block = False
+    block = []
+    for line in lines:
+        stripped = line.strip()
+        # Failure blocks start with '  ●' (two spaces then bullet)
+        if stripped.startswith('● '):
+            if block:
+                failure_blocks.append('\n'.join(block))
+            block = [line]
+            in_block = True
+        elif in_block:
+            # Blank line after content ends the block
+            if stripped == '' and any(
+                kw in '\n'.join(block)
+                for kw in ('Expected', 'Received', 'Error:', 'Cannot find', 'ENOENT')
+            ):
+                failure_blocks.append('\n'.join(block))
+                block = []
+                in_block = False
+            else:
+                block.append(line)
+    if block:
+        failure_blocks.append('\n'.join(block))
+
+    if fail_suites or failure_blocks:
+        parts = []
+        if fail_suites:
+            parts.append('Failing test suites:\n' + '\n'.join(fail_suites))
+        if failure_blocks:
+            parts.append('Failure details:\n' + '\n\n'.join(failure_blocks))
+        extracted = '\n\n'.join(parts)
+        if len(extracted) <= max_chars:
+            return extracted
+        return extracted[:max_chars] + '\n... [truncated]'
+
+    # Fallback: no structured failures found (build error, import error, etc.)
+    # Show head + tail so both early errors and the final summary are visible.
+    head = 800
+    tail = max_chars - head - 6  # 6 for the '\n...\n' separator
+    if len(output) <= max_chars:
+        return output
+    return output[:head] + '\n...\n' + output[-tail:]
+
+
 def read_pipeline_context():
     """Read the pipeline context file saved by the Product Owner workflow."""
     path = 'features/.pipeline_context.json'
