@@ -140,10 +140,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** tester
-- **Seen:** 1
-- **Features:** visual-theme-overhaul
+- **Seen:** 2
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights
 - **Status:** open
-- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files, not `visual-theme-overhaul`. The code reviewer in all three iterations treated this as "pre-existing" and out of scope. No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
+- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files in `visual-theme-overhaul`, and the code reviewer in this feature again confirmed `run-e2e.sh` still references `visual-theme-overhaul` (the immediately prior feature). No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
 - **Suggested improvement:** Instruct the tester to always read the existing `run-e2e.sh` before writing a new one, and to update it to reference all accumulated E2E feature step paths rather than overwriting with only the current feature. Alternatively, define a convention (e.g., one `run-e2e.sh` per feature directory) so the root script does not need updating each time.
 
 ---
@@ -164,8 +164,56 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** developer
-- **Seen:** 1
-- **Features:** visual-theme-overhaul
+- **Seen:** 2
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights
 - **Status:** open
-- **Description:** The tester flagged a blocking gap: "`data-testid='activity-row'` not explicitly confirmed — the developer summary lists `activity-row-toggle` and `activity-row-expanded` but never explicitly confirms `activity-row` on the row wrapper." The developer summary lists test IDs referenced in assertions but does not enumerate all `data-testid` attributes present on rendered DOM elements. The tester had to assume the wrapper testid and flag it as a potential E2E failure source.
+- **Description:** The tester flagged a blocking gap in `visual-theme-overhaul` that `data-testid='activity-row'` was not explicitly confirmed in the developer summary. In `improve-weekly-aggregates-and-prepare-for-more-insights` the tester listed 13 assumed `data-testid` values as assumptions and flagged that the presence of "Strength Cross-Train" (which has null avg_hr/cadence fields essential to Scenario 2) "cannot be verified at E2E level" without clicking the activity — the E2E test has no reliable way to confirm the testid inventory matches expectations without a published developer manifest. The developer summary lists some testids but does not enumerate all attributes present on rendered DOM elements.
 - **Suggested improvement:** Instruct the developer to include a complete `data-testid` inventory table in their summary, listing every `data-testid` attribute present in the implementation with the element type and parent context. This gives the tester a reliable reference and eliminates assumption-driven selector gaps.
+
+---
+
+## Finding: Code reviewer cannot verify core module when file content is truncated
+
+- **Category:** prompt-gap
+- **Agent:** code-reviewer
+- **Seen:** 1
+- **Features:** improve-weekly-aggregates-and-prepare-for-more-insights
+- **Status:** open
+- **Description:** The code reviewer explicitly stated that `weeklyDashboardData.ts` content "was truncated in the implementation files provided" and that it "cannot directly verify" the `computeTrend` threshold logic, `trendLabel` function, W09 dataset values, or `strengthCrossTrainActivity` export — all of which are load-bearing for Scenarios 2, 4, 5, 7, 8, and 9. The reviewer inferred correctness from test assertions and the developer summary, explicitly citing this as a violation of its own Evidence Rule. The file is the single most business-logic-dense module in the feature, yet it was invisible to review.
+- **Suggested improvement:** Instruct the code-reviewer prompt to treat any file listed as an import or dependency but whose content is unavailable (due to truncation or omission) as an automatic blocking concern requiring the reviewer to fetch or request the file before proceeding. The developer prompt should also be instructed to ensure all newly created files — especially domain/data modules — are explicitly emitted in full in the implementation output, not omitted due to size limits.
+
+---
+
+## Finding: Gherkin Background numeric value contradicts scenario assertion under threshold logic
+
+- **Category:** spec-gap
+- **Agent:** product-owner
+- **Seen:** 1
+- **Features:** improve-weekly-aggregates-and-prepare-for-more-insights
+- **Status:** open
+- **Description:** The Gherkin Background stated "W09 has average HR of 145 bpm" but the trend scenario (Scenario 7) asserted "↑ Increasing" for W10 (avg HR 147) vs W09. With a 2% threshold, 145 bpm produces a change of only 1.38% — which would yield "→ Stable", contradicting the scenario assertion. The developer resolved this by setting W09 activity avg HR to 143 (producing 2.8% change) and treating the Background's "145 bpm" as "approximate/descriptive." This required a load-bearing implementation decision made silently without any spec revision or reviewer flag.
+- **Suggested improvement:** Instruct the product-owner to verify all numeric values in Gherkin Backgrounds are arithmetically consistent with all THEN assertions that depend on them — specifically for threshold-based computations (percentages, ratios, comparisons). A calculation table (showing: W09 value, W10 value, delta, threshold, expected direction) should accompany any scenario that asserts a computed direction. The feature-reviewer should be explicitly instructed to perform this arithmetic check as part of its consistency pass.
+
+---
+
+## Finding: Responsive layout Gherkin scenario cannot be satisfied by unit tests — no explicit E2E deferral recorded
+
+- **Category:** coverage-gap
+- **Agent:** developer
+- **Seen:** 1
+- **Features:** improve-weekly-aggregates-and-prepare-for-more-insights
+- **Status:** open
+- **Description:** Scenario 11 specifies "Given the user navigates to the app with a viewport width of 375 pixels" and asserts elements "remain readable." The developer's unit test checks DOM presence only with no viewport set, acknowledged explicitly by the code reviewer: "The test does NOT set viewport width to 375px." The tester's E2E step creates a fresh context at 375px, which is the only correct test layer for this scenario. However, the developer did not record this as a deferred-to-E2E scenario, and the code reviewer accepted the weaker DOM-presence check without flagging a formal deferral.
+- **Suggested improvement:** Instruct the developer to explicitly label any Gherkin scenario whose GIVEN includes a viewport width, device type, or environment constraint as "deferred to E2E" in the developer summary. The code-reviewer should be instructed to flag any scenario with a viewport/device GIVEN that is covered only by a unit test without a documented E2E deferral, and to treat the absence of a deferral note as a blocking gap.
+
+---
+
+## Finding: Week selector implementation choice undocumented — tester forced into multi-strategy step definition
+
+- **Category:** assumption-risk
+- **Agent:** tester
+- **Seen:** 1
+- **Features:** improve-weekly-aggregates-and-prepare-for-more-insights
+- **Status:** open
+- **Description:** The UX spec allowed either an MUI Select (role="combobox") or a ToggleButtonGroup (role="group" with buttons) for the week selector. The developer did not document which was implemented. The tester noted: "The UX spec says 'MUI Select or ToggleButtonGroup' without specifying which the developer chose. The multi-strategy step definition handles both but adds complexity. If neither pattern matches, the test will throw a descriptive error." The tester had to implement branching detection logic and record the widget type as an unresolved assumption.
+- **Suggested improvement:** Instruct the developer to document, for every UI widget where the UX spec offered multiple implementation options, which option was chosen and what the resulting ARIA role and DOM structure are. This information belongs in the developer summary and directly informs the tester's step definitions, eliminating multi-strategy fallback logic.
