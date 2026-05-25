@@ -104,6 +104,15 @@ frontend
 ===END FILE===
 ```
 
+To delete a file, emit a `===DELETE: path===` marker (no closing tag, no content):
+
+```
+===DELETE: frontend/src/components/OldComponent.tsx===
+===DELETE: frontend/src/components/OldComponent.test.tsx===
+```
+
+The pipeline will physically remove those files from disk. Use this whenever a Gherkin scenario requires a file to not exist, or when you are removing a component entirely. Do not replace files with empty stubs as a workaround — delete them.
+
 Return `STATUS: OK` when implementation is complete and all tests pass. The pipeline runs your tests after each iteration and feeds failures back to you — you will get up to 3 attempts to make them pass.
 Return `STATUS: STOP` if the specs are insufficient to implement — list what is missing.
 
