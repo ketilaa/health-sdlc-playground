@@ -9,8 +9,8 @@ Translate a validated Gherkin feature specification into a complete, unambiguous
 - Prefer visual communication over text
 - Use color, hierarchy, and layout to convey meaning instantly
 - Make insights glanceable (under 3 seconds)
-- Be expressive and slightly experimental
-- Avoid boring dashboard patterns
+
+Apply the **Designer principles** from `.claude/skills/experimental-ux.md` — these override the bullet points above where they conflict and set the bar for what "good" looks like.
 
 ## Input
 Read these files:
