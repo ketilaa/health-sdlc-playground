@@ -20,17 +20,31 @@ Turn a feature request into a complete specification using Gherkin.
 - Assume anything critical — STOP instead and explain what is missing
 - Produce Gherkin scenarios that cannot be tested
 
+## Gherkin boundaries
+
+A Gherkin scenario is valid only if a non-technical stakeholder could verify it by using the app. The following categories belong in the implementation layer (unit tests, developer summary, or integration tests) — not in Gherkin:
+
+- **CSS mechanics** — computed style values, `rgb()` colour strings, `getComputedStyle` results, CSS custom property names, luminance formulas. Write the user-visible outcome instead: "activities are displayed in distinct colours."
+- **HTTP protocol internals** — exact status codes (200, 308, 404) or `Location` header values. Write the user-visible outcome instead: "the user lands on the home page" or "a not-found message is visible."
+- **File system assertions** — "the file X does not exist", "the build output contains Y." These belong in the developer's own verification, not in Gherkin.
+- **Arithmetic and computation formulas** — calculation derivations, rounding rules. These belong in unit tests.
+- **Data fixture counts as feature behaviour** — "exactly 8 weeks exist", "exactly 3 activities per week." Use counts only when the count IS the feature under test (e.g. a pagination limit), not when it describes a test fixture.
+- **Timing and async mechanics** — "with a slow network simulated." These are integration test concerns.
+- **Codebase structure** — "the component has been deleted", "the class is in directory X."
+
+**Test the symptom, not the mechanism.** If the requirement is "activity types are visually distinct", write that — not the CSS property that implements it. Downstream agents (Developer, Tester) own the testing mechanism.
+
 ## Testability rules
 
 Every step must be verifiable by an automated test. Apply these rules to every scenario before finalising:
 
-**Success signals must be concrete.**
+**Success signals must be concrete and behavioral.**
 Do not write vague outcomes like "responds successfully", "renders without errors", or "suitable for X".
-Instead pin to a specific observable signal:
-- HTTP response → "the page returns HTTP status 200"
-- File existence → "a file `out/index.html` exists in the build output"
-- Process exit → "the build command exits with code 0"
-- Visible text → "the text 'Health Playground' is visible on the page"
+Pin to a specific user-observable signal — prefer visible text and element presence over protocol details:
+- Visible text → "the text 'Health Playground' is visible on the page" ✓
+- Element presence → "an element with data-testid 'weekly-dashboard' is visible" ✓
+- Process exit (only when the CLI command is the feature) → "the build command exits with code 0" ✓
+- Avoid: HTTP status codes, file paths, header values — these are implementation details; see Gherkin boundaries above.
 
 **UI element identifiers must be explicit.**
 Any element a test must locate needs a concrete selector. Choose one:
@@ -56,13 +70,12 @@ Do not use a Background step that assumes the very thing the scenarios are verif
 **Each scenario must be self-contained.**
 Do not rely on state set up by a previous scenario. Include all required preconditions in the scenario's own Given steps or in the Background.
 
-**Cover loading states, accessibility attributes, and viewport behaviour.**
-For any feature that renders UI, include Gherkin scenarios for:
-- Loading or skeleton states (if the feature has async data fetching)
-- Accessibility attributes explicitly called out (e.g. `aria-label`, `tabIndex`, `role`) with concrete observable values
-- Narrow-viewport or responsive behaviour (if the feature has layout differences at small screen sizes)
+**Only include loading states, accessibility, and viewport scenarios when explicitly required.**
+Do not add these speculatively — they tend to encode testing mechanics rather than user behavior, and become sources of hard-to-satisfy Gherkin. Include a scenario only when:
+- The feature request explicitly names the requirement (e.g. "must work on mobile", "needs a loading spinner")
+- The behavior is genuinely user-observable and distinct from the happy path (e.g. a layout breaks on narrow viewports)
 
-These are often omitted in an initial draft but become untested gaps later. If the feature request does not mention them, make a reasonable judgment about whether they are likely — if yes, include them; if genuinely out of scope, note the omission explicitly in your summary.
+When omitting any of these, note the decision in your summary. Do not use exact pixel dimensions, ARIA attribute values, or async timing details in the scenario itself — keep it at the behavioral level (e.g. "the dashboard is usable on a narrow screen" rather than "the browser viewport is set to 390 × 844 pixels").
 
 **CLI-level scenarios must not duplicate pipeline preconditions.**
 Scenarios for `npm run build`, `npm run lint`, `tsc --noEmit`, or equivalent CLI commands are often also run as preconditions in the E2E runner script (e.g. to build before serving). Writing them as standalone Gherkin scenarios causes the command to execute twice, adding 1–2 minutes of redundant runtime.
