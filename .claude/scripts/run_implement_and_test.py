@@ -95,6 +95,34 @@ SKIP_EXTENSIONS = {'.lock', '.map', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.s
                    '.woff', '.woff2', '.ttf', '.eot', '.zip', '.gz'}
 MAX_FILE_CHARS = 20_000
 MAX_TOTAL_CHARS = 80_000
+MAX_TEST_CHARS = 40_000
+
+
+def collect_existing_tests():
+    """Collect all existing test/spec files from frontend/ and backend/."""
+    parts = []
+    total = 0
+    for pattern in ['frontend/**/*', 'backend/**/*']:
+        for path in sorted(glob.glob(pattern, recursive=True)):
+            if not os.path.isfile(path):
+                continue
+            if any(seg in SKIP_DIRS for seg in path.split(os.sep)):
+                continue
+            name = os.path.basename(path)
+            if not ('.test.' in name or '.spec.' in name):
+                continue
+            content = read_file(path)
+            if not content:
+                continue
+            if len(content) > MAX_FILE_CHARS:
+                content = content[:MAX_FILE_CHARS] + '\n... [truncated]'
+            entry = f'### {path}\n```\n{content}\n```'
+            if total + len(entry) > MAX_TEST_CHARS:
+                parts.append('... [additional test files omitted — size limit reached]')
+                break
+            parts.append(entry)
+            total += len(entry)
+    return '\n\n'.join(parts) if parts else '(none found)'
 
 
 def collect_dir(pattern):
@@ -220,6 +248,7 @@ def main():
     ux_spec = read_file(ux_path)
     uxr_summary = read_file(uxr_summary_path)
     skills = collect_skills()
+    existing_tests = collect_existing_tests()
 
     dev_messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
@@ -234,6 +263,13 @@ def main():
 
 ## Stack-specific Skills
 {skills}
+
+## Existing Test Files
+These are all current test files in the codebase. If your implementation changes what
+any of these files test, you MUST update or delete them — do not let stale tests pass
+for invisible or removed content.
+
+{existing_tests}
 
 Write the scope file first, then run-tests.sh, then tests, then implementation.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
