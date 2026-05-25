@@ -50,7 +50,14 @@ def run_e2e_tests():
         return False, f'ERROR: E2E tests timed out after {E2E_TEST_TIMEOUT}s'
 
 
-def run_developer_phase(feature_name, messages):
+def append_iteration_summary(path, content, label):
+    """Append a labeled iteration block to a summary file."""
+    existing = read_file(path) or ''
+    separator = f'\n\n---\n\n## {label}\n\n' if existing else f'## {label}\n\n'
+    write_file(path, existing + separator + content)
+
+
+def run_developer_phase(feature_name, messages, outer_iter):
     system_prompt = read_prompt('developer')
     for tdd_iter in range(1, MAX_TDD_ITERATIONS + 1):
         print(f'  TDD iteration {tdd_iter}/{MAX_TDD_ITERATIONS}')
@@ -62,7 +69,8 @@ def run_developer_phase(feature_name, messages):
         summary = files.pop(summary_path, None) or strip_file_blocks(assistant_text)
         for path, content in files.items():
             write_file(path, content)
-        write_file(summary_path, summary)
+        append_iteration_summary(summary_path, summary,
+                                 f'Outer Iteration {outer_iter} — TDD Attempt {tdd_iter}')
 
         if not is_ok(assistant_text):
             print(f'Developer STOP:\n{summary}')
@@ -229,7 +237,7 @@ Start your response with STATUS: OK or STATUS: STOP.
     return is_ok(response), response
 
 
-def run_tester_phase(feature_name):
+def run_tester_phase(feature_name, outer_iter):
     system_prompt = read_prompt('tester')
     feature_spec = read_file(f'features/{feature_name}/{feature_name}.feature')
     ux_spec = read_file(f'features/{feature_name}/ux.md')
@@ -269,7 +277,7 @@ Start your response with STATUS: OK or STATUS: STOP.
     summary = files.pop(summary_path, None) or strip_file_blocks(response)
     for path, content in files.items():
         write_file(path, content)
-    write_file(summary_path, summary)
+    append_iteration_summary(summary_path, summary, f'Outer Iteration {outer_iter}')
 
     if not is_ok(response):
         print(f'Tester STOP:\n{summary}')
@@ -339,17 +347,27 @@ Use ===FILE: path=== / ===END FILE=== delimiters for every file.
 Start your response with STATUS: OK or STATUS: STOP.
 """}]
 
+    # Clear any summary files left from a previous run so appends start fresh
+    for agent in ['developer', 'code-reviewer', 'tester']:
+        summary_path = f'features/{feature_name}/work/{agent}-summary.md'
+        if os.path.exists(summary_path):
+            os.remove(summary_path)
+
     for outer_iter in range(1, MAX_OUTER_ITERATIONS + 1):
         print(f'--- Implement and Test iteration {outer_iter}/{MAX_OUTER_ITERATIONS} ---')
 
         # Phase 1: Developer with TDD loop
-        dev_ok, dev_messages = run_developer_phase(feature_name, dev_messages)
+        dev_ok, dev_messages = run_developer_phase(feature_name, dev_messages, outer_iter)
         if not dev_ok:
             sys.exit(1)
 
         # Phase 2: Code review
         cr_ok, cr_summary = run_code_reviewer(feature_name)
-        write_file(f'features/{feature_name}/work/code-reviewer-summary.md', cr_summary)
+        append_iteration_summary(
+            f'features/{feature_name}/work/code-reviewer-summary.md',
+            cr_summary,
+            f'Outer Iteration {outer_iter}',
+        )
 
         if not cr_ok:
             print(f'Code Reviewer STOP on iteration {outer_iter}.')
@@ -364,7 +382,7 @@ Start your response with STATUS: OK or STATUS: STOP.
             continue
 
         # Phase 3: Tester generates E2E tests + run-e2e.sh
-        if not run_tester_phase(feature_name):
+        if not run_tester_phase(feature_name, outer_iter):
             sys.exit(1)
 
         # Phase 4: E2E tests (disabled — set SKIP_E2E=1 to bypass)

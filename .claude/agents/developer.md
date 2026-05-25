@@ -78,6 +78,7 @@ The pipeline runs this script and feeds failures back to you — you will get up
 - Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
 - Leave scratch, draft, or "extra" files in the output (e.g. `package.json.extra`, `*.bak`, temporary notes). Remove them before finalising. Every file you write must serve a runtime or test purpose and must appear in your output summary.
 - Preserve a passing test for content that is no longer visible or relevant — when you modify an existing file, you must update or delete its test file to accurately reflect the new behavior. A test that passes for invisible or removed content is a testing smell, not a green gate. Update the test, or delete it if the file it covers no longer exists.
+- Downgrade existing dependencies or replace a package version with an older one — if you need to modify `package.json`, only add new entries or update to a newer version; never reduce a version that already exists in the codebase
 
 ## Security
 
