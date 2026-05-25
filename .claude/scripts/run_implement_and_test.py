@@ -7,9 +7,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, call_claude_messages, extract_files,
-    format_test_output, get_feature_name, is_ok, read_file, read_prompt,
-    require_files, strip_file_blocks, write_file,
+    apply_deletions, call_claude, call_claude_messages, extract_deletions,
+    extract_files, format_test_output, get_feature_name, is_ok, read_file,
+    read_prompt, require_files, strip_file_blocks, write_file,
 )
 
 MAX_OUTER_ITERATIONS = 3  # full cycle: developer + code review + tester + E2E
@@ -65,10 +65,12 @@ def run_developer_phase(feature_name, messages, outer_iter):
         messages.append({'role': 'assistant', 'content': assistant_text})
 
         files = extract_files(assistant_text)
+        deletions = extract_deletions(assistant_text)
         summary_path = f'features/{feature_name}/work/developer-summary.md'
         summary = files.pop(summary_path, None) or strip_file_blocks(assistant_text)
         for path, content in files.items():
             write_file(path, content)
+        apply_deletions(deletions)
         append_iteration_summary(summary_path, summary,
                                  f'Outer Iteration {outer_iter} — TDD Attempt {tdd_iter}')
 

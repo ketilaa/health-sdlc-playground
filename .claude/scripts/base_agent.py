@@ -121,6 +121,29 @@ def extract_files(text):
     return files
 
 
+def extract_deletions(text):
+    """
+    Parse ===DELETE: path=== markers from agent output.
+    Returns a list of paths the agent wants deleted.
+    """
+    deletions = []
+    for line in text.split('\n'):
+        stripped = line.strip()
+        if stripped.startswith('===DELETE:') and stripped.endswith('==='):
+            path = stripped[10:].rstrip()[:-3].strip()
+            if path:
+                deletions.append(path)
+    return deletions
+
+
+def apply_deletions(paths):
+    """Delete files listed in paths. Silently skip non-existent files."""
+    for path in paths:
+        if os.path.exists(path):
+            os.remove(path)
+            print(f'  Deleted: {path}')
+
+
 def strip_file_blocks(text):
     """Remove ===FILE=== blocks from text, returning the remaining content."""
     lines = []
