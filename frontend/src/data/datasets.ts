@@ -101,24 +101,7 @@ export const fixtureDataset: Dataset = {
   weeks,
 }
 
-// Live (production) datasets visible to end users. Intentionally empty of test
-// fixtures — placeholder live datasets can be added here later.
-const liveDatasets: Dataset[] = [
-  {
-    id: 'live-marathon-16wk',
-    name: 'Marathon Base Block — 16 Week Plan',
-    isTestFixture: false,
-    weeks: [],
-  },
-  {
-    id: 'live-recovery-4wk',
-    name: 'Post-Race Recovery — 4 Week Plan',
-    isTestFixture: false,
-    weeks: [],
-  },
-]
-
-export const allDatasets: Dataset[] = [fixtureDataset, ...liveDatasets]
+export const allDatasets: Dataset[] = [fixtureDataset]
 
 export function getSelectableDatasets(): Dataset[] {
   return allDatasets.filter((d) => !d.isTestFixture)
