@@ -37,7 +37,7 @@ def run_feature_reviewer(feature_name, gherkin, po_summary):
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, max_tokens=2048)
+    response = call_claude(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=2048)
     return is_ok(response), response
 
 
