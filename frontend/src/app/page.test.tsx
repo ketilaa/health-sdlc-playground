@@ -8,7 +8,7 @@ describe('HomePage', () => {
     render(<HomePage />)
     expect(screen.getByTestId('dataset-loading')).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.queryAllByTestId('week-row').length).toBeGreaterThan(0)
+      expect(screen.queryAllByTestId('activity-row').length).toBeGreaterThan(0)
     })
     expect(screen.getByTestId('dataset-selector')).toHaveTextContent(
       'Half-Marathon Build-Up — 8 Week Consistent Plan'

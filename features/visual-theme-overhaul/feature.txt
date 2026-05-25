@@ -1,0 +1,19 @@
+ Apply a visual theme to the Training Overview.
+
+ Use a dark background throughout the app. Introduce a colour-coding system
+ for the three activity types — Long run, Restorative run, and Intervals —
+ so each type always renders in its own distinct colour wherever it appears
+ in the UI (activity rows, type labels, icons, or indicators).
+
+ Define the theme colours as CSS custom properties (variables) so all colour
+ decisions live in one place and can be changed consistently.
+
+ The colour coding must be visible in the expanded activity rows.
+ The sickness week's skipped-activity marker should also have its own
+ distinct visual treatment within the theme.
+
+ No data or behavior changes. This is purely a visual enhancement of the
+ existing Training Overview.
+
+ This is intentionally open-ended — no colours, no layout, no specific components
+ prescribed. The UX designer owns all creative decisions.

@@ -32,10 +32,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** prompt-gap
 - **Agent:** code-reviewer
-- **Seen:** 2
-- **Features:** scaffolding-attempt-7, runner-dataset-with-consistent-improvement
+- **Seen:** 3
+- **Features:** scaffolding-attempt-7, runner-dataset-with-consistent-improvement, visual-theme-overhaul
 - **Status:** applied
-- **Description:** The code reviewer accepts file existence and executability on the developer's word rather than independently verifying. In iteration 1 of `runner-dataset-with-consistent-improvement`, the reviewer wrote: "Cannot verify execute bit from file content alone, but the developer-summary states it was written." Critical executable files are accepted on the developer's summary rather than independently verified.
+- **Description:** The code reviewer accepts file existence and executability on the developer's word rather than independently verifying. In `runner-dataset-with-consistent-improvement` iteration 1 the reviewer wrote "Cannot verify execute bit from file content alone, but the developer-summary states it was written." In `visual-theme-overhaul` iteration 1 the reviewer wrote "Cannot verify file mode bits from text alone. Developer attests it is executable." Critical executable files are accepted on the developer's summary rather than independently verified.
 - **Suggested improvement:** Add to the code-reviewer prompt an explicit instruction to verify the presence and executability of any file claimed by the developer (especially scripts like `run-tests.sh` and `run-e2e.sh`) by reading the file directly with the appropriate tool, and to flag missing files or unverifiable permissions as blocking.
 
 ---
@@ -80,10 +80,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** prompt-gap
 - **Agent:** developer
-- **Seen:** 1
-- **Features:** runner-dataset-with-consistent-improvement
+- **Seen:** 2
+- **Features:** runner-dataset-with-consistent-improvement, visual-theme-overhaul
 - **Status:** open
-- **Description:** The developer summary across both outer iterations states "TDD cycles: 0 net — feature was already green" and "every Gherkin scenario maps directly to existing code paths and existing tests; modifying would risk regressions for no behavioral gain." The developer performed verification rather than TDD, accepting a pre-existing implementation wholesale. There is no record of whether the existing tests were red-then-green at any point, nor whether the implementation was independently re-derived from the Gherkin. The developer's role effectively collapsed to "verify and add `run-tests.sh`".
+- **Description:** The developer summary across both features states zero TDD cycles because the implementation was already present and green. In `visual-theme-overhaul` the summary states "TDD iterations: 0 — pre-existing green suite satisfies the spec" and "No source/test changes." The developer's role collapses to verification with no record of whether the implementation was independently derived from the Gherkin or whether the tests were ever red. There is no record of whether the existing tests were red-then-green at any point.
 - **Suggested improvement:** Clarify in the developer prompt how to behave when the implementation already exists in the repository. Options: (a) require the developer to delete pre-existing implementation and re-derive it under TDD, (b) require an explicit "pre-existing implementation accepted" justification with a checklist confirming each Gherkin scenario was traced back through the existing tests, or (c) flag pre-existing implementation to the calibrator/PO as a workflow anomaly. Currently the agent silently downgrades its own role.
 
 ---
@@ -111,3 +111,61 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 - **Suggested improvement:** Instruct the product-owner to either (a) drop loading-state scenarios for implementations that have no genuine asynchronous data source, or (b) require the developer to expose a test-mode delay knob (env var, query param) that the E2E layer can activate deterministically. The ux-designer/PO pair should agree on whether a loading state is observable before writing it as a scenario.
 
 ---
+
+## Finding: Gherkin Background pins URL without verifying Next.js basePath
+
+- **Category:** spec-gap
+- **Agent:** product-owner
+- **Seen:** 1
+- **Features:** visual-theme-overhaul
+- **Status:** open
+- **Description:** The product-owner pinned the base URL to `http://localhost:3000/` (Revision 2, decision 1) without consulting `next.config.js`. The tester flagged: "The real page URL is `http://localhost:3000/health-sdlc-playground/` (basePath from `next.config.js`), NOT bare `http://localhost:3000/`." The Gherkin Background URL is technically incorrect; the tester's step definitions navigate to the correct URL but future literal validation against the Gherkin would navigate to a 404.
+- **Suggested improvement:** Instruct the product-owner to read `next.config.js` (and equivalent framework-config files) before pinning a base URL in a Gherkin Background. The URL in the Background must be the effective URL a browser would reach, including any `basePath`, reverse-proxy prefix, or port-forwarding convention in use.
+
+---
+
+## Finding: jsdom CSS custom property resolution produces weaker unit-test assertion than Gherkin specifies
+
+- **Category:** coverage-gap
+- **Agent:** developer
+- **Seen:** 1
+- **Features:** visual-theme-overhaul
+- **Status:** open
+- **Description:** Gherkin Scenario 2 specifies that the "resolved value" of each CSS custom property on `document.documentElement` is a non-empty string — meaning `getComputedStyle(document.documentElement).getPropertyValue('--token')` must return non-empty. The unit test instead checks that the injected `<style>` element's text content contains the token name, which is a weaker proxy. jsdom does not apply `<style>` block `:root` rules to `document.documentElement`'s computed custom properties, so the test cannot satisfy the Gherkin literally. The gap is acknowledged by all three code-reviewer iterations but accepted without flagging it as a coverage gap requiring E2E coverage or an explicit deferral note.
+- **Suggested improvement:** When a jsdom limitation prevents a unit test from directly asserting a Gherkin step, the developer should (a) note the step as deferred to E2E and ensure the tester's step definitions cover it, or (b) use a test helper that directly calls `element.style.setProperty` and then asserts `getPropertyValue` returns non-empty — which would satisfy the Gherkin literally within jsdom's constraints. The current proxy (CSS text content) should be documented in the developer summary as a known gap and handed off explicitly.
+
+---
+
+## Finding: run-e2e.sh not updated when feature scope changes — prior feature reference persists
+
+- **Category:** assumption-risk
+- **Agent:** tester
+- **Seen:** 1
+- **Features:** visual-theme-overhaul
+- **Status:** open
+- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files, not `visual-theme-overhaul`. The code reviewer in all three iterations treated this as "pre-existing" and out of scope. No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
+- **Suggested improvement:** Instruct the tester to always read the existing `run-e2e.sh` before writing a new one, and to update it to reference all accumulated E2E feature step paths rather than overwriting with only the current feature. Alternatively, define a convention (e.g., one `run-e2e.sh` per feature directory) so the root script does not need updating each time.
+
+---
+
+## Finding: Developer defers UX spec implementation requirements without creating tracked debt
+
+- **Category:** spec-gap
+- **Agent:** developer
+- **Seen:** 1
+- **Features:** visual-theme-overhaul
+- **Status:** open
+- **Description:** The UX spec explicitly names MUI components throughout (`<Paper>`, `<Collapse>`, `<Stack>`, `<ThemeProvider>`, etc.) and the UX reviewer confirmed full coverage. The developer deferred the MUI rewrite with the rationale that the Gherkin does not mandate MUI. No agent (developer, code-reviewer, or UX-reviewer) recorded this divergence as a tracked debt item or flagged it for follow-up. The UX spec and Gherkin spec now permanently diverge on implementation technology with no resolution path documented.
+- **Suggested improvement:** When the developer defers a UX spec requirement that is explicitly named and reviewed, the developer summary should include a "deferred UX requirements" section listing each deferred item and the justification. The code-reviewer should be instructed to flag any deferred UX requirement that is confirmed-passing by the UX reviewer but absent from the implementation, and to require either a Gherkin scenario covering the requirement or an explicit PO sign-off on the deferral.
+
+---
+
+## Finding: data-testid inventory not published by developer, causing tester selector gaps
+
+- **Category:** assumption-risk
+- **Agent:** developer
+- **Seen:** 1
+- **Features:** visual-theme-overhaul
+- **Status:** open
+- **Description:** The tester flagged a blocking gap: "`data-testid='activity-row'` not explicitly confirmed — the developer summary lists `activity-row-toggle` and `activity-row-expanded` but never explicitly confirms `activity-row` on the row wrapper." The developer summary lists test IDs referenced in assertions but does not enumerate all `data-testid` attributes present on rendered DOM elements. The tester had to assume the wrapper testid and flag it as a potential E2E failure source.
+- **Suggested improvement:** Instruct the developer to include a complete `data-testid` inventory table in their summary, listing every `data-testid` attribute present in the implementation with the element type and parent context. This gives the tester a reliable reference and eliminates assumption-driven selector gaps.

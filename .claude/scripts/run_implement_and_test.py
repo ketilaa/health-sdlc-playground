@@ -379,7 +379,7 @@ Start your response with STATUS: OK or STATUS: STOP.
             print(f'Code Reviewer STOP on iteration {outer_iter}.')
             if outer_iter == MAX_OUTER_ITERATIONS:
                 sys.exit(1)
-            truncated = cr_summary[-3000:] if len(cr_summary) > 3000 else cr_summary
+            truncated = cr_summary[-6000:] if len(cr_summary) > 6000 else cr_summary
             dev_messages.append({'role': 'user', 'content': (
                 'The code reviewer rejected the implementation. Fix it.\n\n'
                 f'Code review feedback:\n{truncated}\n\n'
