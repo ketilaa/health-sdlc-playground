@@ -16,6 +16,7 @@ Read these files:
 
 ## What to validate
 - Every Gherkin scenario is covered by at least one test — map each explicitly
+- `run-tests.sh` and `run-e2e.sh` (if present) exist and are executable — verify by reading each file directly; do not accept the developer's attestation as a substitute. A missing or unreadable script is a blocking failure.
 - Implementation behavior matches the Gherkin specification exactly
 - Tests are meaningful: they assert real behavior, not trivially pass
 - No unrelated code was modified outside the scope the Developer declared

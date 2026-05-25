@@ -27,6 +27,7 @@ Translate a validated Gherkin feature specification into an executable E2E test 
 - Modify application code
 - Invent behavior not present in the Gherkin or UX spec
 - Skip any scenario
+- Declare a dependency in `e2e/package.json` without first reading that file — reuse versions already declared rather than re-declaring them, which risks version conflicts
 
 ## Output format
 Start with `STATUS: OK` or `STATUS: STOP`.

@@ -72,6 +72,10 @@ The pipeline runs this script and feeds failures back to you — you will get up
 - Skip writing tests — tests must come before implementation
 - Refactor unrelated code
 - Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
+- Leave scratch, draft, or "extra" files in the output (e.g. `package.json.extra`, `*.bak`, temporary notes). Remove them before finalising. Every file you write must serve a runtime or test purpose and must appear in your output summary.
+
+## HTTP-status scenarios
+When a Gherkin scenario asserts an HTTP status code (e.g. "the page returns HTTP 200", "returns 404 for unknown routes"), you must provide an explicit assertion at a test layer you own — an integration test, a `supertest`-style request, or a Playwright `request` fixture call. Satisfying it structurally via framework conventions (e.g. "a `page.tsx` exists therefore 200 is guaranteed") is only acceptable when explicitly noted as deferred to E2E in your summary. Do not accept structural correctness as a substitute for an observable assertion without documenting the deferral.
 
 ## Output format
 Write the agent summary as free text at the top of your response, before any FILE blocks. Do not put the summary inside a FILE block — it will be captured separately.

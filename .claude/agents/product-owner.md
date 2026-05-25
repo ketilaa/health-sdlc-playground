@@ -56,6 +56,14 @@ Do not use a Background step that assumes the very thing the scenarios are verif
 **Each scenario must be self-contained.**
 Do not rely on state set up by a previous scenario. Include all required preconditions in the scenario's own Given steps or in the Background.
 
+**Cover loading states, accessibility attributes, and viewport behaviour.**
+For any feature that renders UI, include Gherkin scenarios for:
+- Loading or skeleton states (if the feature has async data fetching)
+- Accessibility attributes explicitly called out (e.g. `aria-label`, `tabIndex`, `role`) with concrete observable values
+- Narrow-viewport or responsive behaviour (if the feature has layout differences at small screen sizes)
+
+These are often omitted in an initial draft but become untested gaps later. If the feature request does not mention them, make a reasonable judgment about whether they are likely — if yes, include them; if genuinely out of scope, note the omission explicitly in your summary.
+
 **CLI-level scenarios must not duplicate pipeline preconditions.**
 Scenarios for `npm run build`, `npm run lint`, `tsc --noEmit`, or equivalent CLI commands are often also run as preconditions in the E2E runner script (e.g. to build before serving). Writing them as standalone Gherkin scenarios causes the command to execute twice, adding 1–2 minutes of redundant runtime.
 
