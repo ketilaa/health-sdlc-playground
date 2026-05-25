@@ -101,8 +101,8 @@ def run_developer_phase(feature_name, messages, outer_iter):
 SKIP_DIRS = {'.next', 'node_modules', '__pycache__', '.git', 'dist', 'build', 'out', '.pytest_cache'}
 SKIP_EXTENSIONS = {'.lock', '.map', '.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg',
                    '.woff', '.woff2', '.ttf', '.eot', '.zip', '.gz'}
-MAX_FILE_CHARS = 20_000
-MAX_TOTAL_CHARS = 80_000
+MAX_FILE_CHARS = 40_000
+MAX_TOTAL_CHARS = 200_000
 MAX_TEST_CHARS = 40_000
 
 
@@ -233,7 +233,7 @@ Scope: {scope}
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=4096)
+    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=8192)
     return is_ok(response), response
 
 
