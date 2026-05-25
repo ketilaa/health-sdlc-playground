@@ -59,6 +59,7 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 - **Agent:** <agent name>
 - **Seen:** <count>
 - **Features:** <comma-separated list of feature names>
+- **Status:** open | applied
 - **Description:** One or two sentences describing the pattern observed.
 - **Suggested improvement:** One concrete, actionable suggestion for improving the agent prompt or spec process to avoid this pattern.
 
