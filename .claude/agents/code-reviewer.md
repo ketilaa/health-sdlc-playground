@@ -22,8 +22,9 @@ If any file that is imported, depended on, or mentioned in the developer summary
 ## What to validate
 - Every Gherkin scenario is covered by at least one test — map each explicitly
 - Any Gherkin scenario whose GIVEN includes a viewport width, device type, or rendering-environment constraint must either (a) have a unit test that actually sets that constraint, or (b) have an explicit "deferred to E2E" note in the developer summary. A DOM-presence check without viewport configuration does not satisfy a viewport GIVEN. Flag the absence of a deferral note as a blocking gap.
-- No implementation exists without a corresponding Gherkin scenario — flag any data, UI state, route, or behavior that has no Gherkin backing as a blocking failure; placeholder datasets, stub arrays, speculative UI states, and "future extension" content all fall into this category
-- `run-tests.sh` and `run-e2e.sh` (if present) exist and are executable — verify by reading each file directly; do not accept the developer's attestation as a substitute. A missing or unreadable script is a blocking failure.
+- No **new** implementation introduced by this feature exists without a corresponding Gherkin scenario — flag new data, UI state, routes, or behaviors that have no Gherkin backing as a blocking failure; placeholder datasets, stub arrays, speculative UI states, and "future extension" content all fall into this category. Pre-existing code in files that were modified by this feature (behavior already present before this feature) must not be flagged — only judge what is new.
+- `run-tests.sh` exists and is executable — verify by reading it directly; a missing or unreadable script is a blocking failure.
+- `run-e2e.sh` is written by the tester, which runs **after** code review. At review time it will always reference the prior feature — this is expected and must not be flagged. Do not assess `run-e2e.sh` for correctness or coverage; its presence or absence has no bearing on your verdict.
 - Implementation behavior matches the Gherkin specification exactly
 - Tests are meaningful: they assert real behavior, not trivially pass
 - No unrelated code was modified outside the scope the Developer declared
