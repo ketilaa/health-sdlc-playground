@@ -27,7 +27,7 @@ jobs:
           echo "feature_name=$FEATURE" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
 
-      - name: Create pull request
+      - name: Create or update pull request
         run: |
           FEATURE="${{ steps.ctx.outputs.feature_name }}"
           ISSUE="${{ steps.ctx.outputs.issue_number }}"
@@ -35,10 +35,14 @@ jobs:
           PO_SUMMARY=$(head -20 "features/$FEATURE/work/product-owner-summary.md" 2>/dev/null || echo "")
           BODY=$(printf 'Closes #%s\n\n%s\n\n## Agent Pipeline\n\nAll agents returned STATUS: OK. E2E tests passed.\n\nSee `features/%s/work/` for individual agent summaries.' \
             "$ISSUE" "$PO_SUMMARY" "$FEATURE")
-          gh pr create \
-            --title "feat: $FEATURE" \
-            --body "$BODY" \
-            --base main \
-            --head "$BRANCH"
+          if gh pr view "$BRANCH" --json number -q .number > /dev/null 2>&1; then
+            gh pr edit "$BRANCH" --title "feat: $FEATURE" --body "$BODY"
+          else
+            gh pr create \
+              --title "feat: $FEATURE" \
+              --body "$BODY" \
+              --base main \
+              --head "$BRANCH"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
