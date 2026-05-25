@@ -2,12 +2,12 @@
   "redirects": [
     {
       "source": "/health-sdlc-playground/weekly-dashboard",
-      "destination": "/",
+      "destination": "/health-sdlc-playground/",
       "type": 308
     },
     {
       "source": "/health-sdlc-playground/weekly-dashboard/",
-      "destination": "/",
+      "destination": "/health-sdlc-playground/",
       "type": 308
     }
   ],

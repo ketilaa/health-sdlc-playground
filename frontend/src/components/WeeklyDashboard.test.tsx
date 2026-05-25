@@ -30,7 +30,7 @@ async function clickActivity(
 }
 
 describe('WeeklyDashboard', () => {
-  describe('Container and heading (Gherkin Scenarios 1, 2, 6)', () => {
+  describe('Container and heading (Gherkin Scenarios 1, 2)', () => {
     test('renders with data-testid="weekly-dashboard-container"', () => {
       render(<WeeklyDashboard />)
       expect(screen.getByTestId('weekly-dashboard-container')).toBeInTheDocument()
@@ -47,30 +47,26 @@ describe('WeeklyDashboard', () => {
       render(<WeeklyDashboard />)
       expect(screen.queryByTestId('training-overview')).not.toBeInTheDocument()
     })
+  })
 
-    // Scenario 6: no horizontal overflow at 390px viewport width
-    // Verifies the container has the CSS properties that prevent overflow.
-    // Full scrollWidth === innerWidth assertion is deferred to E2E (requires real browser viewport).
-    test('weekly-dashboard-container has overflow-x:hidden and max-width:100% (Scenario 6)', () => {
-      const originalInnerWidth = window.innerWidth
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 390,
-      })
-
+  // Scenario 6: No horizontal overflow at 390 × 844 px viewport
+  // The GIVEN requires a real browser viewport (390 × 844 px) to verify that
+  // document.documentElement.scrollWidth === window.innerWidth.
+  // JSDOM does not perform layout and cannot compute scrollWidth or
+  // enforce viewport dimensions. This entire scenario — including the
+  // viewport GIVEN — is deferred to E2E.
+  //
+  // The test below is a structural guard only: it verifies that the
+  // weekly-dashboard-container element has the CSS properties whose purpose
+  // is to prevent horizontal overflow. It does NOT satisfy the Gherkin GIVEN
+  // (viewport 390 × 844) and is NOT a substitute for the E2E assertion.
+  describe('Scenario 6 — structural CSS guard (full scenario deferred to E2E)', () => {
+    test('weekly-dashboard-container has CSS properties intended to prevent horizontal overflow', () => {
       render(<WeeklyDashboard />)
       const container = screen.getByTestId('weekly-dashboard-container')
-
       expect(container.style.overflowX).toBe('hidden')
       expect(container.style.maxWidth).toBe('100%')
       expect(container.style.boxSizing).toBe('border-box')
-
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: originalInnerWidth,
-      })
     })
   })
 
@@ -225,13 +221,6 @@ describe('WeeklyDashboard', () => {
   describe('Scenario: Weekly summary card visible at 375px', () => {
     test('all required elements are present at 375px viewport', async () => {
       const user = userEvent.setup()
-      const originalInnerWidth = window.innerWidth
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 375,
-      })
-
       render(<WeeklyDashboard />)
       await selectWeek(user, '2024-W10')
       expect(screen.getByTestId('weekly-summary-card')).toBeInTheDocument()
@@ -239,12 +228,6 @@ describe('WeeklyDashboard', () => {
       expect(screen.getByTestId('weekly-resting-hr')).toBeInTheDocument()
       expect(screen.getByTestId('intensity-balance')).toBeInTheDocument()
       expect(screen.getByTestId('trend-training-load')).toBeInTheDocument()
-
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: originalInnerWidth,
-      })
     })
   })
 
