@@ -1,0 +1,25 @@
+{
+  "redirects": [
+    {
+      "source": "/weekly-dashboard",
+      "destination": "/",
+      "type": 308
+    },
+    {
+      "source": "/weekly-dashboard/",
+      "destination": "/",
+      "type": 308
+    }
+  ],
+  "headers": [
+    {
+      "source": "**/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
+  ]
+}
