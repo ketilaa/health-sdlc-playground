@@ -1,0 +1,9 @@
+Generate a dataset for a person that are training for a half-maraton. Data set starts when the person is realtively untrained 8 weeks ago. The person has been following the same plan consistently with a mix of long runs, restorative runs and intervals. One exercise in the middle of the period were skipped due to sickness.
+
+Give this data set a good, descriptive name and make it the default dataset in the dataset picker in the top bar.
+
+Visualize the dataset as week aggregates sorted from newest to oldest. It must be possible to drill down to see detailed activities for a week.
+
+Only show data that are relevant for an overview. Later, when we start adding insights, we expose data like trends etc.
+
+It is important that tests have their own data and does not rely on the "live" datasets.

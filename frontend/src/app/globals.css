@@ -1,0 +1,36 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+.top-bar { padding: 12px 24px; border-bottom: 1px solid #e0e0e0; }
+.page-header { padding: 24px; }
+.page-header h1 { margin: 0 0 4px 0; font-size: 28px; }
+.subtitle { color: #666; margin: 0; font-size: 14px; }
+.week-list { padding: 0 24px 24px; }
+.week-row { border-bottom: 1px solid #eee; }
+.week-row-trigger {
+  display: flex; gap: 16px; align-items: center; width: 100%;
+  background: none; border: none; padding: 16px 0; cursor: pointer;
+  font-size: 16px; text-align: left;
+}
+.week-row-trigger:hover { background: #fafafa; }
+.week-label { font-weight: 600; min-width: 80px; }
+.week-bar { display: inline-block; height: 6px; background: #4a90e2; border-radius: 3px; width: 80px; }
+.week-row.sickness .week-bar { background: #c0c0c0; }
+.activity-row {
+  display: flex; gap: 16px; padding: 8px 0 8px 80px; font-size: 14px;
+}
+.skipped-activity {
+  padding: 8px 0 8px 80px; font-style: italic; color: #888;
+  border-top: 1px dashed #ccc;
+}
+.dataset-selector-root { position: relative; display: inline-block; }
+.dataset-selector-root button {
+  background: none; border: 1px solid #ccc; border-radius: 4px;
+  padding: 6px 12px; cursor: pointer; font-size: 14px;
+}
+.dataset-selector-list {
+  position: absolute; top: 100%; left: 0; background: white;
+  border: 1px solid #ccc; border-radius: 4px; padding: 4px 0; margin: 4px 0 0 0;
+  list-style: none; min-width: 240px; z-index: 10;
+}
+.dataset-selector-list li { padding: 6px 12px; cursor: pointer; }
+.dataset-selector-list li:hover { background: #f0f0f0; }
