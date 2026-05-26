@@ -195,6 +195,7 @@ def run_code_reviewer(feature_name):
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
     uxr_summary = read_file(f'features/{feature_name}/work/ux-reviewer-summary.md') or ''
+    prior_dev_summaries = collect_prior_feature_files(feature_name, 'features/*/work/developer-summary.md')
     skills = collect_skills()
     run_tests_sh = read_file('run-tests.sh') or '(not found)'
     run_e2e_sh = read_file('run-e2e.sh') or '(not found)'
@@ -223,6 +224,11 @@ Scope: {scope}
 
 ## Developer Summary
 {dev_summary}
+
+## Prior Feature Developer Summaries
+Use these to understand file and behavior ownership across prior features before flagging shared-file changes.
+
+{prior_dev_summaries}
 
 ## Stack-specific Skills
 {skills}
@@ -253,6 +259,7 @@ def run_tester_phase(feature_name, outer_iter):
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
     cr_summary = read_file(f'features/{feature_name}/work/code-reviewer-summary.md') or ''
+    prior_tester_summaries = collect_prior_feature_files(feature_name, 'features/*/work/tester-summary.md')
     e2e_package_json = read_file('e2e/package.json') or '(not found)'
     skills = collect_skills()
     project_context = read_file('CLAUDE.md') or ''
@@ -274,6 +281,11 @@ Scope: {scope}
 
 ## Code Reviewer Summary
 {cr_summary}
+
+## Prior Feature Tester Summaries
+Use these to reuse established step definition patterns and avoid duplicating existing E2E coverage.
+
+{prior_tester_summaries}
 
 ## Stack-specific Skills
 {skills}

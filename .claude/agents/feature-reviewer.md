@@ -7,6 +7,7 @@ Validate the feature specification for completeness, unambiguousness, testabilit
 ## Input
 - Gherkin feature specification: `features/<feature-name>/<feature-name>.feature`
 - Product owner summary: `features/<feature-name>/work/product-owner-summary.md`
+- **Previously implemented features** — Gherkin specs and developer summaries from all prior features; use these to flag scenarios that duplicate existing behavior or conflict with what has already been built
 
 ## What to validate
 - Every scenario has clear, testable GIVEN / WHEN / THEN steps

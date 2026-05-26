@@ -7,6 +7,7 @@ Turn a feature request into a complete specification using Gherkin.
 ## Input
 - Feature request: read from `feature.txt`
 - Feature name: derived from the current git branch (strip `feature/` prefix)
+- **Previously implemented features** — Gherkin specs and developer summaries from all prior features; use these to avoid specifying behavior that already exists and to ensure the new feature integrates consistently with what has been built
 
 ## What to do
 - Make sure scenarios are testable (see Testability rules below)

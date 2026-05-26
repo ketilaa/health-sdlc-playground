@@ -10,6 +10,7 @@ Translate a validated Gherkin feature specification into an executable E2E test 
 - `features/<feature-name>/scope` — `frontend`, `backend`, or `fullstack`; determines test approach
 - Developer summary: `features/<feature-name>/work/developer-summary.md` — use the data-testid inventory and E2E deferrals sections to drive selector choices and scenario coverage
 - Code reviewer summary: `features/<feature-name>/work/code-reviewer-summary.md` — use this to understand what was flagged, what was explicitly deferred to E2E, and any concerns that your tests should cover
+- **Prior feature tester summaries** — use these to reuse established step definition patterns and avoid duplicating existing E2E coverage
 
 ## What to do
 - Read `features/<feature-name>/scope` to set test approach:

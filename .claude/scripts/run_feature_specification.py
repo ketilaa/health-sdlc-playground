@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, call_claude_messages, extract_between,
+    call_claude, call_claude_messages, collect_prior_feature_files, extract_between,
     get_feature_name, is_ok, read_file, read_prompt,
     require_files, write_file,
 )
@@ -25,7 +25,7 @@ def run_product_owner(feature_name, messages):
     return is_ok(assistant_text), gherkin, summary, messages
 
 
-def run_feature_reviewer(feature_name, gherkin, po_summary):
+def run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prior_dev_summaries):
     system_prompt = read_prompt('feature-reviewer')
     user_message = f"""Feature name: {feature_name}
 
@@ -34,6 +34,12 @@ def run_feature_reviewer(feature_name, gherkin, po_summary):
 
 ## Product Owner Summary
 {po_summary}
+
+## Previously Implemented Features
+{prior_features}
+
+## Prior Developer Summaries
+{prior_dev_summaries}
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
@@ -46,11 +52,22 @@ def main():
     require_files(f'features/{feature_name}/feature.txt')
     feature_request = read_file(f'features/{feature_name}/feature.txt') or ''
     project_context = read_file('CLAUDE.md') or ''
+    prior_features = collect_prior_feature_files(feature_name, 'features/*/*.feature')
+    prior_dev_summaries = collect_prior_feature_files(feature_name, 'features/*/work/developer-summary.md')
 
     messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
 ## Project Context
 {project_context}
+
+## Previously Implemented Features
+Use these to avoid specifying behavior that already exists and to ensure the new
+feature integrates consistently with what has already been built.
+
+{prior_features}
+
+## Prior Developer Summaries
+{prior_dev_summaries}
 
 ## Feature request
 {feature_request}
@@ -89,7 +106,7 @@ Output STATUS: STOP instead of OK if the request is too vague or contradictory.
 
         write_file(f'features/{feature_name}/{feature_name}.feature', gherkin)
 
-        fr_ok, fr_summary = run_feature_reviewer(feature_name, gherkin, po_summary)
+        fr_ok, fr_summary = run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prior_dev_summaries)
         write_file(f'features/{feature_name}/work/feature-reviewer-summary.md', fr_summary)
 
         if fr_ok:

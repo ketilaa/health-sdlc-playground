@@ -25,7 +25,7 @@ def run_ux_designer(messages):
     return is_ok(assistant_text), ux_spec, summary, messages
 
 
-def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary):
+def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary, prior_ux_specs, prior_ux_summaries):
     system_prompt = read_prompt('ux-reviewer')
     user_message = f"""Feature name: {feature_name}
 
@@ -40,6 +40,12 @@ def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary
 
 ## UX Designer Summary
 {uxd_summary}
+
+## Prior Feature UX Specifications
+{prior_ux_specs}
+
+## Prior UX Designer Summaries
+{prior_ux_summaries}
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
@@ -102,7 +108,8 @@ Wrap the UX specification content in ===UX SPEC=== / ===END UX SPEC=== delimiter
         write_file(f'features/{feature_name}/ux.md', ux_spec)
 
         uxr_ok, uxr_summary = run_ux_reviewer(
-            feature_name, feature_spec, ux_spec, fr_summary, uxd_summary
+            feature_name, feature_spec, ux_spec, fr_summary, uxd_summary,
+            prior_ux_specs, prior_ux_summaries,
         )
         write_file(f'features/{feature_name}/work/ux-reviewer-summary.md', uxr_summary)
 

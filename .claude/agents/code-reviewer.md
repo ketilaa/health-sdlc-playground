@@ -10,6 +10,7 @@ Read these files:
 - `features/<feature-name>/scope` — one of `frontend`, `backend`, `fullstack`; determines which directories to review
 - `features/<feature-name>/work/ux-reviewer-summary.md` — use this to verify the implementation honours what was explicitly approved and that any concerns raised by the UX reviewer were addressed
 - `features/<feature-name>/work/developer-summary.md` — implementation decisions and scope rationale
+- **Prior feature developer summaries** — use these to understand file and behavior ownership across prior features before flagging shared-file changes as violations
 - Implementation and tests matching the declared scope:
   - `frontend/` (if scope is `frontend` or `fullstack`)
   - `backend/` (if scope is `backend` or `fullstack`)

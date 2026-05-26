@@ -11,6 +11,7 @@ Read these files:
 - Product owner summary: `features/<feature-name>/work/product-owner-summary.md`
 - Feature reviewer summary: `features/<feature-name>/work/feature-reviewer-summary.md`
 - UX designer summary: `features/<feature-name>/work/ux-designer-summary.md`
+- **Prior feature UX specs and designer summaries** — use these to verify the new UX spec is consistent with the established visual system (color tokens, typography, layout patterns, component conventions); flag any deviation as a blocking concern
 
 ## What to validate
 - Every Gherkin scenario has a corresponding UI state or user flow in the UX spec
