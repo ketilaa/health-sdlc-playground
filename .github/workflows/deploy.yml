@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: "pages-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v3
         if: steps.check.outputs.has_frontend == 'true'
         with:
           path: frontend/out
