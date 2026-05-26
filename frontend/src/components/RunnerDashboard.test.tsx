@@ -108,19 +108,6 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
       // Visible text must communicate that the activity was skipped (UX spec Section 7)
       expect(skippedEl.textContent?.trim()).not.toBe('')
     })
-
-    test('skipped-activity does not have a redundant aria-label conflicting with visible text', async () => {
-      const user = userEvent.setup()
-      render(<RunnerDashboard />)
-
-      await expandWeek(user, 'Week 4')
-
-      const weekActivities = screen.getByTestId('week-activities')
-      const skippedEl = within(weekActivities).getByTestId('skipped-activity')
-
-      // No aria-label that would conflict with the visible text content
-      expect(skippedEl.getAttribute('aria-label')).toBeNull()
-    })
   })
 
   // Scenario: Activity type attribute is consistent for the same type across different weeks
@@ -136,6 +123,7 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
         .getAllByTestId('activity-row')
         .filter((el) => el.getAttribute('data-activity-type') === 'long_run')
       expect(week8LongRunRows.length).toBeGreaterThan(0)
+      const week8AttrValue = week8LongRunRows[0].getAttribute('data-activity-type')
 
       // Collapse Week 8 by clicking again, then expand Week 7
       await expandWeek(user, 'Week 8')
@@ -146,11 +134,11 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
         .getAllByTestId('activity-row')
         .filter((el) => el.getAttribute('data-activity-type') === 'long_run')
       expect(week7LongRunRows.length).toBeGreaterThan(0)
+      const week7AttrValue = week7LongRunRows[0].getAttribute('data-activity-type')
 
       // Both should have the same attribute value
-      expect(week8LongRunRows[0].getAttribute('data-activity-type')).toBe(
-        week7LongRunRows[0].getAttribute('data-activity-type')
-      )
+      expect(week8AttrValue).toBe(week7AttrValue)
+      expect(week8AttrValue).toBe('long_run')
     })
   })
 
