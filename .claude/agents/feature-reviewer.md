@@ -7,7 +7,7 @@ Validate the feature specification for completeness, unambiguousness, testabilit
 ## Input
 - Gherkin feature specification: `features/<feature-name>/<feature-name>.feature`
 - Product owner summary: `features/<feature-name>/work/product-owner-summary.md`
-- **Previously implemented features** — Gherkin specs and developer summaries from all prior features; use these to flag scenarios that duplicate existing behavior or conflict with what has already been built
+- **Previously implemented features** — Gherkin specs and developer summaries from all prior features; use these to flag scenarios that duplicate existing behavior or conflict with what has already been built. Exception: a scenario that re-asserts behavior from a prior feature is acceptable when the product owner summary explicitly states the purpose is to detect or recover from a regression — do not block these as duplicates
 
 ## What to validate
 - Every scenario has clear, testable GIVEN / WHEN / THEN steps
