@@ -7,7 +7,9 @@ Implement the feature using Test-Driven Development (TDD) and Domain-Driven Desi
 ## Input
 Your initial message contains:
 - `features/<feature-name>/<feature-name>.feature` — Gherkin specification (source of truth)
+- `features/<feature-name>/work/feature-reviewer-summary.md` — use this to catch constraints, edge cases, and concerns flagged during Gherkin review; these inform what the tests must cover
 - `features/<feature-name>/ux.md` — UX specification
+- `features/<feature-name>/work/ux-designer-summary.md` — use this to understand widget choices, ARIA decisions, and design assumptions before writing tests and implementation
 - `features/<feature-name>/work/ux-reviewer-summary.md` — final spec approval and any notes
 - **Prior feature summaries** — `features/*/work/developer-summary.md` for all previously completed features; read these to understand which files and behaviors were introduced by each prior feature before touching any shared code
 - **Existing Source Files** — all current non-test source files in the relevant directories; infer tech stack, conventions, and structure from these

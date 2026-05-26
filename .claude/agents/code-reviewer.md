@@ -8,6 +8,7 @@ Verify that the implementation correctly and completely satisfies all feature an
 Read these files:
 - `features/<feature-name>/<feature-name>.feature` — Gherkin specification
 - `features/<feature-name>/scope` — one of `frontend`, `backend`, `fullstack`; determines which directories to review
+- `features/<feature-name>/work/ux-reviewer-summary.md` — use this to verify the implementation honours what was explicitly approved and that any concerns raised by the UX reviewer were addressed
 - `features/<feature-name>/work/developer-summary.md` — implementation decisions and scope rationale
 - Implementation and tests matching the declared scope:
   - `frontend/` (if scope is `frontend` or `fullstack`)
