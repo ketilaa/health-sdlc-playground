@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, call_claude_messages, extract_between,
+    call_claude, call_claude_messages, collect_prior_feature_files, extract_between,
     get_feature_name, is_ok, read_file, read_prompt,
     require_files, write_file,
 )
@@ -56,6 +56,9 @@ def main():
     feature_spec = read_file(feature_path)
     fr_summary = read_file(fr_summary_path)
 
+    prior_ux_specs = collect_prior_feature_files(feature_name, 'features/*/ux.md')
+    prior_ux_summaries = collect_prior_feature_files(feature_name, 'features/*/work/ux-designer-summary.md')
+
     messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
 
 ## Gherkin Feature Specification
@@ -63,6 +66,16 @@ def main():
 
 ## Feature Reviewer Summary
 {fr_summary}
+
+## Prior Feature UX Specifications
+These are the UX specs from previously completed features. Use them to understand
+the established visual language, color tokens, layout patterns, and component
+conventions. Your design must extend — not replace — this system.
+
+{prior_ux_specs}
+
+## Prior UX Designer Summaries
+{prior_ux_summaries}
 
 Start your response with STATUS: OK or STATUS: STOP.
 Wrap the UX specification content in ===UX SPEC=== / ===END UX SPEC=== delimiters.

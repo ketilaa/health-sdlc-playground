@@ -7,9 +7,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    apply_deletions, call_claude, call_claude_messages, extract_deletions,
-    extract_files, format_test_output, get_feature_name, is_ok, read_file,
-    read_prompt, require_files, strip_file_blocks, write_file,
+    apply_deletions, call_claude, call_claude_messages, collect_prior_feature_files,
+    extract_deletions, extract_files, format_test_output, get_feature_name, is_ok,
+    read_file, read_prompt, require_files, strip_file_blocks, write_file,
 )
 
 MAX_OUTER_ITERATIONS = 3  # full cycle: developer + code review + tester + E2E
@@ -314,6 +314,7 @@ def main():
     skills = collect_skills()
     existing_sources = collect_existing_sources()
     existing_tests = collect_existing_tests()
+    prior_dev_summaries = collect_prior_feature_files(feature_name, 'features/*/work/developer-summary.md')
 
     dev_messages = [{'role': 'user', 'content': [
         {
@@ -331,6 +332,15 @@ def main():
 
 ## Stack-specific Skills
 {skills}
+
+## Prior Feature Developer Summaries
+These summaries describe what each previously completed feature implemented, which
+files it owns, and what behavior it introduced. Before modifying any shared file,
+check these summaries to understand prior feature ownership. Do not remove or break
+behavior or tests that belong to a prior feature unless the current Gherkin explicitly
+supersedes them.
+
+{prior_dev_summaries}
 
 ## Existing Source Files
 These are all current non-test source files in the codebase. Use them to infer

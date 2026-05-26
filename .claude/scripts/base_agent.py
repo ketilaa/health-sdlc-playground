@@ -232,6 +232,26 @@ def format_test_output(output, max_chars=3000):
     return output[:head] + '\n...\n' + output[-tail:]
 
 
+def collect_prior_feature_files(current_feature_name, glob_pattern, max_chars=20_000):
+    """Collect files matching glob_pattern, excluding the current feature's directory."""
+    import glob as glob_module
+    parts = []
+    total = 0
+    for path in sorted(glob_module.glob(glob_pattern)):
+        if os.path.join('features', current_feature_name) in os.path.normpath(path):
+            continue
+        content = read_file(path)
+        if not content:
+            continue
+        entry = f'### {path}\n{content}'
+        if total + len(entry) > max_chars:
+            parts.append('... [additional files omitted — size limit reached]')
+            break
+        parts.append(entry)
+        total += len(entry)
+    return '\n\n---\n\n'.join(parts) if parts else '(none)'
+
+
 def read_pipeline_context():
     """Read the pipeline context file saved by the Product Owner workflow."""
     path = 'features/.pipeline_context.json'
