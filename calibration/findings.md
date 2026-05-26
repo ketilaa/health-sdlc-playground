@@ -140,10 +140,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** tester
-- **Seen:** 2
-- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights
+- **Seen:** 3
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, home-page-structure-step-1
 - **Status:** applied
-- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files in `visual-theme-overhaul`, and the code reviewer in this feature again confirmed `run-e2e.sh` still references `visual-theme-overhaul` (the immediately prior feature). No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
+- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files in `visual-theme-overhaul`, and the code reviewer in `improve-weekly-aggregates-and-prepare-for-more-insights` again confirmed `run-e2e.sh` still references `visual-theme-overhaul`. In `home-page-structure-step-1`, the code reviewer again explicitly noted that `run-e2e.sh` references the prior feature (`make-weekly-dashboard-the-home-page`) and accepted this as "expected per review rules." No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
 - **Suggested improvement:** Instruct the tester to always read the existing `run-e2e.sh` before writing a new one, and to update it to reference all accumulated E2E feature step paths rather than overwriting with only the current feature. Alternatively, define a convention (e.g., one `run-e2e.sh` per feature directory) so the root script does not need updating each time.
 
 ---

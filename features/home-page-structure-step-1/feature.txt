@@ -1,0 +1,14 @@
+We are focusing on the home page only.
+The home must have the following page structure:
+- A bar at the top with:
+  - title "Health Playground"
+  - The data set selector we already have
+- The content area below the top bar split into two columns:
+  - The left column is the main content
+    - First we have "Training Overview"
+    - Below we have "Weekly Dashboard"
+  - The right column contains "Insights"
+
+- "Training Overview" is a component with a placeholder text "Training Overview"
+- "Weekly Dashboard" is the component we already have
+- "Insights" is a component with a placeholder text "Insights"

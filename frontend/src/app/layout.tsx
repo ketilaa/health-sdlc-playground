@@ -2,8 +2,8 @@ import React from 'react'
 import { themeTokens } from '../theme/tokens'
 
 export const metadata = {
-  title: 'Weekly Dashboard',
-  description: 'Weekly Training Dashboard',
+  title: 'Health Playground',
+  description: 'Health Playground — Training Overview and Insights',
 }
 
 const rootCss = `

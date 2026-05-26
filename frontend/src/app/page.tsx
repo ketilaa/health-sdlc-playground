@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import WeeklyDashboard from '../components/WeeklyDashboard'
+import HomePage from '../components/HomePage'
 
-export default function HomePage() {
-  return <WeeklyDashboard />
+export default function Page() {
+  return <HomePage />
 }
