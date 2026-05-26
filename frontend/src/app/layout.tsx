@@ -14,6 +14,10 @@ const rootCss = `
   --color-activity-intervals: ${themeTokens['--color-activity-intervals']};
   --color-activity-skipped: ${themeTokens['--color-activity-skipped']};
 }
+[data-activity-type="long_run"] { background-color: var(--color-activity-long-run); }
+[data-activity-type="restorative_run"] { background-color: var(--color-activity-restorative-run); }
+[data-activity-type="intervals"] { background-color: var(--color-activity-intervals); }
+[data-activity-type="skipped"] { background-color: var(--color-activity-skipped); }
 html, body { margin: 0; padding: 0; }
 body {
   background-color: ${themeTokens['--color-background']};

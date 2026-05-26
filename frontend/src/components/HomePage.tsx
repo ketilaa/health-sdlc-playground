@@ -92,15 +92,8 @@ export default function HomePage() {
               >
                 Training Overview
               </Typography>
-            </Paper>
-
-            {/* Runner Dashboard: accordion-style week list exposing data-activity-type
-                attributes for CSS design token application (enforce-visual-theme feature).
-                Rendered as a sibling to training-overview, not inside it, to preserve
-                the home-page-structure-step-1 placeholder contract. */}
-            <Box data-testid="runner-dashboard-section">
               <RunnerDashboard />
-            </Box>
+            </Paper>
 
             <Box data-testid="weekly-dashboard">
               <WeeklyDashboard />
