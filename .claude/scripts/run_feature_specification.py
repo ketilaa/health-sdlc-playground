@@ -5,7 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, call_claude_messages, collect_prior_feature_files, extract_between,
+    append_usage_to_summary, call_claude_tracked, call_claude_messages_tracked,
+    collect_prior_feature_files, extract_between,
     get_feature_name, is_ok, read_file, read_prompt,
     require_files, write_file,
 )
@@ -15,14 +16,14 @@ MAX_ITERATIONS = 3
 
 def run_product_owner(feature_name, messages):
     system_prompt = read_prompt('product-owner')
-    assistant_text = call_claude_messages(system_prompt, messages, max_tokens=4096)
+    assistant_text, usage, elapsed = call_claude_messages_tracked(system_prompt, messages, max_tokens=4096)
     messages.append({'role': 'assistant', 'content': assistant_text})
 
     gherkin = extract_between(assistant_text, '===GHERKIN===\n', '===END GHERKIN===')
     gherkin_start = assistant_text.find('===GHERKIN===')
     summary = assistant_text[:gherkin_start].strip() if gherkin_start != -1 else assistant_text
 
-    return is_ok(assistant_text), gherkin, summary, messages
+    return is_ok(assistant_text), gherkin, summary, messages, usage, elapsed
 
 
 def run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prior_dev_summaries):
@@ -43,8 +44,8 @@ def run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prio
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=4096)
-    return is_ok(response), response
+    response, usage, elapsed = call_claude_tracked(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=4096)
+    return is_ok(response), response, usage, elapsed
 
 
 def main():
@@ -93,8 +94,10 @@ Output STATUS: STOP instead of OK if the request is too vague or contradictory.
     for iteration in range(1, MAX_ITERATIONS + 1):
         print(f'--- Feature Specification iteration {iteration}/{MAX_ITERATIONS} ---')
 
-        po_ok, gherkin, po_summary, messages = run_product_owner(feature_name, messages)
+        po_ok, gherkin, po_summary, messages, po_usage, po_elapsed = run_product_owner(feature_name, messages)
         write_file(f'features/{feature_name}/work/product-owner-summary.md', po_summary)
+        append_usage_to_summary(f'features/{feature_name}/work/product-owner-summary.md',
+                                [('Product Owner', po_usage, po_elapsed)])
 
         if not po_ok:
             print(f'Product Owner STOP:\n{po_summary}')
@@ -106,8 +109,10 @@ Output STATUS: STOP instead of OK if the request is too vague or contradictory.
 
         write_file(f'features/{feature_name}/{feature_name}.feature', gherkin)
 
-        fr_ok, fr_summary = run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prior_dev_summaries)
+        fr_ok, fr_summary, fr_usage, fr_elapsed = run_feature_reviewer(feature_name, gherkin, po_summary, prior_features, prior_dev_summaries)
         write_file(f'features/{feature_name}/work/feature-reviewer-summary.md', fr_summary)
+        append_usage_to_summary(f'features/{feature_name}/work/feature-reviewer-summary.md',
+                                [('Feature Reviewer', fr_usage, fr_elapsed)])
 
         if fr_ok:
             print(f'Feature spec accepted on iteration {iteration}.')

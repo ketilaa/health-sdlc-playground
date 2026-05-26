@@ -5,7 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, call_claude_messages, collect_prior_feature_files, extract_between,
+    append_usage_to_summary, call_claude_tracked, call_claude_messages_tracked,
+    collect_prior_feature_files, extract_between,
     get_feature_name, is_ok, read_file, read_prompt,
     require_files, write_file,
 )
@@ -15,14 +16,14 @@ MAX_ITERATIONS = 3
 
 def run_ux_designer(messages):
     system_prompt = read_prompt('ux-designer')
-    assistant_text = call_claude_messages(system_prompt, messages, max_tokens=8192)
+    assistant_text, usage, elapsed = call_claude_messages_tracked(system_prompt, messages, max_tokens=8192)
     messages.append({'role': 'assistant', 'content': assistant_text})
 
     ux_spec = extract_between(assistant_text, '===UX SPEC===\n', '===END UX SPEC===')
     ux_start = assistant_text.find('===UX SPEC===')
     summary = assistant_text[:ux_start].strip() if ux_start != -1 else assistant_text
 
-    return is_ok(assistant_text), ux_spec, summary, messages
+    return is_ok(assistant_text), ux_spec, summary, messages, usage, elapsed
 
 
 def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary, prior_ux_specs, prior_ux_summaries):
@@ -49,8 +50,8 @@ def run_ux_reviewer(feature_name, feature_spec, ux_spec, fr_summary, uxd_summary
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=4096)
-    return is_ok(response), response
+    response, usage, elapsed = call_claude_tracked(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=4096)
+    return is_ok(response), response, usage, elapsed
 
 
 def main():
@@ -94,8 +95,10 @@ Wrap the UX specification content in ===UX SPEC=== / ===END UX SPEC=== delimiter
     for iteration in range(1, MAX_ITERATIONS + 1):
         print(f'--- UX Design iteration {iteration}/{MAX_ITERATIONS} ---')
 
-        ux_ok, ux_spec, uxd_summary, messages = run_ux_designer(messages)
+        ux_ok, ux_spec, uxd_summary, messages, uxd_usage, uxd_elapsed = run_ux_designer(messages)
         write_file(f'features/{feature_name}/work/ux-designer-summary.md', uxd_summary)
+        append_usage_to_summary(f'features/{feature_name}/work/ux-designer-summary.md',
+                                [(f'UX Designer (iter {iteration})', uxd_usage, uxd_elapsed)])
 
         if not ux_ok:
             print(f'UX Designer STOP:\n{uxd_summary}')
@@ -107,11 +110,13 @@ Wrap the UX specification content in ===UX SPEC=== / ===END UX SPEC=== delimiter
 
         write_file(f'features/{feature_name}/ux.md', ux_spec)
 
-        uxr_ok, uxr_summary = run_ux_reviewer(
+        uxr_ok, uxr_summary, uxr_usage, uxr_elapsed = run_ux_reviewer(
             feature_name, feature_spec, ux_spec, fr_summary, uxd_summary,
             prior_ux_specs, prior_ux_summaries,
         )
         write_file(f'features/{feature_name}/work/ux-reviewer-summary.md', uxr_summary)
+        append_usage_to_summary(f'features/{feature_name}/work/ux-reviewer-summary.md',
+                                [(f'UX Reviewer (iter {iteration})', uxr_usage, uxr_elapsed)])
 
         if uxr_ok:
             print(f'UX spec accepted on iteration {iteration}.')

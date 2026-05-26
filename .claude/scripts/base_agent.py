@@ -44,6 +44,16 @@ def write_file(path, content):
         f.write(content)
 
 
+def _extract_usage(message):
+    u = message.usage
+    return {
+        'input_tokens': u.input_tokens,
+        'output_tokens': u.output_tokens,
+        'cache_read_tokens': getattr(u, 'cache_read_input_tokens', 0) or 0,
+        'cache_write_tokens': getattr(u, 'cache_creation_input_tokens', 0) or 0,
+    }
+
+
 def call_claude_messages(system, messages, model='claude-sonnet-4-6', max_tokens=8192):
     """Call the Claude API with a multi-turn messages list (streaming to support large outputs)."""
     import anthropic
@@ -61,6 +71,27 @@ def call_claude_messages(system, messages, model='claude-sonnet-4-6', max_tokens
         return stream.get_final_text()
 
 
+def call_claude_messages_tracked(system, messages, model='claude-sonnet-4-6', max_tokens=8192):
+    """Like call_claude_messages but also returns (text, usage_dict, elapsed_seconds)."""
+    import anthropic, time
+    client = anthropic.Anthropic()
+    start = time.time()
+    with client.messages.stream(
+        model=model,
+        max_tokens=max_tokens,
+        system=[{
+            'type': 'text',
+            'text': system,
+            'cache_control': {'type': 'ephemeral'},
+        }],
+        messages=messages,
+    ) as stream:
+        msg = stream.get_final_message()
+    elapsed = time.time() - start
+    text = msg.content[0].text if msg.content else ''
+    return text, _extract_usage(msg), elapsed
+
+
 def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
     """Call the Claude API with prompt caching on the system prompt (streaming to support large outputs)."""
     import anthropic
@@ -76,6 +107,54 @@ def call_claude(system, user, model='claude-sonnet-4-6', max_tokens=8192):
         messages=[{'role': 'user', 'content': user}],
     ) as stream:
         return stream.get_final_text()
+
+
+def call_claude_tracked(system, user, model='claude-sonnet-4-6', max_tokens=8192):
+    """Like call_claude but also returns (text, usage_dict, elapsed_seconds)."""
+    import anthropic, time
+    client = anthropic.Anthropic()
+    start = time.time()
+    with client.messages.stream(
+        model=model,
+        max_tokens=max_tokens,
+        system=[{
+            'type': 'text',
+            'text': system,
+            'cache_control': {'type': 'ephemeral'},
+        }],
+        messages=[{'role': 'user', 'content': user}],
+    ) as stream:
+        msg = stream.get_final_message()
+    elapsed = time.time() - start
+    text = msg.content[0].text if msg.content else ''
+    return text, _extract_usage(msg), elapsed
+
+
+def format_usage_row(label, usage, elapsed):
+    """Return a single markdown table row for a usage entry."""
+    cache_pct = int(100 * usage['cache_read_tokens'] / usage['input_tokens']) if usage['input_tokens'] else 0
+    return (
+        f"| {label} | {elapsed:.1f}s "
+        f"| {usage['input_tokens']:,} "
+        f"| {usage['output_tokens']:,} "
+        f"| {usage['cache_read_tokens']:,} ({cache_pct}%) "
+        f"| {usage['cache_write_tokens']:,} |"
+    )
+
+
+def append_usage_to_summary(path, rows):
+    """Append a resource-usage table to a summary file.
+
+    rows — list of (label, usage_dict, elapsed_seconds) tuples.
+    """
+    header = (
+        '\n\n## Resource Usage\n'
+        '| Step | Time | Input tokens | Output tokens | Cache read | Cache write |\n'
+        '|------|------|-------------|--------------|------------|-------------|\n'
+    )
+    body = '\n'.join(format_usage_row(label, u, t) for label, u, t in rows)
+    existing = read_file(path) or ''
+    write_file(path, existing + header + body + '\n')
 
 
 def is_ok(text):

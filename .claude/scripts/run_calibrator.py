@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    call_claude, extract_files, get_feature_name,
+    append_usage_to_summary, call_claude_tracked, extract_files, get_feature_name,
     read_file, read_prompt, strip_file_blocks, write_file,
 )
 
@@ -72,7 +72,7 @@ Start your response with STATUS: OK.
 """
 
     system_prompt = read_prompt('calibrator')
-    response = call_claude(system_prompt, user_message, max_tokens=8192)
+    response, usage, elapsed = call_claude_tracked(system_prompt, user_message, max_tokens=8192)
 
     files = extract_files(response)
     calibrator_summary_path = f'features/{feature_name}/work/calibrator-summary.md'
@@ -81,6 +81,7 @@ Start your response with STATUS: OK.
     for path, content in files.items():
         write_file(path, content)
     write_file(calibrator_summary_path, calibrator_summary)
+    append_usage_to_summary(calibrator_summary_path, [('Calibrator', usage, elapsed)])
 
     print('Calibration complete.')
 

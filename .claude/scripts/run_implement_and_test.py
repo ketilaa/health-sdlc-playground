@@ -7,7 +7,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from base_agent import (
-    apply_deletions, call_claude, call_claude_messages, collect_prior_feature_files,
+    append_usage_to_summary, apply_deletions,
+    call_claude_tracked, call_claude_messages_tracked,
+    collect_prior_feature_files,
     extract_deletions, extract_files, format_test_output, get_feature_name, is_ok,
     read_file, read_prompt, require_files, strip_file_blocks, write_file,
 )
@@ -59,10 +61,12 @@ def append_iteration_summary(path, content, label):
 
 def run_developer_phase(feature_name, messages, outer_iter):
     system_prompt = read_prompt('developer')
+    usage_rows = []
     for tdd_iter in range(1, MAX_TDD_ITERATIONS + 1):
         print(f'  TDD iteration {tdd_iter}/{MAX_TDD_ITERATIONS}')
-        assistant_text = call_claude_messages(system_prompt, messages, max_tokens=32768)
+        assistant_text, usage, elapsed = call_claude_messages_tracked(system_prompt, messages, max_tokens=32768)
         messages.append({'role': 'assistant', 'content': assistant_text})
+        usage_rows.append((f'Developer O{outer_iter}/T{tdd_iter}', usage, elapsed))
 
         files = extract_files(assistant_text)
         deletions = extract_deletions(assistant_text)
@@ -76,15 +80,18 @@ def run_developer_phase(feature_name, messages, outer_iter):
 
         if not is_ok(assistant_text):
             print(f'Developer STOP:\n{summary}')
+            append_usage_to_summary(summary_path, usage_rows)
             return False, messages
 
         if not os.path.exists(f'features/{feature_name}/scope'):
             print('ERROR: Developer did not write a scope file')
+            append_usage_to_summary(summary_path, usage_rows)
             return False, messages
 
         passed, test_output = run_unit_tests()
         if passed:
             print('  Unit tests passed.')
+            append_usage_to_summary(summary_path, usage_rows)
             return True, messages
 
         print('  Unit tests failed.')
@@ -95,6 +102,7 @@ def run_developer_phase(feature_name, messages, outer_iter):
                 f'Test output:\n{format_test_output(test_output)}'
             )})
 
+    append_usage_to_summary(summary_path, usage_rows)
     print(f'Unit tests still failing after {MAX_TDD_ITERATIONS} TDD iterations.')
     return False, messages
 
@@ -248,7 +256,9 @@ Use these to understand file and behavior ownership across prior features before
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=8192)
+    response, usage, elapsed = call_claude_tracked(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=8192)
+    cr_summary_path = f'features/{feature_name}/work/code-reviewer-summary.md'
+    append_usage_to_summary(cr_summary_path, [(f'Code Reviewer', usage, elapsed)])
     return is_ok(response), response
 
 
@@ -299,7 +309,7 @@ Generate Cucumber + Playwright E2E tests and run-e2e.sh.
 Use ===FILE: path=== / ===END FILE=== delimiters for every file.
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=16384)
+    response, usage, elapsed = call_claude_tracked(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=16384)
 
     files = extract_files(response)
     summary_path = f'features/{feature_name}/work/tester-summary.md'
@@ -307,6 +317,7 @@ Start your response with STATUS: OK or STATUS: STOP.
     for path, content in files.items():
         write_file(path, content)
     append_iteration_summary(summary_path, summary, f'Outer Iteration {outer_iter}')
+    append_usage_to_summary(summary_path, [(f'Tester (iter {outer_iter})', usage, elapsed)])
 
     if not is_ok(response):
         print(f'Tester STOP:\n{summary}')
