@@ -29,10 +29,18 @@ Read these files:
 - **Experimental UX** — apply the **Reviewer checklist** from `.claude/skills/experimental-ux.md`; every item is blocking
 - **Accessibility** — apply the **Reviewer checklist** from `.claude/skills/accessibility.md`; every item is blocking
 
+## Blocking vs. non-blocking
+
+Only block on items that are **UX spec gaps** — missing UI states, undefined flows, accessibility failures, or contradictions with the Gherkin. Do NOT block on:
+
+- Items the spec explicitly delegates to the developer (e.g. fixture data, runtime token verification) — note them in your summary as developer handoff items, not blocking issues
+- Verification of existing design token values (colours, spacing) that are sourced by reference to a prior feature spec — accept that delegation as authoritative; you cannot read the live codebase and it is not your responsibility to do so
+- Low-risk ambiguities that do not affect any Gherkin scenario — note them as suggestions, not blockers
+
 ## Output
 Return `STATUS: OK` only if every validation check passes.
 
-Return `STATUS: STOP` if any gap or contradiction is found — list every issue with a specific reference to the Gherkin scenario or UX section. Do not allow partial approval.
+Return `STATUS: STOP` only if a genuine UX spec gap is found — list every blocking issue with a specific reference to the Gherkin scenario or UX section. Do not allow partial approval on blocking issues, but do not elevate non-blocking observations to blockers.
 
 ## Output files
 - `features/<feature-name>/work/ux-reviewer-summary.md` — use this structure:
