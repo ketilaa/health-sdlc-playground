@@ -197,6 +197,7 @@ def run_code_reviewer(feature_name):
     skills = collect_skills()
     run_tests_sh = read_file('run-tests.sh') or '(not found)'
     run_e2e_sh = read_file('run-e2e.sh') or '(not found)'
+    project_context = read_file('CLAUDE.md') or ''
 
     parts = []
     if scope in ('frontend', 'fullstack'):
@@ -206,6 +207,9 @@ def run_code_reviewer(feature_name):
 
     user_message = f"""Feature name: {feature_name}
 Scope: {scope}
+
+## Project Context
+{project_context}
 
 ## Gherkin Feature Specification
 {feature_spec}
@@ -246,9 +250,13 @@ def run_tester_phase(feature_name, outer_iter):
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
     e2e_package_json = read_file('e2e/package.json') or '(not found)'
     skills = collect_skills()
+    project_context = read_file('CLAUDE.md') or ''
 
     user_message = f"""Feature name: {feature_name}
 Scope: {scope}
+
+## Project Context
+{project_context}
 
 ## Gherkin Feature Specification (do NOT recreate)
 {feature_spec}
@@ -315,11 +323,15 @@ def main():
     existing_sources = collect_existing_sources()
     existing_tests = collect_existing_tests()
     prior_dev_summaries = collect_prior_feature_files(feature_name, 'features/*/work/developer-summary.md')
+    project_context = read_file('CLAUDE.md') or ''
 
     dev_messages = [{'role': 'user', 'content': [
         {
             'type': 'text',
             'text': f"""Feature name: {feature_name}
+
+## Project Context
+{project_context}
 
 ## Gherkin Feature Specification (source of truth for behavior)
 {feature_spec}

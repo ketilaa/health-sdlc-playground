@@ -55,11 +55,15 @@ def main():
 
     feature_spec = read_file(feature_path)
     fr_summary = read_file(fr_summary_path)
+    project_context = read_file('CLAUDE.md') or ''
 
     prior_ux_specs = collect_prior_feature_files(feature_name, 'features/*/ux.md')
     prior_ux_summaries = collect_prior_feature_files(feature_name, 'features/*/work/ux-designer-summary.md')
 
     messages = [{'role': 'user', 'content': f"""Feature name: {feature_name}
+
+## Project Context
+{project_context}
 
 ## Gherkin Feature Specification
 {feature_spec}

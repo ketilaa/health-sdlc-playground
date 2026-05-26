@@ -44,6 +44,7 @@ def main():
 
     # Read existing global findings (may be empty/new)
     existing_findings = read_file(FINDINGS_PATH) or FINDINGS_TEMPLATE
+    project_context = read_file('CLAUDE.md') or ''
 
     # Build the summaries block
     summaries_text = '\n\n'.join(
@@ -52,6 +53,9 @@ def main():
     )
 
     user_message = f"""Feature name: {feature_name}
+
+## Project Context
+{project_context}
 
 ## Existing Global Findings
 {existing_findings}
