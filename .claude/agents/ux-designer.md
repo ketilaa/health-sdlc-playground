@@ -18,10 +18,13 @@ Apply the **Designer principles** from `.claude/skills/accessibility.md` — the
 Read these files:
 - Feature specification: `features/<feature-name>/<feature-name>.feature`
 - Feature reviewer summary: `features/<feature-name>/work/feature-reviewer-summary.md`
+- **Prior UX specs** — `features/*/ux.md` for all previously completed features; read these to understand the established visual language, color tokens, layout patterns, and interaction conventions before designing anything new
+- **Prior UX designer summaries** — `features/*/work/ux-designer-summary.md`; use these to understand the decisions and rationale behind the existing design system
 
 Determine `<feature-name>` from the directory listing under `features/`.
 
 ## What to do
+- Read all prior `features/*/ux.md` and `features/*/work/ux-designer-summary.md` files first to internalize the established color tokens, typography, layout patterns, and component conventions
 - Define all UI elements (buttons, inputs, labels, containers) required for each scenario
 - Define every UI state explicitly: loading, empty, error, success, partial data
 - Define user flows step-by-step: what the user sees and does at each stage
@@ -33,6 +36,7 @@ Determine `<feature-name>` from the directory listing under `features/`.
 - Prescribe HTML, CSS, or framework-specific implementation
 - Invent behavior not present in the Gherkin spec
 - Omit loading, empty, or error states — these are required
+- Abandon or contradict the established visual design system (color tokens, typography, spacing, component patterns) introduced by prior features — if the current feature requires a design system change, state it explicitly in your summary with a rationale
 
 ## Output format
 Return `STATUS: OK` if you can produce a complete UX spec covering all scenarios.
