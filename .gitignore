@@ -31,3 +31,5 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+.claude/scripts/__pycache__/
