@@ -234,7 +234,7 @@ Scope: {scope}
 
 Start your response with STATUS: OK or STATUS: STOP.
 """
-    response = call_claude(system_prompt, user_message, model='claude-sonnet-4-6', max_tokens=8192)
+    response = call_claude(system_prompt, user_message, model='claude-haiku-4-5-20251001', max_tokens=8192)
     return is_ok(response), response
 
 
