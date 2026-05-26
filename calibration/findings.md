@@ -116,10 +116,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** spec-gap
 - **Agent:** product-owner
-- **Seen:** 1
-- **Features:** visual-theme-overhaul
+- **Seen:** 2
+- **Features:** visual-theme-overhaul, enforce-visual-theme
 - **Status:** open
-- **Description:** The product-owner pinned the base URL to `http://localhost:3000/` (Revision 2, decision 1) without consulting `next.config.js`. The tester flagged: "The real page URL is `http://localhost:3000/health-sdlc-playground/` (basePath from `next.config.js`), NOT bare `http://localhost:3000/`." The Gherkin Background URL is technically incorrect; the tester's step definitions navigate to the correct URL but future literal validation against the Gherkin would navigate to a 404.
+- **Description:** The product-owner pinned the base URL to `http://localhost:3000/` without consulting `next.config.js`. In `visual-theme-overhaul` the tester flagged: "The real page URL is `http://localhost:3000/health-sdlc-playground/` (basePath from `next.config.js`), NOT bare `http://localhost:3000/`." In `enforce-visual-theme` the tester again had to rewrite the navigation URL in step definitions to include the basePath. The Gherkin Background URL is technically incorrect in both features; testers must silently correct it in step definitions.
 - **Suggested improvement:** Instruct the product-owner to read `next.config.js` (and equivalent framework-config files) before pinning a base URL in a Gherkin Background. The URL in the Background must be the effective URL a browser would reach, including any `basePath`, reverse-proxy prefix, or port-forwarding convention in use.
 
 ---
@@ -164,11 +164,11 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** developer
-- **Seen:** 2
-- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights
+- **Seen:** 3
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, enforce-visual-theme
 - **Status:** applied
-- **Description:** The tester flagged a blocking gap in `visual-theme-overhaul` that `data-testid='activity-row'` was not explicitly confirmed in the developer summary. In `improve-weekly-aggregates-and-prepare-for-more-insights` the tester listed 13 assumed `data-testid` values as assumptions and flagged that the presence of "Strength Cross-Train" (which has null avg_hr/cadence fields essential to Scenario 2) "cannot be verified at E2E level" without clicking the activity — the E2E test has no reliable way to confirm the testid inventory matches expectations without a published developer manifest. The developer summary lists some testids but does not enumerate all attributes present on rendered DOM elements.
-- **Suggested improvement:** Instruct the developer to include a complete `data-testid` inventory table in their summary, listing every `data-testid` attribute present in the implementation with the element type and parent context. This gives the tester a reliable reference and eliminates assumption-driven selector gaps.
+- **Description:** The tester flagged a blocking gap in `visual-theme-overhaul` that `data-testid='activity-row'` was not explicitly confirmed in the developer summary. In `improve-weekly-aggregates-and-prepare-for-more-insights` the tester listed 13 assumed `data-testid` values as assumptions. In `enforce-visual-theme` the tester was forced to use `{ hasText: 'Week 8' }` text-content matching to distinguish between week rows because the developer did not document (and the implementation does not provide) a unique per-row `data-testid` discriminator — all week rows share the same `data-testid="week-row"`. Without a published testid inventory specifying per-row identifiers, the tester must rely on fragile text-content matching to target specific rows in a list.
+- **Suggested improvement:** Instruct the developer to include a complete `data-testid` inventory table in their summary, listing every `data-testid` attribute present in the implementation with the element type, parent context, and any per-instance discriminators (e.g., `data-week-number` for list rows). For list-of-items components where Gherkin scenarios target specific items, the developer should document how individual items are uniquely addressable by the tester.
 
 ---
 
@@ -217,3 +217,29 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 - **Status:** applied
 - **Description:** The UX spec allowed either an MUI Select (role="combobox") or a ToggleButtonGroup (role="group" with buttons) for the week selector. The developer did not document which was implemented. The tester noted: "The UX spec says 'MUI Select or ToggleButtonGroup' without specifying which the developer chose. The multi-strategy step definition handles both but adds complexity. If neither pattern matches, the test will throw a descriptive error." The tester had to implement branching detection logic and record the widget type as an unresolved assumption.
 - **Suggested improvement:** Instruct the developer to document, for every UI widget where the UX spec offered multiple implementation options, which option was chosen and what the resulting ARIA role and DOM structure are. This information belongs in the developer summary and directly informs the tester's step definitions, eliminating multi-strategy fallback logic.
+
+---
+
+## Finding: Test description contradicts test logic and fixture — semantic failure on fixture transcription
+
+- **Category:** prompt-gap
+- **Agent:** developer
+- **Seen:** 1
+- **Features:** enforce-visual-theme
+- **Status:** open
+- **Description:** In `enforce-visual-theme`, the code reviewer (Iteration 1) returned STOP because a test description in `datasets.test.ts` read "7 weeks have 3 activities and 1 week has **2** activities" while the test body asserted `expect(zero).toBe(1)` (zero activities, not two) and the fixture had Week 4 as the skipped week with `activities: []`. The description was evidently a mis-transcription from a prior feature assertion (which may have had a different fixture shape). The test logic was correct; the description created a false record of fixture intent and required a full reviewer STOP-and-return cycle to fix.
+- **Suggested improvement:** Instruct the developer to verify that every test description accurately reflects the test body's assertion and the fixture's actual data shape before finalising output. When updating an existing test's assertion (e.g., changing expected activity counts because the fixture shape changed), the description must be updated in the same edit. The code-reviewer should be explicitly instructed to compare test descriptions against test body assertions as a standard check, not only against Gherkin scenarios.
+
+---
+
+## Finding: Tester uses positional selector without verifying accordion open mode
+
+- **Category:** assumption-risk
+- **Agent:** tester
+- **Seen:** 1
+- **Features:** enforce-visual-theme
+- **Status:** open
+- **Description:** In `enforce-visual-theme` Scenario 4 (consistency across weeks), the tester used `.first()` on the `week-activities` locator after clicking Week 7, under the assumption the accordion is single-open (i.e., clicking Week 7 collapses Week 8). The tester explicitly flagged this: "If the accordion keeps both panels open simultaneously, `week-activities` returns two elements; `.first()` would return the Week 8 panel rather than Week 7's — a potential false pass." The tester did not read the `RunnerDashboard.tsx` implementation to verify whether the accordion is single-open or multi-open before writing the step definition.
+- **Suggested improvement:** Instruct the tester to read the implementation file(s) for any accordion, tab, or collapsible widget before writing multi-step E2E sequences that rely on a single-open assumption. When the open mode is not confirmed by the developer summary or UX spec, the tester should scope locators to the clicked parent element rather than using a global positional selector (e.g., scope `week-activities` lookup to within the clicked `week-row` element). Document the open-mode assumption explicitly and flag it as a potential false-pass risk if it cannot be confirmed.
+
+---
