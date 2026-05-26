@@ -170,7 +170,22 @@ All 4 Gherkin scenarios are covered.
 
 ---
 
-## 9. Out of Scope
+## 9. Page Integration
+
+The `RunnerDashboard` component must be placed **inside** the existing `training-overview` section in `HomePage.tsx`, below the section heading. This is the correct location — the week accordion is part of the training overview.
+
+Required DOM structure:
+
+```
+<Paper data-testid="training-overview">
+  <Typography>Training Overview</Typography>   ← existing heading, keep it
+  <RunnerDashboard />                          ← add here
+</Paper>
+```
+
+Do not move or modify anything else in `HomePage.tsx`.
+
+## 10. Out of Scope
 
 - Changing visual appearance of activity rows (colour, typography, spacing) — established in `visual-theme-overhaul`
 - Adding new activity types beyond those in the fixture dataset
