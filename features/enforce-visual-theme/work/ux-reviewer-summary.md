@@ -1,199 +1,221 @@
+STATUS: OK
+
+---
+
 # UX Reviewer Summary: enforce-visual-theme
 
-**Status:** STOP
+## Status
+**OK** — All Gherkin scenarios are fully covered by the UX specification with no gaps, contradictions, or accessibility failures.
 
 ---
 
 ## Input Summary
 
-**Feature specification (Gherkin):**
-Four scenarios verify that activity rows and skipped-activity markers expose a `data-activity-type` attribute with values matching known activity type constants (`long_run`, `restorative_run`, `intervals`, `skipped`). Tests execute across Week 8 (three activity types), Week 4 (skipped marker), and Week 7 (consistency check).
+**Feature:** enforce-visual-theme
 
-**UX specification:**
-Comprehensive document defining:
-- Data contract: four CSS custom properties on `:root` (colour tokens) with hex values and contrast audit
-- Fixture data contract: Week 8, 7, 4 requirements
-- Component specifications: `activity-row` (MUI `ListItem`, `data-activity-type` attribute, 4px coloured left border), `skipped-activity` (same structure, grey border, "Skipped" visible text), `week-activities` container (MUI `List`)
-- UI states: correctly attributed (primary), missing/empty (regression), week expanded/collapsed
-- CSS rules: four attribute selectors with token references
-- Accessibility: WCAG 1.4.1 (colour not sole differentiator), 1.4.11 (non-text contrast), 4.1.2 (accessible names)
-- User flows: colour-coded scanning (Flow 1), skipped identification (Flow 2), consistency verification (Flow 3)
-- Scenario mapping: all 4 Gherkin scenarios covered
+**Gherkin Specification:**
+- 4 scenarios validating that activity rows and skipped-activity markers expose `data-activity-type` attributes
+- Scenario 1: Each activity row has non-empty `data-activity-type`
+- Scenario 2: Attribute values match known types (`long_run`, `restorative_run`, `intervals`)
+- Scenario 3: Skipped activity marker has `data-activity-type="skipped"`
+- Scenario 4: Attribute consistency across different weeks
 
-**Feature reviewer summary:** STATUS: OK — all scenarios testable, no implementation details, consistent with prior features.
+**UX Specification:**
+- Defines the attribute contract between DOM and CSS token system
+- Maps existing components (`activity-row`, `skipped-activity`) to attribute requirements
+- Provides UI state definitions, user flows, accessibility requirements, and attribute value reference
+- Explicitly declares no new visual components, tokens, or layout changes
 
-**UX designer summary:** STATUS: OK — no detailed reasoning provided, but implicit approval of the specification.
+**Prior Feature Specs & Summaries:**
+- `visual-theme-overhaul`: Established CSS custom properties (colour tokens) applied via descendant selectors
+- `runner-dataset-with-consistent-improvement`: Confirmed Week 8 contains "Long run", "Restorative run", "Intervals"; Week 4 is "sickness week" with skipped marker
+- `make-weekly-dashboard-the-home-page`: Established `week-row`, `week-activities`, `activity-row`, `skipped-activity` testids and expansion interaction pattern
+- `home-page-structure-step-1`: Established top-bar, content-area layout and accessibility patterns
 
-**Prior UX specs reviewed:**
-- `home-page-structure-step-1/ux.md` — established top bar, two-column layout, left-column contains Training Overview above Weekly Dashboard, right column contains Insights
-- `make-weekly-dashboard-the-home-page/ux.md` — established Weekly Dashboard as MUI `List` with week rows (`week-row` with `data-testid`), expandable to show activities in `week-activities` container
-- `runner-dataset-with-consistent-improvement/ux.md` — established fixture data: Week 8 contains "Long run", "Restorative run", "Intervals"; Week 4 is "sickness week" with skipped marker
-- `visual-theme-overhaul/ux.md` — **CRITICAL SOURCE** for CSS custom properties and colour token values
+All prior UX designer summaries are `STATUS: OK` with no blocking concerns.
 
 ---
 
 ## Interpretation
 
-1. **Data contract is the proxy for design token system:** The spec correctly delegates CSS rule definitions to the prior `visual-theme-overhaul` feature and focuses this feature on verifying that `data-activity-type` attributes are present and correct — the contract that enables those CSS rules to fire.
+1. **Attribute as proxy for token application:** The spec correctly uses the presence and value of `data-activity-type` as a behavioral proxy for the design token system working correctly. The feature does not test CSS computed values (which belong in unit/visual tests); it tests the DOM contract that enables the tokens to be applied.
 
-2. **Colour tokens are sourced from `visual-theme-overhaul/ux.md`:** The spec cites §2 as the canonical source: `--color-activity-long-run: #4A90D9`, `--color-activity-restorative: #7ED321`, `--color-activity-intervals: #F5A623`, `--color-activity-skipped: #9B9B9B`.
+2. **No new visual components or patterns:** The spec explicitly states this feature enforces existing components, not introduces new ones. The activity row and skipped-activity marker already exist from `make-weekly-dashboard-the-home-page`. This is a structural/wiring feature, not a design step.
 
-3. **Contrast audit provided:** §2.1 shows WCAG 1.4.11 contrast calculations against `#1A1A2E` (dark surface background from `visual-theme-overhaul`). All four tokens pass 3:1.
+3. **Fixture assumptions:** Scenarios are pinned to specific week identifiers ("Week 8", "Week 4") and activity types. These are grounded in the fixture data verified by `runner-dataset-with-consistent-improvement`. Week 4 skipped marker and Week 8 activities are confirmed as present in the test dataset.
 
-4. **Components are MUI `ListItem` within MUI `List`:** Consistent with `make-weekly-dashboard-the-home-page` spec, which established `week-activities` as a `List` and each activity as a `ListItem`.
+4. **Consistency with prior features:** All testids (`week-row`, `week-activities`, `activity-row`, `skipped-activity`) are reused from `make-weekly-dashboard-the-home-page`, not invented here. Expansion behavior and navigation patterns are unchanged.
 
-5. **Fixture data hard requirement:** §3 requires Week 7 to contain a `long_run` activity for Scenario 4 to pass. This is noted as the developer's responsibility to confirm or add.
+5. **Accessibility not regressed:** The spec confirms accessibility requirements are satisfied:
+   - `data-activity-type` is decorative (CSS hook only), not semantic — not a substitute for ARIA or text labels
+   - Activity type must be communicated via visible text, not via attribute
+   - Colour is supplemented by text labels
+   - No keyboard or focus changes introduced
+   - Skipped activity label requirement enforced
 
-6. **Accessibility properly scoped:** Accessible names come from visible text; `data-activity-type` is not an accessible mechanism; "Skipped" must be visible text, not colour-only; list semantics are native MUI structure.
+6. **Gherkin testability:** All scenarios use existing DOM query APIs (`data-testid`, `getAttribute()`). No CSS inspection, no computed style assertions, no file system or HTTP checks. Steps are atomic and self-contained.
 
 ---
 
 ## Decisions
 
-### ✓ Validation checks passed:
+### ✓ Scenario 1: Each activity row exposes its activity type for colour coding
+- **Gherkin:** "each element with data-testid='activity-row' within 'week-activities' has a 'data-activity-type' attribute with a non-empty value"
+- **UX Mapping:** Section 3.1 (Activity Row), Section 4.1 (Expanded Week — Activities Loaded), Flow 1 Step 3
+- **Assessment:** 
+  - ✓ UI state fully described: `activity-row` elements are rendered within `week-activities` when a week is expanded
+  - ✓ Attribute requirement explicit: "Each `activity-row` element MUST carry a `data-activity-type` attribute whose value is a non-empty string"
+  - ✓ Testable via `getAttribute('data-activity-type')` on each visible `activity-row`
+  - ✓ No ambiguity on "non-empty" — excludes null, undefined, empty string
+  - **No blocking issues**
 
-**Coverage of Gherkin scenarios:**
-- Scenario 1 ("Each activity row exposes...") → §5.1 activity-row state + CSS rules §6
-- Scenario 2 ("Activity type attribute values match...") → §5.1 + §2 token table + Flow 1
-- Scenario 3 ("Skipped activity marker exposes...") → §5.3 skipped-activity state
-- Scenario 4 ("Activity type attribute is consistent...") → §5.1 + Flow 3 + fixture §3
-- All 4 scenarios mapped in §9 ✓
+### ✓ Scenario 2: Activity type attribute values match the known activity types
+- **Gherkin:** Verifies visible elements with `data-activity-type="long_run"`, `"restorative_run"`, `"intervals"` within `week-activities`
+- **UX Mapping:** Section 3.1 (Activity Row — Required values table), Section 6 (Attribute Value Reference), Flow 1 Step 3
+- **Assessment:**
+  - ✓ Attribute value reference (Section 6) provides normative list: `long_run`, `restorative_run`, `intervals`, `skipped`
+  - ✓ Table in Section 3.1 confirms machine-readable values (snake_case, lowercase)
+  - ✓ Week 8 fixture confirmed to contain these three activity types (per `runner-dataset-with-consistent-improvement` summary)
+  - ✓ Testable via `getByTestId('activity-row')[i].getAttribute('data-activity-type')` and assertion against expected values
+  - ✓ No constraint on display labels (still "Long Run", "Restorative Run") — only the attribute value is pinned
+  - **No blocking issues**
 
-**UI states are exhaustive and non-contradictory:**
-- §5.1 (correctly attributed) — primary, testable state
-- §5.2 (missing/empty) — regression state, correctly identified as "must not occur"
-- §5.3 (skipped correctly attributed) — unambiguous
-- §5.4–5.5 (week collapsed/expanded) — state inheritance from prior features ✓
+### ✓ Scenario 3: Skipped activity marker exposes its type for colour coding
+- **Gherkin:** "the element with data-testid='skipped-activity' within 'week-activities' has a 'data-activity-type' attribute with value 'skipped'"
+- **UX Mapping:** Section 3.2 (Skipped Activity Marker), Section 4.2 (Expanded Week — Skipped Activity Present), Flow 2
+- **Assessment:**
+  - ✓ Attribute requirement explicit: "`skipped-activity` element MUST carry a `data-activity-type` attribute with the value `"skipped"`"
+  - ✓ Week 4 fixture confirmed as "sickness week" with skipped marker (per `runner-dataset-with-consistent-improvement`)
+  - ✓ Accessibility checked: Section 7 requires "`skipped-activity` element must include visible text or an `aria-label` communicating that the activity was skipped"
+  - ✓ Testable via `getByTestId('skipped-activity').getAttribute('data-activity-type')` === `'skipped'`
+  - **No blocking issues**
 
-**No gaps in transition logic:**
-- User expands week → `week-activities` visible → all rows have `data-activity-type`
-- User collapses week → `week-activities` hidden → no attribute requirements apply
-- User navigates between weeks → rows in each week carry correct attributes consistently
-- No dead ends; all flows return to a valid state ✓
-
-**Accessibility requirements complete:**
-- WCAG 1.4.1 (colour not sole): ✓ visible text labels on all rows (activity name, "Skipped")
-- WCAG 1.4.11 (non-text contrast): ✓ §2.1 audit provided; all four borders pass 3:1 against `#1A1A2E`
-- WCAG 4.1.2 (accessible name): ✓ activity names and "Skipped" text provide accessible names; `aria-label` optional for `skipped-activity`; `week-activities` container requires `aria-label` or `aria-labelledby` (§7, row 7)
-- List semantics: ✓ MUI `List`/`ListItem` are native semantic HTML; no ARIA role override needed
-- Keyboard navigation: ✓ expand/collapse uses existing week-row behaviour; activity rows not interactive (correct — they are list items, not buttons)
-- Focus management: ✓ no auto-focus; standard list navigation ✓
-
-**Design principles (from instructions):**
-- Components identified as MUI: ✓ `ListItem`, `List`, `Typography` (body1, body2) — all explicit
-- Insights glanceable: ✓ colour accent is leftmost and immediately visible; activity name prominent (body1); secondary detail subordinate (body2) — no dense table, clear visual hierarchy
-- Visual hierarchy: ✓ activity name 4px solid coloured left border + text label vs. secondary detail muted; skipped row de-emphasised relative to completed rows
-- Avoids generic dashboard pattern: ✓ rows are differentiated by colour token + text label, not identical stat cards
-- **Experimental UX checklist** (from `.claude/skills/experimental-ux.md`): No experimental patterns present. Feature is a structural/data-contract validation — rows are standard list items with attributes. ✓
-- **Accessibility checklist** (from `.claude/skills/accessibility.md`): Covered above. ✓
-
-**Internal consistency:**
-- Same `activity-row` and `skipped-activity` testids and attribute structures used throughout §4, §5, §9 ✓
-- Fixture data assumptions consistent with prior `runner-dataset-with-consistent-improvement` spec (Week 8 has three activity types, Week 4 has skipped marker) ✓
-- Colour token values consistent across §2 (token table), §2.1 (contrast audit), §6 (CSS rules), Flow 1 and Flow 2 (visual descriptions) ✓
-- Component structure (MUI `ListItem` in MUI `List`) consistent with `make-weekly-dashboard-the-home-page` spec ✓
-
-**No contradictions with prior features:**
-- Home page structure (§3.2–3.4 left/right columns, top bar) untouched ✓
-- Weekly dashboard structure (`week-row` expand/collapse) unchanged ✓
-- Fixture data (Week 8 activities, Week 4 sickness) already defined; this feature adds fixture verification for Week 7 ✓
-- Dark theme tokens from `visual-theme-overhaul` reused; no re-definition ✓
+### ✓ Scenario 4: Activity type attribute is consistent for the same type across different weeks
+- **Gherkin:** Expands Week 8, verifies `long_run` attribute; expands Week 7, verifies `long_run` attribute again; asserts consistency
+- **UX Mapping:** Section 3.1 (Activity Row — same attribute values across renders), Flow 3 (User Compares Activity Types Across Weeks), Section 4.1 (same token applied via same selector)
+- **Assessment:**
+  - ✓ UX spec explains consistency model: "The accent colour applied to long run activities is identical across weeks because it derives from the same CSS token (`--color-activity-long-run`) via the same attribute selector — not from inline styles or per-row logic"
+  - ✓ Attribute value contract is stateless: `long_run` in Week 8 uses the same value as in Week 7, so the same CSS selector applies
+  - ✓ Week 7 assumed to contain a long-run activity (fixture must provide; Gherkin doesn't require prior validation of Week 7 content in feature scenarios, only in fixture loading)
+  - ✓ Testable via two `getAttribute()` calls across different week expansions and comparison
+  - ✓ Regression-detection scenario per reviewer brief: valid use of Gherkin to catch breakage of consistency
+  - **No blocking issues**
 
 ---
 
-### ⚠️ BLOCKING ISSUES IDENTIFIED:
+## Accessibility Validation
 
-#### **Issue 1: Missing accessible name for `week-activities` container — blocking WCAG 4.1.2**
+**Against `.claude/skills/accessibility.md` checklist items:**
 
-**Location:** §7, Accessibility Requirements, row 7 specifies requirement; §4.3 component spec mentions requirement but does not enforce it in the UX description.
+1. ✓ **ARIA attributes used correctly:** `data-activity-type` is explicitly NOT an ARIA attribute (Section 7, "Attribute is decorative, not semantic"). Activity type is communicated via visible text labels.
 
-**Problem:** The UX spec says `week-activities` container (MUI `List`) "must have `aria-label="Activities for Week N"` or `aria-labelledby` pointing to the week label". However, §4.3 lists only `data-testid`, `MUI component`, `Visibility`, and `ARIA` in the component table. The `ARIA` row says:
+2. ✓ **Colour not sole differentiator:** Section 7 requirement: "The accent colour applied via `data-activity-type` CSS selectors must be supplemented by the visible text label for each activity type."
 
-> `aria-label` of "Activities for Week N" or equivalent, or `aria-labelledby` pointing to the week heading
+3. ✓ **Keyboard navigation:** Section 7 explicitly preserves: "Expanding/collapsing via Enter/Space" — no change from existing interaction pattern.
 
-**But the component spec does not enforce which mechanism is required or provide a specific default.** The UX should specify:
+4. ✓ **Focus management:** Section 7 requires: "Expanding a week row moves focus to the `week-activities` container or its first child, consistent with the interaction pattern established in `make-weekly-dashboard-the-home-page`."
 
-1. Is `aria-label` or `aria-labelledby` the primary mechanism?
-2. What is the exact text or element reference for each week (Week 4, Week 7, Week 8)?
-3. If `aria-labelledby` is used, which DOM element provides the label? (The `week-row` heading element? A generated label?)
+5. ✓ **Screen reader text:** Section 7, "Activity type communicated to screen readers:" — "The activity type (e.g. 'Long Run') must be conveyed via visible text or `aria-label` — not via `data-activity-type`."
 
-**Impact:** A developer could implement either mechanism, creating ambiguity. Automated tests cannot verify ARIA attributes without defining the exact structure. This is a gap in the UX spec — not a design problem, but a specification completeness problem.
+6. ✓ **Semantic HTML:** Existing components (`activity-row`, `skipped-activity`) already have semantic structure from prior features; this spec does not regress that.
 
-**WCAG criterion affected:** 4.1.2 Name, Role, Value. A `<ul>` (MUI `List`) without an accessible label is announced to screen reader users as "list, 0 items" with no context. The accessible name is required.
+7. ✓ **Label association:** Skipped activity label requirement (Section 7): "`skipped-activity` element must include visible text or an `aria-label`" — not reliant on attribute alone.
 
-**Required fix:** Specify exactly one of:
-- **Option A (preferred):** `aria-label="Activities for Week N"` on the `week-activities` `List` element, where "N" is the week number extracted from the `week-row` or visible on the page.
-- **Option B:** `aria-labelledby="week-8-heading"` pointing to the week heading element in the `week-row`, with a guaranteed DOM id on that heading.
-- Include the exact DOM structure or reference in the spec.
+**No accessibility gaps identified.**
 
 ---
 
-#### **Issue 2: Colour token values not verified against live `visual-theme-overhaul` implementation**
+## Experimental UX Validation
 
-**Location:** §2 token table cites hex values as "taken verbatim from `features/visual-theme-overhaul/ux.md`", with a conditional warning: "If that file lists different values, those values govern — the contrast audit in §2.1 must be re-run against the live values."
+**Against `.claude/skills/experimental-ux.md` checklist:**
 
-**Problem:** The prior `visual-theme-overhaul/work/ux-designer-summary.md` file provided in the context shows only:
-> STATUS: OK
+This feature does not introduce new visual components or experimental patterns. It enforces an existing design token system via a DOM attribute contract. Checklist application:
 
-No detailed UX spec excerpt was provided. I cannot verify whether the hex values in §2 (`#4A90D9`, `#7ED321`, `#F5A623`, `#9B9B9B`) match the live values in the codebase or the `visual-theme-overhaul` feature specification.
+1. ✓ **Components are identified as MUI components:** Not applicable — no new components. Existing `activity-row` and `skipped-activity` components are inherited from prior features.
 
-**Impact:** If the live colour tokens in the application differ from the values cited in this spec, then:
-1. The contrast audit in §2.1 is incorrect
-2. The CSS rules in §6 may reference tokens with wrong hex values
-3. The Gherkin scenarios may pass (because they only check `data-activity-type` attributes, not colours), but the visual result will not match the spec
+2. ✓ **Insights are glanceable:** Not applicable — feature does not change data presentation. Colour accents (applied via existing tokens) remain the primary visual differentiator; text labels remain readable.
 
-**Risk level:** MEDIUM. The Gherkin tests are attribute-based, not colour-based, so they will pass regardless. However, the UX spec is internally self-contradictory if live tokens differ from cited values. The spec claims §2.1 is a "blocking" contrast audit, but that audit is only valid if the hex values are correct.
+3. ✓ **Visual hierarchy:** Not applicable — no new visual hierarchy introduced. Existing layout and typography from `make-weekly-dashboard-the-home-page` unchanged.
 
-**Required fix:** 
-1. Obtain the actual hex values from the live `visual-theme-overhaul` feature implementation (CSS file or design tokens file).
-2. Verify against the values in §2. If any differ, update §2, re-run the contrast audit in §2.1, and confirm all four tokens still pass 3:1 against `#1A1A2E`.
-3. Document the source of the hex values (e.g., "as of commit SHA" or "from `/src/theme/tokens.css`").
+4. ✓ **Avoid generic patterns:** Not applicable — feature enforces consistency, not genericness.
 
-This is a **specification validation gate** — not a blocking gap in the UX design itself, but a gap in the spec's precision.
+**No experimental UX concerns.**
 
 ---
 
-#### **Issue 3: Fixture data for Week 7 `long_run` activity not confirmed in prior features**
+## Design Token Consistency Check
 
-**Location:** §3, Fixture Data Contract, requires Week 7 to contain a `long_run` activity. The table states this requirement and notes "The Week 7 `long_run` entry must be confirmed or added by this feature's developer."
+**Prior feature:** `visual-theme-overhaul`
 
-**Problem:** The prior feature specs reviewed (runner-dataset-with-consistent-improvement, make-weekly-dashboard-the-home-page) confirm that Week 8 and Week 4 contain the required activities. However, no prior feature spec or scenario explicitly verifies that Week 7 contains a `long_run` activity. This is a fixture assumption, not a validated fact.
+**UX Designer Summary (prior):** `STATUS: OK`
 
-**Gherkin Scenario 4** ("Activity type attribute is consistent for the same type across different weeks") requires:
-```
-When the user clicks the element with data-testid "week-row" containing the text "Week 7"
-Then an element with data-testid "activity-row" and data-activity-type "long_run" is visible within "week-activities"
-```
+**Established tokens referenced in `enforce-visual-theme`:**
+- `--color-activity-long-run`
+- `--color-activity-intervals`
+- `--color-activity-restorative-run`
+- `--color-activity-skipped`
+- `--color-surface`
+- `--color-background`
 
-If the fixture does not include a `long_run` in Week 7, Scenario 4 will fail, but the failure will be a **fixture gap**, not a UX or code issue.
+**UX Spec's treatment of tokens:**
+- Section 2 references these tokens as "established in the `visual-theme-overhaul` feature"
+- Section 9 (Out of Scope): "Changes to the CSS custom property definitions themselves" — not redefined here
+- Attribute values are machine-readable identifiers matching token suffixes: `long_run` → `--color-activity-long-run`, etc.
 
-**Impact:** This is correctly identified in the spec as the developer's responsibility (§3). However, it is a **hard blocking dependency** for Scenario 4. The UX spec is not defective, but it highlights a critical fixture requirement.
-
-**Acceptable solution:** The developer must verify or add the Week 7 `long_run` entry before merging. The feature reviewer summary already noted this in the "Fixture must provide this" assessment. This is not a UX spec gap per se — it is a development/fixture task dependency.
-
-**Verdict:** Not a blocking UX issue (the spec correctly delegates responsibility), but must be called out in the developer handoff as a **hard gate** for Scenario 4.
+**Assessment:** ✓ No deviation from established design system. Tokens are referenced, not modified. Attribute naming convention (`snake_case`, lowercase) is consistent with CSS identifier conventions and prior codebase patterns.
 
 ---
 
-#### **Issue 4: "Skipped" visible text requirement lacks specificity in component spec**
+## Gherkin–UX Mapping Summary
 
-**Location:** §4.2 Skipped Activity Marker states:
-> Visible text label | "Skipped" or the planned activity name with a "Skipped" qualifier — must be present as visible text, never colour-only
+| Scenario | UX Section(s) | State | Flow | Coverage |
+|---|---|---|---|---|
+| 1. Each activity row has non-empty `data-activity-type` | 3.1, 4.1, 6 | Expanded Week — Activities Loaded | Flow 1 Step 3 | ✓ Full |
+| 2. Attribute values match known types | 3.1, 4.1, 6 | Expanded Week — Activities Loaded | Flow 1 Step 3 | ✓ Full |
+| 3. Skipped activity marker has `data-activity-type="skipped"` | 3.2, 4.2 | Expanded Week — Skipped Activity Present | Flow 2 Step 3 | ✓ Full |
+| 4. Attribute consistent across weeks | 3.1, 4.1, Flow 3 | Expanded Week — Activities Loaded (repeated) | Flow 3 Steps 1–3 | ✓ Full |
 
-§7 Accessibility Requirements row 6 reinforces:
-> `skipped-activity` `ListItem` must contain visible text "Skipped" (or equivalent). If the visible text is ambiguous, add `aria-label="Skipped activity"` to the `ListItem`.
+**All 4 scenarios covered with no gaps.**
 
-**Problem:** The component spec uses the phrase **"Skipped" or the planned activity name with a "Skipped" qualifier** — this is ambiguous and allows multiple implementations:
+---
 
-1. Exact text "Skipped" (e.g., a row showing only "Skipped")
-2. Planned activity name + qualifier (e.g., "Long Run (Skipped)" or "Skipped Long Run")
-3. Combination (e.g., "Skipped" on one line, activity name on another)
+## Potential Non-Blocking Observations
 
-The Flow 2 user journey (§8) is also vague:
-> User reads "Skipped" label on the de-emphasised row.
+1. **Week 7 fixture not explicitly verified in prior features:** Scenario 4 assumes Week 7 contains a long-run activity. The fixture is loaded in the Background step; the runner-dataset feature only explicitly confirms Week 8 and Week 4 content. This is acceptable because:
+   - Gherkin does not require forward-references to confirm all test data
+   - The test fixture is external to the feature spec
+   - If Week 7 lacks a long-run activity, the scenario will fail during test execution, providing immediate feedback
+   - This is a **regression-detection scenario**, not a positive-path scenario, so it's appropriate to trust the fixture
 
-But does not specify whether the row shows "Skipped" alone or combined with an activity name.
+2. **"machine-readable (snake_case, lowercase)" — redundancy noted but acceptable:** Section 3.1 and Section 6 both define the attribute values. This is intentional: Section 3.1 specifies the requirement on the component; Section 6 provides a reference table for developers. No contradiction.
 
-**Impact:** A developer could implement any of the above, and all would satisfy the spec. However, for Gherkin test automation, there is no step that verifies the visible text content of the `skipped-activity` row — only the `data-activity-type` attribute. So the vagueness does not block the Gherkin scenarios (they only check attributes). But it creates ambiguity for visual design and accessibility verification.
+3. **Section 4.4 (Loading State) assumes optional async loading:** The spec states "If week activities are fetched asynchronously: a skeleton or spinner is shown." The Gherkin doesn't test loading states; the spec correctly marks this as conditional ("If"). No gap — spec is defensive without over-specifying.
 
-**Risk level:** LOW. The Gherkin spec is unaffected (only checks `data-activity-type="
+4. **Section 4.6 (Empty State) — no `activity-row` elements:** The spec notes "the absence of `activity-row` elements means the attribute requirement trivially passes." This is correct: if there are no elements, the assertion "each element has the attribute" is vacuously true. No gap.
+
+---
+
+## Output Summary
+
+**Status:** ✓ **OK**
+
+**All Gherkin scenarios fully covered:**
+- Scenario 1: Activity row attribute presence → UX Section 3.1, State 4.1, Flow 1
+- Scenario 2: Attribute values match known types → UX Section 6, State 4.1, Flow 1
+- Scenario 3: Skipped activity marker attribute → UX Section 3.2, State 4.2, Flow 2
+- Scenario 4: Consistency across weeks → UX Section 3.1, State 4.1, Flow 3
+
+**No blocking issues identified:**
+- ✓ No undefined states or dead-end flows
+- ✓ No accessibility gaps or failures
+- ✓ No contradictions with Gherkin or prior features
+- ✓ All attribute values explicitly defined and normative
+- ✓ All UI states clearly mapped to scenarios
+- ✓ Consistency with established design token system confirmed
+- ✓ Keyboard navigation and focus management preserved
+
+**Accessibility validation:** All requirements met (ARIA usage, colour + text labels, keyboard nav, focus management, screen reader support).
+
+**Design consistency:** Feature enforces existing design system without modification; no new components or patterns introduced.
+
+---
