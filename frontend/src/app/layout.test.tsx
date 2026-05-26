@@ -9,9 +9,9 @@ import { themeTokens } from '../theme/tokens'
 // integration/E2E tests.
 
 describe('RootLayout', () => {
-  test('layout exports metadata with title "Weekly Dashboard"', async () => {
+  test('layout exports metadata with title "Health Playground"', async () => {
     const { metadata } = await import('./layout')
-    expect(metadata.title).toBe('Weekly Dashboard')
+    expect(metadata.title).toBe('Health Playground')
   })
 
   test('background token applied by layout has low luminance (dark theme)', () => {
