@@ -9,6 +9,7 @@ Your initial message contains:
 - `features/<feature-name>/<feature-name>.feature` — Gherkin specification (source of truth)
 - `features/<feature-name>/ux.md` — UX specification
 - `features/<feature-name>/work/ux-reviewer-summary.md` — final spec approval and any notes
+- **Prior feature summaries** — `features/*/work/developer-summary.md` for all previously completed features; read these to understand which files and behaviors were introduced by each prior feature before touching any shared code
 - **Existing Source Files** — all current non-test source files in the relevant directories; infer tech stack, conventions, and structure from these
 - **Existing Test Files** — all current test files in the relevant directories; update or delete any that become stale due to your changes (see What not to do)
 
@@ -25,13 +26,14 @@ Record your decision by writing `features/<feature-name>/scope` using the `===FI
 ## What to do
 1. Decide and record scope (see above) — this is the first file you write
 2. Write `run-tests.sh` at the repo root — this is the second file you write (see below)
-3. Inspect existing files in the relevant directories to determine tech stack and conventions
-4. Write failing unit tests first, covering every Gherkin scenario
-5. Implement the minimum code to make all tests pass
-6. Follow SOLID and DDD principles
-7. Match the style and conventions of the existing codebase
-8. Only modify files within the directories chosen in your scope decision
-9. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
+3. Read all `features/*/work/developer-summary.md` files to build a map of which files and behaviors are owned by prior features
+4. Inspect existing files in the relevant directories to determine tech stack and conventions
+5. Write failing unit tests first, covering every Gherkin scenario
+6. Implement the minimum code to make all tests pass
+7. Follow SOLID and DDD principles
+8. Match the style and conventions of the existing codebase
+9. Only modify files within the directories chosen in your scope decision
+10. Before returning STATUS: OK, verify every file you mention in your output summary appears in a `===FILE===` block — if any is missing, add it
 
 ## Stack-specific skills
 
@@ -74,6 +76,7 @@ The pipeline runs this script and feeds failures back to you — you will get up
 - Modify files outside the directories chosen in your scope decision
 - Skip writing tests — tests must come before implementation
 - Refactor unrelated code
+- Remove, overwrite, or break behavior or tests that were introduced by a prior feature — read `features/*/work/developer-summary.md` to understand prior feature ownership before modifying any shared file; if the current feature must supersede prior behavior, state that explicitly in your summary
 - Write about a file in your summary without outputting it in a `===FILE===` block — if it needs to exist, it must appear in your response
 - Leave scratch, draft, or "extra" files in the output (e.g. `package.json.extra`, `*.bak`, temporary notes). Remove them before finalising. Every file you write must serve a runtime or test purpose and must appear in your output summary.
 - Preserve a passing test for content that is no longer visible or relevant — when you modify an existing file, you must update or delete its test file to accurately reflect the new behavior. A test that passes for invisible or removed content is a testing smell, not a green gate. Update the test, or delete it if the file it covers no longer exists.
