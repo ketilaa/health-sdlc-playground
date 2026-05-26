@@ -194,6 +194,7 @@ def run_code_reviewer(feature_name):
     ux_spec = read_file(f'features/{feature_name}/ux.md')
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
+    uxr_summary = read_file(f'features/{feature_name}/work/ux-reviewer-summary.md') or ''
     skills = collect_skills()
     run_tests_sh = read_file('run-tests.sh') or '(not found)'
     run_e2e_sh = read_file('run-e2e.sh') or '(not found)'
@@ -216,6 +217,9 @@ Scope: {scope}
 
 ## UX Specification
 {ux_spec}
+
+## UX Reviewer Summary
+{uxr_summary}
 
 ## Developer Summary
 {dev_summary}
@@ -248,6 +252,7 @@ def run_tester_phase(feature_name, outer_iter):
     ux_spec = read_file(f'features/{feature_name}/ux.md')
     scope = (read_file(f'features/{feature_name}/scope') or '').strip()
     dev_summary = read_file(f'features/{feature_name}/work/developer-summary.md')
+    cr_summary = read_file(f'features/{feature_name}/work/code-reviewer-summary.md') or ''
     e2e_package_json = read_file('e2e/package.json') or '(not found)'
     skills = collect_skills()
     project_context = read_file('CLAUDE.md') or ''
@@ -266,6 +271,9 @@ Scope: {scope}
 
 ## Developer Summary
 {dev_summary}
+
+## Code Reviewer Summary
+{cr_summary}
 
 ## Stack-specific Skills
 {skills}
@@ -319,6 +327,8 @@ def main():
     feature_spec = read_file(feature_path)
     ux_spec = read_file(ux_path)
     uxr_summary = read_file(uxr_summary_path)
+    fr_summary = read_file(f'features/{feature_name}/work/feature-reviewer-summary.md') or ''
+    uxd_summary = read_file(f'features/{feature_name}/work/ux-designer-summary.md') or ''
     skills = collect_skills()
     existing_sources = collect_existing_sources()
     existing_tests = collect_existing_tests()
@@ -336,8 +346,14 @@ def main():
 ## Gherkin Feature Specification (source of truth for behavior)
 {feature_spec}
 
+## Feature Reviewer Summary
+{fr_summary}
+
 ## UX Specification
 {ux_spec}
+
+## UX Designer Summary
+{uxd_summary}
 
 ## UX Reviewer Summary (spec approval)
 {uxr_summary}
