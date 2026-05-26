@@ -1,0 +1,11 @@
+The visual theme established by the visual-theme-overhaul feature has been
+partially overwritten by subsequent features. The five CSS custom properties
+on :root (--color-activity-long-run, --color-activity-restorative-run,
+--color-activity-intervals, --color-activity-skipped, --color-background),
+the dark body background (WCAG luminance < 0.2), and per-activity-type
+background-color coding may no longer be applied correctly across all screens.
+
+Restore and enforce the full visual theme across the entire app so that all
+pages — including those added by later features — honour the established
+design token system. Do not re-specify behavior that is already working;
+only re-assert what has regressed.

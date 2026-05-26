@@ -1,22 +1,22 @@
-export type ActivityType = 'Long run' | 'Restorative run' | 'Intervals'
-
 export interface Activity {
   id: string
-  date: string // ISO date
-  displayDate: string // e.g. "Mon, Oct 14"
-  type: ActivityType
-  distanceKm: number
-  durationMinutes: number
+  name: string
+  type: string
+  distanceKm?: number
+  durationMin?: number
+  avgHr?: number
+  cadence?: number
 }
 
-export interface SkippedMarker {
+export interface SkippedWeek {
   reason: string
 }
 
 export interface Week {
   weekNumber: number
+  label: string
   activities: Activity[]
-  skipped?: SkippedMarker
+  skipped?: SkippedWeek
 }
 
 export interface Dataset {
@@ -26,91 +26,89 @@ export interface Dataset {
   weeks: Week[]
 }
 
-// Helper to build a typical 3-activity week.
-function typicalWeek(weekNumber: number, totalKm: number, baseDateIso: string, baseDateLabel: string, distances: [number, number, number], durations: [number, number, number]): Week {
-  void totalKm
-  return {
-    weekNumber,
-    activities: [
-      {
-        id: `w${weekNumber}-long`,
-        date: `${baseDateIso}-long`,
-        displayDate: `${baseDateLabel} (Sun)`,
-        type: 'Long run',
-        distanceKm: distances[0],
-        durationMinutes: durations[0],
-      },
-      {
-        id: `w${weekNumber}-restorative`,
-        date: `${baseDateIso}-rest`,
-        displayDate: `${baseDateLabel} (Tue)`,
-        type: 'Restorative run',
-        distanceKm: distances[1],
-        durationMinutes: durations[1],
-      },
-      {
-        id: `w${weekNumber}-intervals`,
-        date: `${baseDateIso}-int`,
-        displayDate: `${baseDateLabel} (Thu)`,
-        type: 'Intervals',
-        distanceKm: distances[2],
-        durationMinutes: durations[2],
-      },
-    ],
-  }
-}
-
-// 8 weeks; week 4 is the sickness week (2 activities + skipped marker).
-// Volumes grow consistently from week 1 (lowest) to week 8 (highest).
-const weeks: Week[] = [
-  typicalWeek(1, 22, '2025-08-25', 'Aug 25', [10.0, 5.0, 7.0], [60, 30, 40]),
-  typicalWeek(2, 24, '2025-09-01', 'Sep 1', [11.0, 5.5, 7.5], [66, 33, 43]),
-  typicalWeek(3, 26, '2025-09-08', 'Sep 8', [12.0, 6.0, 8.0], [72, 36, 46]),
-  {
-    weekNumber: 4,
-    activities: [
-      {
-        id: 'w4-long',
-        date: '2025-09-15-long',
-        displayDate: 'Sep 15 (Sun)',
-        type: 'Long run',
-        distanceKm: 8.0,
-        durationMinutes: 50,
-      },
-      {
-        id: 'w4-restorative',
-        date: '2025-09-17-rest',
-        displayDate: 'Sep 17 (Tue)',
-        type: 'Restorative run',
-        distanceKm: 4.0,
-        durationMinutes: 25,
-      },
-    ],
-    skipped: { reason: 'Skipped due to sickness' },
-  },
-  typicalWeek(5, 28, '2025-09-22', 'Sep 22', [13.0, 6.5, 8.5], [78, 39, 49]),
-  typicalWeek(6, 30, '2025-09-29', 'Sep 29', [13.5, 7.0, 9.5], [80, 42, 55]),
-  typicalWeek(7, 30, '2025-10-06', 'Oct 6', [14.0, 7.0, 9.0], [82, 42, 52]),
-  typicalWeek(8, 32, '2025-10-13', 'Oct 13', [14.0, 8.0, 10.0], [80, 45, 65]),
-]
-
-// The canonical user-facing dataset. It is the default and must also appear in
-// the dataset selector dropdown, hence isTestFixture = false. The name must
-// not contain "Test Fixture" so the selectable-datasets filter (which excludes
-// fixtures by name match in tests) is satisfied.
 export const fixtureDataset: Dataset = {
-  id: 'half-marathon-8wk',
+  id: 'half-marathon-build-up',
   name: 'Half-Marathon Build-Up — 8 Week Consistent Plan',
-  isTestFixture: false,
-  weeks,
+  isTestFixture: true,
+  weeks: [
+    {
+      weekNumber: 1,
+      label: 'Week 1',
+      activities: [
+        { id: 'w1-a1', name: 'Easy Run', type: 'Restorative run', distanceKm: 6.0, durationMin: 38, avgHr: 138, cadence: 162 },
+        { id: 'w1-a2', name: 'Intervals', type: 'Intervals', distanceKm: 7.5, durationMin: 45, avgHr: 162, cadence: 178 },
+        { id: 'w1-a3', name: 'Long run', type: 'Long run', distanceKm: 14.0, durationMin: 88, avgHr: 142, cadence: 164 },
+      ],
+    },
+    {
+      weekNumber: 2,
+      label: 'Week 2',
+      activities: [
+        { id: 'w2-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 6.0, durationMin: 40, avgHr: 136, cadence: 161 },
+        { id: 'w2-a2', name: 'Intervals', type: 'Intervals', distanceKm: 8.0, durationMin: 46, avgHr: 164, cadence: 179 },
+        { id: 'w2-a3', name: 'Long run', type: 'Long run', distanceKm: 16.0, durationMin: 100, avgHr: 143, cadence: 165 },
+      ],
+    },
+    {
+      weekNumber: 3,
+      label: 'Week 3',
+      activities: [
+        { id: 'w3-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 6.0, durationMin: 38, avgHr: 135, cadence: 162 },
+        { id: 'w3-a2', name: 'Intervals', type: 'Intervals', distanceKm: 8.0, durationMin: 44, avgHr: 165, cadence: 180 },
+        { id: 'w3-a3', name: 'Long run', type: 'Long run', distanceKm: 17.0, durationMin: 106, avgHr: 141, cadence: 163 },
+      ],
+    },
+    {
+      weekNumber: 4,
+      label: 'Week 4',
+      activities: [],
+      skipped: { reason: 'Skipped due to sickness' },
+    },
+    {
+      weekNumber: 5,
+      label: 'Week 5',
+      activities: [
+        { id: 'w5-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 5.0, durationMin: 34, avgHr: 136, cadence: 161 },
+        { id: 'w5-a2', name: 'Intervals', type: 'Intervals', distanceKm: 7.5, durationMin: 44, avgHr: 161, cadence: 177 },
+        { id: 'w5-a3', name: 'Long run', type: 'Long run', distanceKm: 16.0, durationMin: 102, avgHr: 140, cadence: 162 },
+      ],
+    },
+    {
+      weekNumber: 6,
+      label: 'Week 6',
+      activities: [
+        { id: 'w6-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 6.0, durationMin: 38, avgHr: 134, cadence: 162 },
+        { id: 'w6-a2', name: 'Intervals', type: 'Intervals', distanceKm: 8.5, durationMin: 47, avgHr: 163, cadence: 179 },
+        { id: 'w6-a3', name: 'Long run', type: 'Long run', distanceKm: 18.0, durationMin: 112, avgHr: 140, cadence: 163 },
+      ],
+    },
+    {
+      weekNumber: 7,
+      label: 'Week 7',
+      activities: [
+        { id: 'w7-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 6.0, durationMin: 37, avgHr: 133, cadence: 163 },
+        { id: 'w7-a2', name: 'Intervals', type: 'Intervals', distanceKm: 9.0, durationMin: 48, avgHr: 165, cadence: 181 },
+        { id: 'w7-a3', name: 'Long run', type: 'Long run', distanceKm: 19.0, durationMin: 118, avgHr: 139, cadence: 164 },
+      ],
+    },
+    {
+      weekNumber: 8,
+      label: 'Week 8',
+      activities: [
+        { id: 'w8-a1', name: 'Restorative run', type: 'Restorative run', distanceKm: 5.0, durationMin: 32, avgHr: 132, cadence: 162 },
+        { id: 'w8-a2', name: 'Intervals', type: 'Intervals', distanceKm: 8.0, durationMin: 44, avgHr: 160, cadence: 178 },
+        { id: 'w8-a3', name: 'Long run', type: 'Long run', distanceKm: 21.1, durationMin: 130, avgHr: 144, cadence: 165 },
+      ],
+    },
+  ],
 }
 
 export const allDatasets: Dataset[] = [fixtureDataset]
 
-export function getSelectableDatasets(): Dataset[] {
-  return allDatasets.filter((d) => !d.isTestFixture)
-}
-
 export function getDefaultDataset(): Dataset {
   return fixtureDataset
+}
+
+export function getSelectableDatasets(): Dataset[] {
+  return allDatasets.filter((d) => !d.isTestFixture)
 }

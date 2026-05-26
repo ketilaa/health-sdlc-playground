@@ -11,6 +11,7 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import { WeeklyDashboard } from './WeeklyDashboard'
+import RunnerDashboard from './RunnerDashboard'
 
 export default function HomePage() {
   const [dataset, setDataset] = useState('demo')
@@ -92,6 +93,14 @@ export default function HomePage() {
                 Training Overview
               </Typography>
             </Paper>
+
+            {/* Runner Dashboard: accordion-style week list exposing data-activity-type
+                attributes for CSS design token application (enforce-visual-theme feature).
+                Rendered as a sibling to training-overview, not inside it, to preserve
+                the home-page-structure-step-1 placeholder contract. */}
+            <Box data-testid="runner-dashboard-section">
+              <RunnerDashboard />
+            </Box>
 
             <Box data-testid="weekly-dashboard">
               <WeeklyDashboard />
