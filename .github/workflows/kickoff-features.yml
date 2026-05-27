@@ -18,40 +18,42 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Create feature issues from backlog
+      - name: Create first feature issue from backlog
         run: |
           BRANCH="${{ github.event.pull_request.head.ref }}"
           ISSUE_NUM="${BRANCH#plan/issue-}"
-          BACKLOG="incoming-requests/$ISSUE_NUM/backlog.md"
 
-          if [ ! -f "$BACKLOG" ]; then
-            echo "No backlog found at $BACKLOG — nothing to kick off."
-            exit 0
-          fi
+          python3 - <<PYEOF
+import re, json, subprocess, sys, os
 
-          # Extract feature names from "## Feature N: {name}" headings
-          FEATURES=$(grep -oP '(?<=## Feature \d: )[\w-]+' "$BACKLOG" || true)
+issue_num = int('$ISSUE_NUM')
+backlog_path = f'incoming-requests/{issue_num}/backlog.md'
 
-          if [ -z "$FEATURES" ]; then
-            echo "No features found in backlog."
-            exit 0
-          fi
+if not os.path.exists(backlog_path):
+    print(f'No backlog at {backlog_path} — nothing to kick off.')
+    sys.exit(0)
 
-          echo "Features to kick off:"
-          echo "$FEATURES"
+backlog = open(backlog_path).read()
+features = re.findall(r'^## Feature \d+: ([\w-]+)', backlog, re.MULTILINE)
 
-          for FEATURE in $FEATURES; do
-            BRIEF="incoming-requests/$ISSUE_NUM/$FEATURE/brief.md"
-            if [ -f "$BRIEF" ]; then
-              BODY=$(cat "$BRIEF")
-            else
-              BODY="Feature: $FEATURE\n\nSee incoming-requests/$ISSUE_NUM/backlog.md for details."
-            fi
-            echo "Creating issue for: $FEATURE"
-            gh issue create \
-              --title "$FEATURE" \
-              --body "$BODY" \
-              --label "direct-feature"
-          done
+if not features:
+    print('No features found in backlog.')
+    sys.exit(0)
+
+print(f'Backlog: {features}')
+first = features[0]
+brief_path = f'incoming-requests/{issue_num}/{first}/brief.md'
+body = open(brief_path).read() if os.path.exists(brief_path) else f'Feature: {first}\n\nSee incoming-requests/{issue_num}/backlog.md for details.'
+body += f'\n\n<!-- plan:{json.dumps({"n": issue_num, "i": 0})} -->'
+
+print(f'Kicking off Feature 1: {first}')
+r = subprocess.run(['gh', 'issue', 'create', '--title', first, '--body', body, '--label', 'direct-feature'],
+                   capture_output=True, text=True)
+if r.returncode != 0:
+    print(r.stderr); sys.exit(1)
+print(r.stdout.strip())
+if len(features) > 1:
+    print(f'Remaining features will chain after each merge: {features[1:]}')
+PYEOF
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}

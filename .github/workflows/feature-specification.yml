@@ -42,13 +42,28 @@ jobs:
           FEATURE="${{ steps.branch.outputs.feature_name }}"
           mkdir -p "features/$FEATURE"
           printf '%s' "$ISSUE_BODY" > "features/$FEATURE/feature.txt"
-          printf '{"issue_number":%s,"feature_name":"%s","issue_author":"%s"}\n' \
-            "${{ github.event.issue.number }}" \
-            "${{ steps.branch.outputs.feature_name }}" \
-            "${{ github.event.issue.user.login }}" \
-            > features/.pipeline_context.json
+          python3 -c "
+import re, json, os
+feature = os.environ['FEATURE']
+body = open(f'features/{feature}/feature.txt').read()
+ctx = {
+    'issue_number': int(os.environ['ISSUE_NUMBER']),
+    'feature_name': feature,
+    'issue_author': os.environ['ISSUE_AUTHOR'],
+}
+m = re.search(r'<!-- plan:(\{.*?\}) -->', body)
+if m:
+    meta = json.loads(m.group(1))
+    ctx['plan_issue_number'] = meta.get('n')
+    ctx['feature_index'] = meta.get('i')
+    print(f'Plan metadata found: issue {meta.get(\"n\")}, feature index {meta.get(\"i\")}')
+json.dump(ctx, open('features/.pipeline_context.json', 'w'))
+"
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
+          FEATURE: ${{ steps.branch.outputs.feature_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
 
       - run: pip install -r requirements.txt
 
