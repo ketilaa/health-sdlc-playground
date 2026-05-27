@@ -118,8 +118,23 @@ To delete a file, emit a `===DELETE: path===` marker (no closing tag, no content
 
 The pipeline will physically remove those files from disk. Use this whenever a Gherkin scenario requires a file to not exist, or when you are removing a component entirely. Do not replace files with empty stubs as a workaround — delete them.
 
-Return `STATUS: OK` when implementation is complete and all tests pass. The pipeline runs your tests after each iteration and feeds failures back to you — you will get up to 3 attempts to make them pass.
-Return `STATUS: STOP` if the specs are insufficient to implement — list what is missing.
+The pipeline runs your tests after each iteration and feeds failures back to you — you will get up to 3 attempts to make them pass.
+
+## Diagnosing test failures
+
+When `run-tests.sh` returns failures, do this before making any changes:
+1. Quote each failing assertion verbatim — the exact expected value and the exact received value
+2. Write one sentence explaining why those specific values differ
+3. Only then propose a fix — the fix must address the quoted mismatch directly, not a pattern you recognise from elsewhere
+
+Example of correct diagnosis: `Expected: "↑ Increasing" / Received: "↑Increasing"` → two adjacent spans with no whitespace node between them. Fix: add `{' '}` between the spans.
+
+Example of incorrect diagnosis: seeing a DOM warning about unknown props and concluding the MUI component is broken — when the actual test failure is about text content mismatch.
+
+`STATUS: STOP` is reserved for spec gaps that make implementation impossible — not for test failures you can diagnose. You have multiple TDD iterations; use them.
+
+Return `STATUS: OK` when implementation is complete and all tests pass.
+Return `STATUS: STOP` if the specs are genuinely insufficient to implement — list what is missing.
 
 ## Output files
 - `features/<feature-name>/scope` — `frontend`, `backend`, or `fullstack` (write this first)
