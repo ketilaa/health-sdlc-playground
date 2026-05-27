@@ -77,6 +77,7 @@ jobs:
         run: |
           ISSUE_NUM="${{ github.event.issue.number }}"
           gh label create "planning" --color "0075ca" --description "Planner backlog awaiting review" 2>/dev/null || true
+          gh label create "direct-feature" --color "e4e669" --description "Skip planner — go straight to feature specification" 2>/dev/null || true
           BACKLOG=$(cat "incoming-requests/$ISSUE_NUM/backlog.md" 2>/dev/null || echo "(backlog not generated)")
           BODY=$(printf 'Planned feature backlog for issue #%s.\n\nReview the backlog and per-feature briefs in `incoming-requests/%s/`, then merge to approve and hand off to the Product Owner pipeline.\n\n---\n\n%s' \
             "$ISSUE_NUM" "$ISSUE_NUM" "$BACKLOG")
