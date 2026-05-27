@@ -158,19 +158,23 @@ def append_usage_to_summary(path, rows):
 
 
 def is_ok(text):
-    """Return True if response contains STATUS: OK; False for STOP or missing.
+    """Return True if the final STATUS line is OK; False for STOP or missing.
+
+    Uses the LAST STATUS line as the authoritative verdict — agents write their
+    opening summary block first (which may contain an intermediate status) and
+    conclude with the real verdict at the end.
 
     Accepts common markdown variants produced by agents:
       STATUS: OK          (canonical)
       ## Status: OK       (markdown heading)
       **Status:** OK      (bold label)
     """
+    verdict = None
     for line in text.split('\n'):
-        # Strip leading markdown heading markers and bold/italic markers
         core = line.strip().lstrip('#').lstrip('*').strip().lstrip('*').strip()
         if core.upper().startswith('STATUS:'):
-            return 'STOP' not in core.upper()
-    return False  # no STATUS line → treat as STOP
+            verdict = 'STOP' not in core.upper()
+    return verdict is True  # None (no STATUS line) → treat as STOP
 
 
 def extract_between(text, start_marker, end_marker):
