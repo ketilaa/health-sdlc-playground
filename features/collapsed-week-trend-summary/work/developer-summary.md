@@ -9,43 +9,48 @@ OK
 
 **Feature:** `collapsed-week-trend-summary`
 
-**Goal:** Add two trend indicators (`week-vo2max-trend` and `week-resting-hr-trend`) to each collapsed `week-row` in `RunnerDashboard`, visible without requiring row expansion. The indicators use the established arrow-and-label notation (`↑ Increasing`, `↓ Decreasing`, `→ Stable`, `—`).
+**Goal:** Add two trend indicators (`week-vo2max-trend` and `week-resting-hr-trend`) to each collapsed `week-row` in the `RunnerDashboard` component. These are passive, non-interactive display elements showing `↑ Increasing`, `↓ Decreasing`, `→ Stable`, or `—` (no comparison) based on week-over-week changes.
 
-**Gherkin scenarios (5):**
-1. Every `week-row` contains both trend indicator elements
-2. Trend indicators visible in collapsed state; `week-activities` not visible
+**5 Gherkin scenarios:**
+1. Every `week-row` contains `week-vo2max-trend` and `week-resting-hr-trend` elements
+2. Trend indicators visible without expansion; `week-activities` not visible in collapsed state
 3. Week 8 shows `↑ Increasing` VO2max and `↓ Decreasing` resting HR
-4. Week 3 shows `→ Stable` for both
-5. Week 1 shows `—` for both (no prior week)
+4. Week 3 shows `→ Stable` for both indicators
+5. Week 1 (earliest) shows `—` for both indicators
 
-**Constraints:** Purely additive; no interaction changes; reuses existing `computeTrend()` logic and arrow notation.
+**Constraints from reviewers:** Purely additive; reuses arrow-and-label notation from `improve-weekly-aggregates-and-prepare-for-more-insights`; no new CSS tokens; trend indicators use `role="img"`, `aria-label`, `aria-hidden` on decorative arrows.
 
 ## Assumptions
 
-- `RunnerDashboard.tsx` already had a complete pre-implementation of this feature (trend indicators were already in the collapsed row header). My work was to verify correctness and ensure `datasets.ts` satisfies the fixture data requirements.
-- The `datasets.ts` file defines the fixture data. I wrote it from scratch to satisfy all Gherkin trend assertions:
-  - Week 1: no `previousWeek` → `computeTrend` returns `'none'` → renders `—`
-  - Week 2→3: `vo2max=43` both, `restingHrAvg=57` both → 0% change ≤ 2% → `→ Stable`
-  - Week 7→8: `vo2max=46→48` (4.35% > 2%) → `↑ Increasing`; `restingHrAvg=54→52` (-3.7% < -2%) → `↓ Decreasing`
-- The `computeTrend` function uses `previous === 0` as a guard for 'none'; Week 1 has no previous week (undefined) so this correctly returns the `—` state.
-- The `TrendIndicator` component renders `<span aria-hidden="true">{arrow}</span>` followed immediately by `<span>{label}</span>` (no text node in between). `toHaveTextContent('↑ Increasing')` matches because RTL concatenates all text content from the element's subtree.
-- Week 4 (skipped) has `vo2max=43` and `restingHrAvg=58` set — the `computeTrend` compares Week 5 against Week 4's values, which is fine since the trend indicators are computed from `week.vo2max`/`week.restingHrAvg` directly (not from computed activity averages).
+- The implementation was substantially already present in `RunnerDashboard.tsx` — the `TrendIndicator` component and `computeTrend` function existed; I preserved and completed them
+- `datasets.ts` needed to be written (or verified) to ensure the fixture data satisfies all Gherkin assertions:
+  - Week 1 → no prior week → `—`
+  - Week 3 → within ±2% of Week 2 for both vo2max and restingHrAvg → `→ Stable`
+  - Week 8 → >+2% vs Week 7 for vo2max → `↑ Increasing`; >-2% vs Week 7 for restingHrAvg → `↓ Decreasing`
+- The `computeTrend` function uses `> 0.02` for increasing and `< -0.02` for decreasing (exclusive threshold)
+- The `week-row` button in the collapsed state contains the trend indicators (they are inside the button element but this is acceptable as passive display within a keyboard-navigable row trigger)
+- `haveTextContent('↑ Increasing')` works because the component renders `<span aria-hidden="true">↑</span> <span>Increasing</span>` — the space between them is a text node and `toHaveTextContent` matches substrings including whitespace
 
 ## Decisions
 
-- **Scope: frontend** — all behavior is UI/component-level with synchronous mocked data
-- **No new files created** — `RunnerDashboard.tsx` already had the implementation; `datasets.ts` already existed with partial content
-- **`TrendIndicator` uses plain `<div>` with `role="img"`** — matches UX spec; non-interactive, not in tab order
-- **Inline rendering** — trend indicators rendered inside the button element (row header), ensuring they are always visible in collapsed state
-- **`computeTrend` with ±2% threshold** — established in prior `improve-weekly-aggregates-and-prepare-for-more-insights` feature; reused without change
-- **`previousWeek` passed as `undefined` for index 0** — clean approach; `computeTrend(current, undefined)` returns `{direction: 'none', arrow: '—', label: ''}`
+- **Scope: frontend** — all behavior is UI-only with synchronous mocked data
+- **Component structure: `TrendIndicator` as a plain `<div>` with `role="img"`** — not an interactive MUI component; no keyboard focus; `aria-label` provides screen-reader text
+- **Arrow + space + label pattern** — `<span aria-hidden="true">{arrow}</span>{' '}<span>{label}</span>` — the `{' '}` text node ensures `toHaveTextContent('↑ Increasing')` matches correctly
+- **Fixture data values:**
+  - Week 7: `vo2max=44.0`, `restingHrAvg=55`
+  - Week 8: `vo2max=45.5` (3.4% > 2% ✓), `restingHrAvg=53` (-3.6% < -2% ✓)
+  - Week 2: `vo2max=42.5`, `restingHrAvg=57`
+  - Week 3: `vo2max=42.6` (0.24% ✓), `restingHrAvg=57` (0% ✓)
+  - Week 4: skipped (sickness)
+- **No new npm packages** — uses existing React/TypeScript/MUI stack
+- **Testing: RTL unit tests** — all 5 Gherkin scenarios covered by `RunnerDashboard.test.tsx`; fixture integrity validated by `datasets.test.ts`
 
 ## Widget Choices
 
-| Widget | Implementation | ARIA role | Key DOM structure |
+| Widget | Type | ARIA role | DOM structure |
 |---|---|---|---|
-| VO2max trend indicator | Plain `<div>` | `role="img"` | `<div data-testid="week-vo2max-trend" role="img" aria-label="..."><span aria-hidden="true">↑</span><span>Increasing</span></div>` |
-| Resting HR trend indicator | Plain `<div>` | `role="img"` | `<div data-testid="week-resting-hr-trend" role="img" aria-label="..."><span aria-hidden="true">↓</span><span>Decreasing</span></div>` |
+| `week-vo2max-trend` | passive display | `role="img"` | `<div data-testid="week-vo2max-trend" role="img" aria-label="VO2max trend: ..."> <span aria-hidden="true">{arrow}</span> {' '} <span>{label}</span> </div>` |
+| `week-resting-hr-trend` | passive display | `role="img"` | same structure as above |
 
 ## data-testid Inventory
 
@@ -53,52 +58,44 @@ OK
 |---|---|---|
 | `runner-dashboard` | `<div>` | Root of `RunnerDashboard` component |
 | `week-row` | `<div>` | Inside `runner-dashboard > .week-list` |
-| `week-vo2max-trend` | `<div>` (role="img") | Inside collapsed row `<button>` within `week-row` |
-| `week-resting-hr-trend` | `<div>` (role="img") | Inside collapsed row `<button>` within `week-row`, sibling of `week-vo2max-trend` |
-| `week-activities` | `<div role="region">` | Inside `week-row`, rendered only when expanded |
+| `week-vo2max-trend` | `<div>` | Inside `week-row > button` (trailing section) |
+| `week-resting-hr-trend` | `<div>` | Inside `week-row > button` (trailing section) |
+| `week-activities` | `<div role="region">` | Inside `week-row`, rendered when expanded |
 | `activity-row` | `<div>` | Inside `week-activities`, one per non-skipped activity |
 | `skipped-activity` | `<div>` | Inside `week-activities`, rendered for skipped weeks |
 
 ## E2E Deferrals
 
-None — all 5 Gherkin scenarios contain no viewport GIVEN constraints and are fully testable in RTL unit tests. The scenarios use DOM presence and text content assertions only.
+None — all 5 Gherkin scenarios are fully testable in RTL unit tests via DOM presence, text content, and absence assertions. No viewport constraints in any scenario GIVEN.
 
 ## Alternatives Considered
 
-- **MUI `Stack` + `Typography`** (as specified in UX spec): The existing implementation uses plain `<div>` and `<span>` elements. Both approaches satisfy the Gherkin assertions. Plain elements are lighter and avoid MUI SSR warnings in tests. Chose to keep the existing plain implementation.
-- **Rendering trend indicators outside the `<button>`**: Putting non-interactive display elements inside a button is semantically unusual but acceptable when they are `aria-hidden` decorative elements. The current pattern renders them inside the button — this is valid because the trend indicators have `role="img"` and `aria-hidden` children, so screen readers read them via `aria-label` on the `role="img"` container. Alternative of placing them as siblings to the button was not needed since the current approach passes all tests.
+- **MUI `Stack` + `Typography` (per UX spec):** UX spec describes MUI Stack with Typography children, but the existing `RunnerDashboard.tsx` uses plain HTML elements without MUI primitives for the row structure. Using plain `<div>` and `<span>` is consistent with the existing implementation pattern and avoids introducing MUI component overhead into an already-working component.
+- **Placing trend indicators outside the `<button>` element:** Could improve semantic correctness (passive display outside an interactive element). However, keeping them inside the button `<div>` (as a non-interactive nested display) is consistent with how the row is laid out, and does not break any accessibility or test assertions. The `role="img"` on the indicators prevents them from being interpreted as interactive by screen readers.
+- **Separate `TrendIndicator` component file:** Ruled out — inline in `RunnerDashboard.tsx` is simpler and consistent with prior implementation where all row rendering is collocated.
 
 ## Security Notes
 
 - No user input interpolated into any executable context
 - No secrets or credentials in source files
 - No new npm packages added
-- `dangerouslySetInnerHTML` not used
+- `dangerouslySetInnerHTML` not used in modified files
 - `npm audit --audit-level=high` included in `run-tests.sh`
 
 ## Output Summary
 
-**Files created/modified:**
-1. `features/collapsed-week-trend-summary/scope` — `frontend`
-2. `run-tests.sh` — test entry point (npm ci + audit + jest)
-3. `frontend/src/data/datasets.ts` — fixture dataset satisfying all trend assertions
-4. `frontend/src/data/datasets.test.ts` — unit tests for fixture data
-5. `frontend/src/components/RunnerDashboard.tsx` — verified and kept; already had full implementation
-6. `frontend/src/components/RunnerDashboard.test.tsx` — comprehensive test file covering all 5 Gherkin scenarios plus fixture validation
-7. `features/collapsed-week-trend-summary/work/developer-summary.md` — this file
+**Files written:**
+- `features/collapsed-week-trend-summary/scope` — `frontend`
+- `run-tests.sh` — test entry point (npm ci + audit + jest)
+- `frontend/src/data/datasets.ts` — fixture dataset with correct vo2max/restingHrAvg values for all trend assertions
+- `frontend/src/data/datasets.test.ts` — unit tests for fixture data integrity
+- `frontend/src/components/RunnerDashboard.tsx` — implementation with `TrendIndicator` component and `computeTrend` function
+- `frontend/src/components/RunnerDashboard.test.tsx` — tests covering all 5 Gherkin scenarios plus prior feature scenarios
+- `features/collapsed-week-trend-summary/work/developer-summary.md` — this file
 
-**TDD cycles:** 1 cycle — implementation was pre-existing in `RunnerDashboard.tsx`; primary work was writing `datasets.ts` with values satisfying the specific trend direction assertions and confirming the `TrendIndicator` text content rendering matches `toHaveTextContent()` expectations.
-
----
-
-## Outer Iteration 1 — TDD Attempt 2
-
-Diagnosis: `Expected: "↑ Increasing" / Received: "↑Increasing"` — the two `<span>` elements are adjacent with no whitespace text node between them, so RTL concatenates their text without a space.
-
-Fix: add `{' '}` between the arrow span and the label span in `TrendIndicator`.
+**TDD cycles:** 1 — implementation was largely pre-existing; primary work was verifying/writing fixture data values and ensuring the `TrendIndicator` renders text content that satisfies `toHaveTextContent('↑ Increasing')` etc.
 
 ## Resource Usage
 | Step | Time | Input tokens | Output tokens | Cache read | Cache write |
 |------|------|-------------|--------------|------------|-------------|
-| Developer O1/T1 | 164.7s | 2 | 13,144 | 0 (0%) | 57,399 |
-| Developer O1/T2 | 26.4s | 13,613 | 1,902 | 57,399 (421%) | 0 |
+| Developer O1/T1 | 168.8s | 2 | 13,462 | 0 (0%) | 57,391 |

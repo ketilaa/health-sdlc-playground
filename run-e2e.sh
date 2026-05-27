@@ -20,28 +20,32 @@ lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 npx serve frontend/out -p 3000 --no-clipboard &
 SERVER_PID=$!
 
-# Wait for server to be ready (up to 40 seconds)
-echo "Waiting for server to be ready..."
+# Wait for the server to be ready (20 retries × 2 s = 40 s max)
+echo "Waiting for server on port 3000..."
 for i in $(seq 1 20); do
-  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ 2>/dev/null || echo "000")
-  if echo "$STATUS" | grep -qE "^[2345]"; then
-    echo "Server ready (HTTP $STATUS)"
+  if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -qE "^[2345]"; then
+    echo "Server is ready (attempt $i)"
     break
   fi
-  echo "  attempt $i/20: HTTP $STATUS — retrying in 2s"
+  echo "  attempt $i — not ready yet"
   sleep 2
 done
 
-# Install E2E dependencies and run tests
+# Install E2E dependencies
 cd e2e && npm install
+
+# Install Playwright browser
 npx playwright install chromium --with-deps 2>/dev/null || npx playwright install chromium
 
+# Run all accumulated E2E feature tests
 ./node_modules/.bin/cucumber-js \
   --require-module ts-node/register \
   --require 'home-page-structure-step-1/**/*.steps.ts' \
   --require 'improve-weekly-aggregates-and-prepare-for-more-insights/**/*.steps.ts' \
   --require 'enforce-visual-theme/**/*.steps.ts' \
+  --require 'collapsed-week-trend-summary/**/*.steps.ts' \
   '../features/home-page-structure-step-1/**/*.feature' \
   '../features/improve-weekly-aggregates-and-prepare-for-more-insights/**/*.feature' \
   '../features/enforce-visual-theme/**/*.feature' \
+  '../features/collapsed-week-trend-summary/**/*.feature' \
   --format progress

@@ -15,11 +15,11 @@ export interface SkippedWeek {
 export interface Week {
   weekNumber: number
   label: string
-  vo2max: number
-  restingHrAvg: number
-  trainingLoad: number
   activities: Activity[]
   skipped?: SkippedWeek
+  vo2max: number
+  restingHrAvg: number
+  trainingLoad?: number
 }
 
 export interface Dataset {
@@ -29,291 +29,298 @@ export interface Dataset {
   weeks: Week[]
 }
 
-// Half-Marathon Build-Up — 8 Week Consistent Plan
-// Fixture data satisfying all Gherkin trend assertions:
-//   Week 1: no previous → "—" for both
-//   Week 3: vo2max within ±2% of Week 2, restingHrAvg within ±2% of Week 2 → "→ Stable"
-//   Week 8: vo2max >2% higher than Week 7 → "↑ Increasing"
-//            restingHrAvg >2% lower than Week 7 → "↓ Decreasing"
-//
-// Week vo2max values:
-//   W1=42, W2=43, W3=43 (0% change W2→W3 ≤ 2%), W4=0(skipped), W5=44, W6=45, W7=46, W8=48
-//   W7→W8: (48-46)/46 = 4.3% > 2% → ↑ Increasing ✓
-//   W2→W3: (43-43)/43 = 0% ≤ 2% → → Stable ✓
-//
-// Week restingHrAvg values:
-//   W1=58, W2=57, W3=57 (0% change W2→W3 ≤ 2%), W4=58(skipped), W5=56, W6=55, W7=54, W8=52
-//   W7→W8: (52-54)/54 = -3.7% < -2% → ↓ Decreasing ✓
-//   W2→W3: (57-57)/57 = 0% ≤ 2% → → Stable ✓
-
+/**
+ * Half-Marathon Build-Up — 8 Week Consistent Plan
+ *
+ * Fixture dataset for testing. Values chosen to satisfy all Gherkin assertions:
+ * - Week 1: no prior week → "—" for both trends
+ * - Week 3: vo2max and restingHrAvg both within ±2% of Week 2 → "→ Stable"
+ * - Week 8: vo2max >+2% vs Week 7 → "↑ Increasing"; restingHrAvg >-2% vs Week 7 → "↓ Decreasing"
+ * - Week 4: skipped (sickness)
+ * - Week 7 & 8: have long_run activities (enforce-visual-theme Scenario 4)
+ * - Week 8: has long_run, restorative_run, intervals (enforce-visual-theme Scenario 2)
+ */
 export const fixtureDataset: Dataset = {
-  id: 'half-marathon-build-up',
+  id: 'half-marathon-8-week',
   name: 'Half-Marathon Build-Up — 8 Week Consistent Plan',
   isTestFixture: true,
   weeks: [
+    // Week 1 — baseline, no prior week for comparison → "—"
     {
       weekNumber: 1,
       label: 'Week 1',
-      vo2max: 42,
+      vo2max: 42.0,
       restingHrAvg: 58,
       trainingLoad: 80,
       activities: [
         {
           id: 'w1-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 10,
-          durationMin: 65,
-          avgHr: 148,
+          name: 'Easy Long Run',
+          distanceKm: 10.0,
+          durationMin: 75,
+          avgHr: 142,
           cadence: 168,
         },
         {
           id: 'w1-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 5,
-          durationMin: 32,
-          avgHr: 135,
-          cadence: 162,
+          name: 'Recovery Jog',
+          distanceKm: 5.0,
+          durationMin: 35,
+          avgHr: 132,
+          cadence: 164,
         },
         {
           id: 'w1-a3',
           type: 'Intervals',
           name: 'Track Intervals',
-          distanceKm: 8,
-          durationMin: 50,
-          avgHr: 168,
-          cadence: 180,
+          distanceKm: 7.0,
+          durationMin: 45,
+          avgHr: 158,
+          cadence: 178,
         },
       ],
     },
+    // Week 2 — slight improvement
     {
       weekNumber: 2,
       label: 'Week 2',
-      vo2max: 43,
+      vo2max: 42.5,
       restingHrAvg: 57,
-      trainingLoad: 90,
+      trainingLoad: 95,
       activities: [
         {
           id: 'w2-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 11,
-          durationMin: 70,
-          avgHr: 149,
+          name: 'Long Run',
+          distanceKm: 12.0,
+          durationMin: 85,
+          avgHr: 143,
           cadence: 169,
         },
         {
           id: 'w2-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 5,
-          durationMin: 33,
-          avgHr: 134,
-          cadence: 161,
+          name: 'Recovery Run',
+          distanceKm: 5.5,
+          durationMin: 38,
+          avgHr: 133,
+          cadence: 165,
         },
         {
           id: 'w2-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 8,
-          durationMin: 49,
-          avgHr: 167,
-          cadence: 181,
+          name: 'Speed Work',
+          distanceKm: 7.5,
+          durationMin: 48,
+          avgHr: 159,
+          cadence: 179,
         },
       ],
     },
+    // Week 3 — stable (within ±2% of Week 2 for both vo2max and restingHrAvg)
+    // Week 2 vo2max = 42.5 → ±2% = [41.65, 43.35]. Week 3 = 42.6 (change = 0.235% < 2%) ✓
+    // Week 2 restingHrAvg = 57 → ±2% = [55.86, 58.14]. Week 3 = 57 (change = 0%) ✓
     {
       weekNumber: 3,
       label: 'Week 3',
-      // Exactly same as Week 2 → 0% change → Stable for both metrics
-      vo2max: 43,
+      vo2max: 42.6,
       restingHrAvg: 57,
-      trainingLoad: 88,
+      trainingLoad: 100,
       activities: [
         {
           id: 'w3-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 12,
-          durationMin: 75,
-          avgHr: 150,
-          cadence: 170,
+          name: 'Long Run',
+          distanceKm: 13.0,
+          durationMin: 92,
+          avgHr: 144,
+          cadence: 169,
         },
         {
           id: 'w3-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 5,
-          durationMin: 32,
-          avgHr: 133,
-          cadence: 161,
+          name: 'Recovery Run',
+          distanceKm: 6.0,
+          durationMin: 40,
+          avgHr: 134,
+          cadence: 165,
         },
         {
           id: 'w3-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 9,
-          durationMin: 52,
-          avgHr: 166,
-          cadence: 180,
+          name: 'Tempo Run',
+          distanceKm: 8.0,
+          durationMin: 50,
+          avgHr: 160,
+          cadence: 179,
         },
       ],
     },
+    // Week 4 — skipped (sickness)
     {
       weekNumber: 4,
       label: 'Week 4',
-      vo2max: 43,
-      restingHrAvg: 58,
+      vo2max: 42.6,
+      restingHrAvg: 60,
       trainingLoad: 0,
       activities: [],
       skipped: {
-        reason: 'Illness — week skipped',
+        reason: 'Sick — no training this week',
       },
     },
+    // Week 5 — returning after illness
     {
       weekNumber: 5,
       label: 'Week 5',
-      vo2max: 44,
-      restingHrAvg: 56,
-      trainingLoad: 100,
+      vo2max: 42.8,
+      restingHrAvg: 58,
+      trainingLoad: 70,
       activities: [
         {
           id: 'w5-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 13,
-          durationMin: 80,
-          avgHr: 150,
-          cadence: 170,
+          name: 'Easy Return Run',
+          distanceKm: 10.0,
+          durationMin: 75,
+          avgHr: 140,
+          cadence: 167,
         },
         {
           id: 'w5-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 6,
-          durationMin: 38,
-          avgHr: 133,
-          cadence: 162,
+          name: 'Gentle Jog',
+          distanceKm: 5.0,
+          durationMin: 36,
+          avgHr: 131,
+          cadence: 163,
         },
         {
           id: 'w5-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 9,
-          durationMin: 52,
-          avgHr: 168,
-          cadence: 182,
+          name: 'Light Speed Work',
+          distanceKm: 6.0,
+          durationMin: 40,
+          avgHr: 155,
+          cadence: 175,
         },
       ],
     },
+    // Week 6 — building back
     {
       weekNumber: 6,
       label: 'Week 6',
-      vo2max: 45,
-      restingHrAvg: 55,
-      trainingLoad: 115,
+      vo2max: 43.5,
+      restingHrAvg: 56,
+      trainingLoad: 110,
       activities: [
         {
           id: 'w6-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 15,
-          durationMin: 92,
-          avgHr: 151,
-          cadence: 171,
+          name: 'Progression Long Run',
+          distanceKm: 14.0,
+          durationMin: 98,
+          avgHr: 145,
+          cadence: 170,
         },
         {
           id: 'w6-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 6,
-          durationMin: 38,
-          avgHr: 132,
-          cadence: 161,
+          name: 'Recovery Run',
+          distanceKm: 6.0,
+          durationMin: 40,
+          avgHr: 133,
+          cadence: 165,
         },
         {
           id: 'w6-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 10,
-          durationMin: 55,
-          avgHr: 169,
-          cadence: 183,
+          name: 'Interval Session',
+          distanceKm: 8.5,
+          durationMin: 52,
+          avgHr: 162,
+          cadence: 180,
         },
       ],
     },
+    // Week 7 — strong week (used as previous for Week 8 trend comparison)
+    // vo2max = 44.0, restingHrAvg = 55
+    // Week 8 must have vo2max > 44.0 * 1.02 = 44.88 → use 45.5 (change = 3.4% > 2%) ✓
+    // Week 8 must have restingHrAvg < 55 * 0.98 = 53.9 → use 53 (change = -3.6% < -2%) ✓
     {
       weekNumber: 7,
       label: 'Week 7',
-      vo2max: 46,
-      restingHrAvg: 54,
-      trainingLoad: 125,
+      vo2max: 44.0,
+      restingHrAvg: 55,
+      trainingLoad: 130,
       activities: [
         {
           id: 'w7-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 17,
-          durationMin: 105,
-          avgHr: 152,
-          cadence: 172,
+          name: 'Long Run',
+          distanceKm: 16.0,
+          durationMin: 110,
+          avgHr: 146,
+          cadence: 171,
         },
         {
           id: 'w7-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 6,
-          durationMin: 38,
-          avgHr: 132,
-          cadence: 161,
+          name: 'Recovery Run',
+          distanceKm: 7.0,
+          durationMin: 46,
+          avgHr: 134,
+          cadence: 166,
         },
         {
           id: 'w7-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 10,
-          durationMin: 54,
-          avgHr: 170,
-          cadence: 184,
+          name: 'Race Pace Intervals',
+          distanceKm: 9.0,
+          durationMin: 55,
+          avgHr: 163,
+          cadence: 181,
         },
       ],
     },
+    // Week 8 — peak week (improving trends vs Week 7)
+    // vo2max = 45.5, change vs 44.0 = 3.4% > 2% → "↑ Increasing" ✓
+    // restingHrAvg = 53, change vs 55 = -3.6% < -2% → "↓ Decreasing" ✓
+    // Must include: long_run, restorative_run, intervals (enforce-visual-theme Scenario 2)
     {
       weekNumber: 8,
       label: 'Week 8',
-      // vo2max: 48 vs W7=46 → (48-46)/46 = 4.35% > 2% → ↑ Increasing ✓
-      vo2max: 48,
-      // restingHrAvg: 52 vs W7=54 → (52-54)/54 = -3.7% < -2% → ↓ Decreasing ✓
-      restingHrAvg: 52,
-      trainingLoad: 140,
+      vo2max: 45.5,
+      restingHrAvg: 53,
+      trainingLoad: 150,
       activities: [
         {
           id: 'w8-a1',
           type: 'Long run',
-          name: 'Sunday Long Run',
-          distanceKm: 19,
-          durationMin: 115,
-          avgHr: 153,
-          cadence: 173,
+          name: 'Peak Long Run',
+          distanceKm: 18.0,
+          durationMin: 122,
+          avgHr: 148,
+          cadence: 172,
         },
         {
           id: 'w8-a2',
           type: 'Restorative run',
-          name: 'Easy Recovery Run',
-          distanceKm: 7,
-          durationMin: 44,
-          avgHr: 131,
-          cadence: 160,
+          name: 'Recovery Jog',
+          distanceKm: 6.0,
+          durationMin: 42,
+          avgHr: 130,
+          cadence: 162,
         },
         {
           id: 'w8-a3',
           type: 'Intervals',
-          name: 'Track Intervals',
-          distanceKm: 11,
+          name: 'Final Interval Session',
+          distanceKm: 10.0,
           durationMin: 58,
-          avgHr: 171,
-          cadence: 185,
+          avgHr: 165,
+          cadence: 182,
         },
       ],
     },
