@@ -1,29 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { fixtureDataset } from '../data/datasets'
+import { fixtureDataset, Week } from '../data/datasets'
 import { themeTokens } from '../theme/tokens'
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Activity {
-  type: string
-  distanceKm?: number
-  durationMin?: number
-}
-
-interface Week {
-  weekNumber: number
-  label: string
-  startDate: string
-  endDate: string
-  totalDistanceKm: number
-  totalDurationMin: number
-  vo2max: number
-  restingHrAvg: number
-  activities: Activity[]
-  skipped?: boolean | string
-}
 
 type TrendDirection = 'increasing' | 'decreasing' | 'stable'
 
@@ -196,7 +175,7 @@ function activityTypeAttr(type: string): string {
 export default function RunnerDashboard() {
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null)
 
-  const weeks = fixtureDataset.weeks as Week[]
+  const weeks = fixtureDataset.weeks
 
   function toggleWeek(weekNumber: number) {
     setExpandedWeek((prev) => (prev === weekNumber ? null : weekNumber))
@@ -250,7 +229,7 @@ export default function RunnerDashboard() {
                 {week.skipped ? (
                   <div data-testid="skipped-activity" data-activity-type="skipped">
                     Week skipped —{' '}
-                    {typeof week.skipped === 'string' ? week.skipped : 'no training'}
+                    {week.skipped.reason}
                   </div>
                 ) : (
                   week.activities.map((activity, i) => (
