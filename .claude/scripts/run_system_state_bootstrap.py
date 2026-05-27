@@ -86,10 +86,10 @@ def main():
     key_source_files.extend(f for f in component_files if not f.endswith('.test.tsx'))
 
     source_block = collect_source_files(key_source_files, 'Key Source Files')
-    gherkin_block = collect_glob('features/**/*.feature', 'Gherkin Feature Specs', max_chars=12_000)
-    ux_block = collect_glob('features/**/ux.md', 'UX Specifications', max_chars=12_000)
-    dev_summaries_block = collect_glob('features/**/work/developer-summary.md', 'Developer Summaries', max_chars=8_000)
-    workflows_block = collect_glob('.github/workflows/*.yml', 'GitHub Actions Workflows', max_chars=8_000)
+    gherkin_block = collect_glob('features/**/*.feature', 'Gherkin Feature Specs', max_chars=30_000)
+    ux_block = collect_glob('features/**/ux.md', 'UX Specifications', max_chars=25_000)
+    dev_summaries_block = collect_glob('features/**/work/developer-summary.md', 'Developer Summaries', max_chars=30_000)
+    workflows_block = collect_glob('.github/workflows/*.yml', 'GitHub Actions Workflows', max_chars=15_000)
 
     user_message = f"""Produce the initial `system/state.md` from the following codebase snapshot.
 
