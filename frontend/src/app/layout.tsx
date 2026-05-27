@@ -16,6 +16,11 @@ const rootCss = `
   --color-activity-restorative-run: ${themeTokens['--color-activity-restorative-run']};
   --color-activity-intervals: ${themeTokens['--color-activity-intervals']};
   --color-activity-skipped: ${themeTokens['--color-activity-skipped']};
+  --color-metric-vo2max: ${themeTokens['--color-metric-vo2max']};
+  --color-metric-hr: ${themeTokens['--color-metric-hr']};
+  --color-trend-up: ${themeTokens['--color-trend-up']};
+  --color-trend-down: ${themeTokens['--color-trend-down']};
+  --color-trend-stable: ${themeTokens['--color-trend-stable']};
 }
 [data-activity-type="long_run"] { background-color: var(--color-activity-long-run); }
 [data-activity-type="restorative_run"] { background-color: var(--color-activity-restorative-run); }
