@@ -1,0 +1,57 @@
+name: Kickoff Features
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  kickoff:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'plan/issue-')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Create feature issues from backlog
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          ISSUE_NUM="${BRANCH#plan/issue-}"
+          BACKLOG="incoming-requests/$ISSUE_NUM/backlog.md"
+
+          if [ ! -f "$BACKLOG" ]; then
+            echo "No backlog found at $BACKLOG — nothing to kick off."
+            exit 0
+          fi
+
+          # Extract feature names from "## Feature N: {name}" headings
+          FEATURES=$(grep -oP '(?<=## Feature \d: )[\w-]+' "$BACKLOG" || true)
+
+          if [ -z "$FEATURES" ]; then
+            echo "No features found in backlog."
+            exit 0
+          fi
+
+          echo "Features to kick off:"
+          echo "$FEATURES"
+
+          for FEATURE in $FEATURES; do
+            BRIEF="incoming-requests/$ISSUE_NUM/$FEATURE/brief.md"
+            if [ -f "$BRIEF" ]; then
+              BODY=$(cat "$BRIEF")
+            else
+              BODY="Feature: $FEATURE\n\nSee incoming-requests/$ISSUE_NUM/backlog.md for details."
+            fi
+            echo "Creating issue for: $FEATURE"
+            gh issue create \
+              --title "$FEATURE" \
+              --body "$BODY" \
+              --label "direct-feature"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
