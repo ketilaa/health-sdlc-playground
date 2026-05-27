@@ -89,7 +89,7 @@ def main():
     gherkin_block = collect_glob('features/**/*.feature', 'Gherkin Feature Specs', max_chars=30_000)
     ux_block = collect_glob('features/**/ux.md', 'UX Specifications', max_chars=25_000)
     dev_summaries_block = collect_glob('features/**/work/developer-summary.md', 'Developer Summaries', max_chars=30_000)
-    workflows_block = collect_glob('.github/workflows/*.yml', 'GitHub Actions Workflows', max_chars=15_000)
+    workflows_block = collect_glob('.github/workflows/*.yml', 'GitHub Actions Workflows', max_chars=32_000)
 
     user_message = f"""Produce the initial `system/state.md` from the following codebase snapshot.
 
