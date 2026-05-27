@@ -7,6 +7,7 @@ Analyze the full set of agent summaries for a feature and produce a structured s
 
 ## Input
 Read these files:
+- `incoming-requests/<plan-issue-number>/work/planner-summary.md` — present when the feature came from a plan; absent for standalone features
 - `features/<feature-name>/work/product-owner-summary.md`
 - `features/<feature-name>/work/feature-reviewer-summary.md`
 - `features/<feature-name>/work/ux-designer-summary.md`
