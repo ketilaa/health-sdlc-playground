@@ -3,21 +3,82 @@
 import React, { useState } from 'react'
 import { fixtureDataset, Week } from '../data/datasets'
 
+type TrendDirection = 'increasing' | 'decreasing' | 'stable' | 'none'
+
+interface TrendResult {
+  direction: TrendDirection
+  arrow: string
+  label: string
+}
+
+function computeTrend(current: number, previous: number | undefined): TrendResult {
+  if (previous === undefined || previous === 0) {
+    return { direction: 'none', arrow: '—', label: '' }
+  }
+  const change = (current - previous) / previous
+  if (change > 0.02) {
+    return { direction: 'increasing', arrow: '↑', label: 'Increasing' }
+  }
+  if (change < -0.02) {
+    return { direction: 'decreasing', arrow: '↓', label: 'Decreasing' }
+  }
+  return { direction: 'stable', arrow: '→', label: 'Stable' }
+}
+
 function activityTypeAttr(type: string): string {
-  // Normalize display-form types ("Long run") to snake_case attribute values ("long_run")
   return type
     .toLowerCase()
     .replace(/\s+/g, '_')
     .replace(/-/g, '_')
 }
 
+interface TrendIndicatorProps {
+  testId: string
+  trend: TrendResult
+  ariaLabel: string
+}
+
+function TrendIndicator({ testId, trend, ariaLabel }: TrendIndicatorProps) {
+  return (
+    <div
+      data-testid={testId}
+      role="img"
+      aria-label={ariaLabel}
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: '0.75rem',
+      }}
+    >
+      <span aria-hidden="true">{trend.arrow}</span>
+      {trend.label && <span>{trend.label}</span>}
+    </div>
+  )
+}
+
 interface WeekRowProps {
   week: Week
+  previousWeek: Week | undefined
   isExpanded: boolean
   onToggle: () => void
 }
 
-function WeekRowItem({ week, isExpanded, onToggle }: WeekRowProps) {
+function WeekRowItem({ week, previousWeek, isExpanded, onToggle }: WeekRowProps) {
+  const vo2maxTrend = computeTrend(week.vo2max, previousWeek?.vo2max)
+  const restingHrTrend = computeTrend(week.restingHrAvg, previousWeek?.restingHrAvg)
+
+  const vo2maxAriaLabel =
+    vo2maxTrend.direction === 'none'
+      ? 'VO2max trend: No comparison available'
+      : `VO2max trend: ${vo2maxTrend.label}`
+
+  const restingHrAriaLabel =
+    restingHrTrend.direction === 'none'
+      ? 'Resting HR trend: No comparison available'
+      : `Resting HR trend: ${restingHrTrend.label}`
+
   return (
     <div data-testid="week-row" className="week-row">
       <button
@@ -45,6 +106,27 @@ function WeekRowItem({ week, isExpanded, onToggle }: WeekRowProps) {
             {week.skipped.reason}
           </span>
         )}
+
+        <div
+          style={{
+            display: 'inline-flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 16,
+            marginLeft: 'auto',
+          }}
+        >
+          <TrendIndicator
+            testId="week-vo2max-trend"
+            trend={vo2maxTrend}
+            ariaLabel={vo2maxAriaLabel}
+          />
+          <TrendIndicator
+            testId="week-resting-hr-trend"
+            trend={restingHrTrend}
+            ariaLabel={restingHrAriaLabel}
+          />
+        </div>
       </button>
 
       {isExpanded && (
@@ -107,14 +189,18 @@ export default function RunnerDashboard() {
   return (
     <div data-testid="runner-dashboard">
       <div className="week-list">
-        {weeks.map((week) => (
-          <WeekRowItem
-            key={week.weekNumber}
-            week={week}
-            isExpanded={expandedWeek === week.weekNumber}
-            onToggle={() => toggleWeek(week.weekNumber)}
-          />
-        ))}
+        {weeks.map((week, index) => {
+          const previousWeek = index > 0 ? weeks[index - 1] : undefined
+          return (
+            <WeekRowItem
+              key={week.weekNumber}
+              week={week}
+              previousWeek={previousWeek}
+              isExpanded={expandedWeek === week.weekNumber}
+              onToggle={() => toggleWeek(week.weekNumber)}
+            />
+          )
+        })}
       </div>
     </div>
   )
