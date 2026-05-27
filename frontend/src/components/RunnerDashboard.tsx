@@ -53,7 +53,12 @@ function TrendIndicator({ testId, trend, ariaLabel }: TrendIndicatorProps) {
       }}
     >
       <span aria-hidden="true">{trend.arrow}</span>
-      {trend.label && <span>{trend.label}</span>}
+      {trend.label && (
+        <>
+          {' '}
+          <span>{trend.label}</span>
+        </>
+      )}
     </div>
   )
 }

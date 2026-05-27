@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event'
 import RunnerDashboard from './RunnerDashboard'
 import { fixtureDataset } from '../data/datasets'
 
-// Helper: find the week-row button containing the specified week label text
-// and click it to expand the week activities.
+// Helper: find the week-row containing the specified week label text
+// and click its button to expand/toggle the week activities.
 async function expandWeek(user: ReturnType<typeof userEvent.setup>, weekLabel: string) {
   const weekRows = screen.getAllByTestId('week-row')
   const targetRow = weekRows.find((row) => row.textContent?.includes(weekLabel))
@@ -242,7 +242,10 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
     })
   })
 
+  // ============================================================
   // Structural and fixture validation tests
+  // ============================================================
+
   describe('Component structure and fixture validation', () => {
     test('renders the runner-dashboard container', () => {
       render(<RunnerDashboard />)
@@ -270,7 +273,7 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
       expect(longRunRow).toBeDefined()
     })
 
-    // Fixture validation: Week 7 must contain a long_run activity (required by Scenario 4)
+    // Fixture validation: Week 7 must contain a long_run activity (required by enforce-visual-theme Scenario 4)
     test('fixture Week 7 contains at least one long_run activity type', () => {
       const week7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)
       expect(week7).toBeDefined()
@@ -288,7 +291,7 @@ describe('RunnerDashboard — enforce-visual-theme Gherkin scenarios', () => {
     })
 
     // Fixture validation: Week 8 must have long_run, restorative_run, and intervals
-    test('fixture Week 8 has all three required activity types for Scenario 2', () => {
+    test('fixture Week 8 has all three required activity types for enforce-visual-theme Scenario 2', () => {
       const week8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)
       expect(week8).toBeDefined()
       const attrValues = week8!.activities.map((a) =>

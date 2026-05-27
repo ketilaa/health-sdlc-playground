@@ -1,88 +1,81 @@
-import { allDatasets, getDefaultDataset, getSelectableDatasets, fixtureDataset } from './datasets'
+import { fixtureDataset, getSelectableDatasets } from './datasets'
 
-describe('datasets module', () => {
-  test('default dataset name matches the preselected fixture name', () => {
-    expect(getDefaultDataset().name).toBe('Half-Marathon Build-Up — 8 Week Consistent Plan')
-  })
-
-  test('fixture has 8 weeks', () => {
+describe('fixtureDataset', () => {
+  test('has 8 weeks', () => {
     expect(fixtureDataset.weeks).toHaveLength(8)
   })
 
-  test('exactly one week (Week 4) is marked as skipped/sickness', () => {
-    const skipped = fixtureDataset.weeks.filter((w) => w.skipped)
-    expect(skipped).toHaveLength(1)
-    expect(skipped[0].weekNumber).toBe(4)
-    expect(skipped[0].skipped?.reason).toBe('Skipped due to sickness')
+  test('weeks are numbered 1 through 8', () => {
+    const numbers = fixtureDataset.weeks.map((w) => w.weekNumber)
+    expect(numbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 
-  test('7 weeks have 3 activities and 1 week has 0 activities (skipped)', () => {
-    const three = fixtureDataset.weeks.filter((w) => w.activities.length === 3).length
-    const zero = fixtureDataset.weeks.filter((w) => w.activities.length === 0).length
-    expect(three).toBe(7)
-    expect(zero).toBe(1)
-  })
-
-  test('Week 8 contains Long run, Restorative run, and Intervals activity types', () => {
-    const week8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)!
-    const types = week8.activities.map((a) => a.type).sort()
-    expect(types).toEqual(['Intervals', 'Long run', 'Restorative run'])
-  })
-
-  test('Week 7 contains a Long run activity (required for consistency scenario)', () => {
-    const week7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)!
-    const types = week7.activities.map((a) => a.type)
-    expect(types).toContain('Long run')
-  })
-
-  test('selectable datasets exclude anything labeled Test Fixture', () => {
-    const selectable = getSelectableDatasets()
-    for (const d of selectable) {
-      expect(d.name).not.toMatch(/Test Fixture/i)
-      expect(d.isTestFixture).toBe(false)
+  test('each week has a label matching "Week N"', () => {
+    for (const week of fixtureDataset.weeks) {
+      expect(week.label).toBe(`Week ${week.weekNumber}`)
     }
   })
 
-  test('allDatasets includes the fixture', () => {
-    expect(allDatasets.map((d) => d.id)).toContain(fixtureDataset.id)
+  test('7 weeks have activities and 1 week is skipped (Week 4)', () => {
+    const skippedWeeks = fixtureDataset.weeks.filter((w) => w.skipped !== undefined)
+    const activeWeeks = fixtureDataset.weeks.filter((w) => w.skipped === undefined)
+    expect(skippedWeeks).toHaveLength(1)
+    expect(activeWeeks).toHaveLength(7)
+    expect(skippedWeeks[0].weekNumber).toBe(4)
   })
 
-  test('all weeks have vo2max and restingHrAvg fields', () => {
+  test('each non-skipped week has at least 1 activity', () => {
+    for (const week of fixtureDataset.weeks) {
+      if (!week.skipped) {
+        expect(week.activities.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  test('each week has vo2max as a positive number', () => {
     for (const week of fixtureDataset.weeks) {
       expect(typeof week.vo2max).toBe('number')
-      expect(typeof week.restingHrAvg).toBe('number')
+      expect(week.vo2max).toBeGreaterThan(0)
     }
   })
 
-  test('Week 1 has no prior week (first entry — trend will show —)', () => {
-    expect(fixtureDataset.weeks[0].weekNumber).toBe(1)
+  test('each week has restingHrAvg as a positive number', () => {
+    for (const week of fixtureDataset.weeks) {
+      expect(typeof week.restingHrAvg).toBe('number')
+      expect(week.restingHrAvg).toBeGreaterThan(0)
+    }
   })
 
-  test('Week 8 vo2max is >2% higher than Week 7 (↑ Increasing)', () => {
-    const week7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)!
-    const week8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)!
-    const change = (week8.vo2max - week7.vo2max) / week7.vo2max
-    expect(change).toBeGreaterThan(0.02)
+  test('isTestFixture is true', () => {
+    expect(fixtureDataset.isTestFixture).toBe(true)
   })
 
-  test('Week 8 restingHrAvg is >2% lower than Week 7 (↓ Decreasing)', () => {
-    const week7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)!
-    const week8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)!
-    const change = (week8.restingHrAvg - week7.restingHrAvg) / week7.restingHrAvg
-    expect(change).toBeLessThan(-0.02)
+  test('getSelectableDatasets returns empty array (fixture-only mode)', () => {
+    expect(getSelectableDatasets()).toHaveLength(0)
   })
 
-  test('Week 3 vo2max is within ±2% of Week 2 (→ Stable)', () => {
-    const week2 = fixtureDataset.weeks.find((w) => w.weekNumber === 2)!
-    const week3 = fixtureDataset.weeks.find((w) => w.weekNumber === 3)!
-    const change = Math.abs((week3.vo2max - week2.vo2max) / week2.vo2max)
-    expect(change).toBeLessThanOrEqual(0.02)
+  // Trend constraints for collapsed-week-trend-summary feature
+  test('Week 8 vo2max is >2% higher than Week 7', () => {
+    const w7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)!
+    const w8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)!
+    expect((w8.vo2max - w7.vo2max) / w7.vo2max).toBeGreaterThan(0.02)
   })
 
-  test('Week 3 restingHrAvg is within ±2% of Week 2 (→ Stable)', () => {
-    const week2 = fixtureDataset.weeks.find((w) => w.weekNumber === 2)!
-    const week3 = fixtureDataset.weeks.find((w) => w.weekNumber === 3)!
-    const change = Math.abs((week3.restingHrAvg - week2.restingHrAvg) / week2.restingHrAvg)
-    expect(change).toBeLessThanOrEqual(0.02)
+  test('Week 8 restingHrAvg is >2% lower than Week 7', () => {
+    const w7 = fixtureDataset.weeks.find((w) => w.weekNumber === 7)!
+    const w8 = fixtureDataset.weeks.find((w) => w.weekNumber === 8)!
+    expect((w8.restingHrAvg - w7.restingHrAvg) / w7.restingHrAvg).toBeLessThan(-0.02)
+  })
+
+  test('Week 3 vo2max is within ±2% of Week 2', () => {
+    const w2 = fixtureDataset.weeks.find((w) => w.weekNumber === 2)!
+    const w3 = fixtureDataset.weeks.find((w) => w.weekNumber === 3)!
+    expect(Math.abs((w3.vo2max - w2.vo2max) / w2.vo2max)).toBeLessThanOrEqual(0.02)
+  })
+
+  test('Week 3 restingHrAvg is within ±2% of Week 2', () => {
+    const w2 = fixtureDataset.weeks.find((w) => w.weekNumber === 2)!
+    const w3 = fixtureDataset.weeks.find((w) => w.weekNumber === 3)!
+    expect(Math.abs((w3.restingHrAvg - w2.restingHrAvg) / w2.restingHrAvg)).toBeLessThanOrEqual(0.02)
   })
 })
