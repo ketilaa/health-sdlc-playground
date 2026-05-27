@@ -1,0 +1,31 @@
+# Feature Brief: collapsed-week-trend-summary
+
+## Feature Type
+mixed
+
+The behavioral core is: collapsed week rows now display activity count, VO2max trend arrow, and resting HR trend arrow. The mixed aspect is: two new CSS color tokens (`--color-metric-vo2max`, `--color-metric-hr`) are introduced and applied to the trend indicators — the developer handles token definition and CSS wiring; the Product Owner focuses Gherkin on the visible behavioral outputs.
+
+## Goal
+A user scanning the RunnerDashboard can see, without expanding any week, how many activities occurred and whether VO2max and resting HR trended up or down compared to the previous week.
+
+## Context
+Builds directly on `runner-dataset-with-consistent-improvement` (`RunnerDashboard`, `WeekRow`, `WeekData` with `vo2max` and `restingHrAvg` fields) and `improve-weekly-aggregates-and-prepare-for-more-insights` (established `computeTrend()` logic and trend indicator pattern). The existing `week-row` element in `RunnerDashboard` currently shows only week label and aggregate distance/duration when collapsed.
+
+## Scope
+frontend
+
+## Affected System Areas
+- **Pages / routes:** `/` (RunnerDashboard is rendered here)
+- **Components:** `WeekRow.tsx`, `RunnerDashboard.tsx`
+- **Data model:** `WeekData.vo2max`, `WeekData.restingHrAvg`, `WeekData.activities` (all already present; no schema change needed)
+- **Design system:** `frontend/src/theme/tokens.ts` — add `--color-metric-vo2max` and `--color-metric-hr` tokens; developer to choose values consistent with health/training domain conventions (VO2max: blue-teal family; HR: red family)
+
+## Out of Scope
+- Expanding/collapsing behavior changes — collapsed state only
+- Trend display inside the expanded week panel (already handled by `WeeklyDashboard`)
+- Cadence, training load, or avg HR trends in the collapsed row
+- Any tooltip, popover, or hover interaction on the trend arrows
+- Changes to `WeeklyDashboard.tsx` or the weekly detail view
+- Accessibility beyond what the existing pattern requires (text label alongside color)
+
+<!-- plan:{"n": 36, "i": 0} -->
