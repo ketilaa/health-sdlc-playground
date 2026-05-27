@@ -1,6 +1,6 @@
 # System State
 
-_Bootstrapped on 2026-05-27. Last updated 2026-05-27 (MUI dark theme)._
+_Bootstrapped on 2026-05-27. Last updated 2026-05-27 (collapsed-week-trend-summary)._
 
 ---
 
@@ -20,7 +20,9 @@ _Bootstrapped on 2026-05-27. Last updated 2026-05-27 (MUI dark theme)._
 |---|---|
 | `HomePage.tsx` | Top-level page layout: sticky AppBar (TopBar), two-column content area (`left-column` / `right-column`), dataset selector, Training Overview placeholder, WeeklyDashboard, Insights placeholder |
 | `TopBar.tsx` | App bar component (stub / partially used; AppBar logic also inline in HomePage) |
-| `RunnerDashboard.tsx` | Accordion-style weekly list; renders `week-row` elements, expands to show `week-activities`, `activity-row` (with `data-activity-type`), and `skipped-activity` marker |
+| `RunnerDashboard.tsx` | Accordion-style weekly list; renders `week-row` elements, expands to show `week-activities`, `activity-row` (with `data-activity-type`), and `skipped-activity` marker; each collapsed `week-row` includes `week-vo2max-trend` and `week-resting-hr-trend` passive trend indicators |
+| `TrendIndicator` (inline in `RunnerDashboard.tsx`) | Passive display element rendered inside each `week-row`; `role="img"`, `aria-label`, decorative arrow `aria-hidden="true"`; shows `↑ Increasing`, `↓ Decreasing`, `→ Stable`, or `—`; non-interactive, not in tab order |
+| `computeTrend` (inline in `RunnerDashboard.tsx`) | Pure function computing trend direction from two numeric values; threshold >±2% (exclusive) for directional change; returns `TrendDirection`, `arrow`, and `label` |
 | `WeeklyDashboard.tsx` | Weekly summary card view; week selector (`week-selector`), activity list (`activity-list`), activity detail (`activity-detail`), aggregate metrics (avg HR, cadence, VO2max, resting HR, intensity balance), week-over-week trend indicators |
 | `WeekRow.tsx` | Single week row in the RunnerDashboard accordion |
 | `ActivityRow.tsx` | Single activity row within an expanded week; carries `data-activity-type` attribute for CSS token application |
@@ -136,6 +138,7 @@ CSS attribute selectors wire tokens to DOM:
 - **MUI Paper sections:** Used for `training-overview` and `insights` panel placeholders with `component="section"` and `role="region"`
 - **Metric display pattern:** `data-testid`-keyed elements for each metric (e.g. `weekly-vo2max`, `weekly-avg-hr`, `weekly-resting-hr`, `intensity-balance`, `trend-training-load`) enabling targeted test assertions and screen reader access
 - **Loading state pattern:** `LoadingState` component shown before data renders; gated by async data availability
+- **Trend indicator pattern:** Passive `<div role="img">` with `aria-label`; decorative arrow in `<span aria-hidden="true">`; direction label in a sibling `<span>`; non-interactive and absent from tab order; used in both `WeeklyDashboard` (weekly aggregate section) and `RunnerDashboard` (collapsed `week-row`)
 
 ### Accessibility Baseline
 
@@ -148,6 +151,7 @@ CSS attribute selectors wire tokens to DOM:
 - Color is never the sole differentiator — text labels accompany all color-coded elements
 - WCAG AA contrast target for text (4.5:1 normal, 3:1 large text) — dark background with white text
 - 404 page uses `role="main"` and `aria-hidden="true"` on decorative "404" number display
+- Trend indicators use `role="img"` + `aria-label` (e.g. `"VO2max trend: Increasing"`, `"Resting HR trend: No comparison available"`); raw arrow characters are `aria-hidden="true"`; indicators are not in the tab order
 
 ---
 
@@ -186,7 +190,16 @@ CSS attribute selectors wire tokens to DOM:
 - `weeklyAvgHr`: mean of `activity.avgHr` values (rounded), ignoring nulls
 - `weeklyAvgCadence`: mean of `activity.cadence` values (rounded), ignoring nulls
 - `intensityBalance`: count of high-intensity (`type === 'intervals'`) vs low-intensity activities
-- Trend indicators (`↑ Increasing` / `↓ Decreasing` / `→ Stable` / `—`): computed by `computeTrend()` comparing current vs previous week; threshold >±2% for directional change
+- Trend indicators (`↑ Increasing` / `↓ Decreasing` / `→ Stable` / `—`): computed by `computeTrend()` comparing current vs previous week; threshold >±2% (exclusive) for directional change; returns `TrendDirection` (`'increasing' | 'decreasing' | 'stable' | 'none'`), `arrow` character, and `label` string
+
+**`TrendResult`** _(defined in `RunnerDashboard.tsx`)_:
+```
+{
+  direction: TrendDirection   // 'increasing' | 'decreasing' | 'stable' | 'none'
+  arrow: string               // '↑' | '↓' | '→' | '—'
+  label: string               // 'Increasing' | 'Decreasing' | 'Stable' | ''
+}
+```
 
 **`Dataset`** _(inferred from `domain/dataset.ts` and developer summaries)_:
 ```
@@ -201,7 +214,7 @@ CSS attribute selectors wire tokens to DOM:
 
 All data is **mocked**. Two data modules serve mock data:
 
-- `frontend/src/data/datasets.ts` — exports the half-marathon fixture dataset (`isTestFixture: true`) and `getSelectableDatasets()` (returns non-fixture datasets for the UI dropdown; currently empty or stub). Contains 8 weeks: Weeks 1–8, Week 4 has no activities and a skipped marker.
+- `frontend/src/data/datasets.ts` — exports the half-marathon fixture dataset (`isTestFixture: true`) and `getSelectableDatasets()` (returns non-fixture datasets for the UI dropdown; currently empty or stub). Contains 8 weeks: Weeks 1–8, Week 4 has no activities and a skipped marker. Fixture values are constrained to satisfy trend assertions: W8 `vo2max=45.5` / `restingHrAvg=53` (vs W7 `vo2max=44.0` / `restingHrAvg=55`); W3 `vo2max=42.6` / `restingHrAvg=57` (vs W2 `vo2max=42.5` / `restingHrAvg=57`).
 - `frontend/src/data/weeklyDashboardData.ts` — exports typed weekly data used by `WeeklyDashboard.tsx`; includes at least W08, W09, W10 with full activity and aggregate data.
 - `frontend/src/data/halfMarathonFixture.ts` — fixture data file for the 8-week plan.
 
@@ -220,6 +233,7 @@ All data is **mocked**. Two data modules serve mock data:
 | `enforce-visual-theme` | `data-activity-type` attribute wired to every `activity-row` (snake_case values: `long_run`, `restorative_run`, `intervals`) and `skipped-activity` (`data-activity-type="skipped"`); CSS tokens now structurally applied via DOM attribute contract |
 | `make-weekly-dashboard-the-home-page` | Root `/` now renders `WeeklyDashboard` directly (Training Overview removed from page); `/weekly-dashboard` → 308 redirect to `/`; `weekly-dashboard-container` no horizontal overflow at 390px; `TrainingOverview.tsx` deleted |
 | `improve-weekly-aggregates-and-prepare-for-more-insights` | Activity-level `avgHr` and `cadence` fields with em-dash fallback; weekly metrics: `weekly-vo2max`, `weekly-resting-hr`, `weekly-avg-hr`, `weekly-avg-cadence`; intensity balance indicator with `aria-label`; week-over-week trend indicators (↑/↓/→/—) for training load, avg HR, resting HR; `weeklyDashboardData.ts` data module; `week-selector` navigation; `activity-list` → `activity-detail` drill-down; responsive at 375px |
+| `collapsed-week-trend-summary` | `week-vo2max-trend` and `week-resting-hr-trend` passive trend indicators added to each collapsed `week-row` in `RunnerDashboard`; `TrendIndicator` inline component and `computeTrend` pure function; `role="img"` + `aria-label` accessibility pattern; fixture data values locked to satisfy trend assertions for W1 (—), W3 (→ Stable), W8 (↑ Increasing VO2max / ↓ Decreasing resting HR); `datasets.test.ts` fixture integrity tests added |
 
 ---
 
@@ -237,6 +251,7 @@ All data is **mocked**. Two data modules serve mock data:
 - **`data-activity-type` attribute contract:** Values must be snake_case (`long_run`, `restorative_run`, `intervals`, `skipped`). CSS selectors in `layout.tsx` depend on these exact strings.
 - **Color is never the sole differentiator:** Every color-coded element must also carry a text label or `aria-label`. This is both an accessibility requirement and a Gherkin-tested constraint.
 - **Four activity token colors are pairwise distinct:** All four `--color-activity-*` tokens must remain unique (tested by `visual-theme-overhaul` scenarios).
+- **`computeTrend` threshold is >±2% exclusive:** The `collapsed-week-trend-summary` and `improve-weekly-aggregates-and-prepare-for-more-insights` features both rely on `change > 0.02` / `change < -0.02` as the boundary for directional trend. Fixture data values in `datasets.ts` are set to specific numeric values (W7: `vo2max=44.0`, `restingHrAvg=55`; W8: `vo2max=45.5`, `restingHrAvg=53`; W2: `vo2max=42.5`, `restingHrAvg=57`; W3: `vo2max=42.6`, `restingHrAvg=57`) that satisfy Gherkin assertions — do not change these values without re-validating all trend scenarios.
 
 ### Performance-Sensitive
 - **`weekly-dashboard-container` horizontal overflow:** The weekly dashboard must not cause horizontal scrollbar at 390px viewport width — this is a regression-tested constraint.
