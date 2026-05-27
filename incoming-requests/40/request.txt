@@ -1,0 +1,8 @@
+Replace the trend indicator layout in collapsed week rows. Currently each indicator shows a Unicode arrow + text label. Replace with:
+- A metric icon that permanently identifies the metric — use MUI Favorite for HR (colored --color-metric-hr, red family) and MUI DirectionsRun for VO2max (colored --color-metric-vo2max, teal family)
+- A trend icon from MUI alongside it — TrendingUp, TrendingDown, or TrendingFlat for increasing, decreasing, or stable. No text label.
+- When no prior week exists (earliest week), show only the metric icon with no trend icon.
+
+The metric icon must always be visible so the user knows which indicator is HR and which is VO2max without expanding the row. Color alone is not sufficient.
+
+Accessible label on the container should read e.g. "Resting HR trend: Increasing" — the icon replaces the visual text, not the accessibility text.
