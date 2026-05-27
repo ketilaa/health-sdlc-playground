@@ -78,12 +78,16 @@ def run_developer_phase(feature_name, messages, outer_iter):
         append_iteration_summary(summary_path, summary,
                                  f'Outer Iteration {outer_iter} — TDD Attempt {tdd_iter}')
 
-        if not is_ok(assistant_text):
+        # On the first iteration, respect STATUS: STOP — the developer may have
+        # found a genuine spec gap. On fix iterations (2+) the STATUS signal is
+        # unreliable: the developer often diagnoses correctly but still writes
+        # STOP instead of applying the fix. Let the tests be the arbiter instead.
+        if tdd_iter == 1 and not is_ok(assistant_text):
             print(f'Developer STOP:\n{summary}')
             append_usage_to_summary(summary_path, usage_rows)
             return False, messages
 
-        if not os.path.exists(f'features/{feature_name}/scope'):
+        if tdd_iter == 1 and not os.path.exists(f'features/{feature_name}/scope'):
             print('ERROR: Developer did not write a scope file')
             append_usage_to_summary(summary_path, usage_rows)
             return False, messages
@@ -97,10 +101,8 @@ def run_developer_phase(feature_name, messages, outer_iter):
         print('  Unit tests failed.')
         if tdd_iter < MAX_TDD_ITERATIONS:
             messages.append({'role': 'user', 'content': (
-                'Tests failed. Fix the code and return STATUS: OK. '
-                'Do NOT return STATUS: STOP — the spec is sufficient and this is a fixable implementation issue. '
-                'Output only the corrected files using ===FILE: path=== blocks.\n\n'
-                f'Test output:\n{format_test_output(test_output)}'
+                f'Test output:\n{format_test_output(test_output)}\n\n'
+                'Write the corrected files now using ===FILE: path=== blocks.'
             )})
 
     append_usage_to_summary(summary_path, usage_rows)
