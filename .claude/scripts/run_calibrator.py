@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Calibrator: reads all agent summaries for a feature and updates the global findings file."""
+import json
 import os
 import sys
 
@@ -42,6 +43,21 @@ def main():
         print(f'ERROR: No agent summaries found under features/{feature_name}/work/')
         sys.exit(1)
 
+    # Read planner summary from incoming-requests/ if this feature came from a plan
+    planner_summary = None
+    ctx_path = 'features/.pipeline_context.json'
+    if os.path.exists(ctx_path):
+        try:
+            ctx = json.load(open(ctx_path))
+            plan_issue = ctx.get('plan_issue_number')
+            if plan_issue is not None:
+                planner_path = f'incoming-requests/{plan_issue}/work/planner-summary.md'
+                planner_summary = read_file(planner_path)
+                if planner_summary:
+                    print(f'  Planner summary loaded from {planner_path}')
+        except (json.JSONDecodeError, OSError):
+            pass
+
     # Read existing global findings (may be empty/new)
     existing_findings = read_file(FINDINGS_PATH) or FINDINGS_TEMPLATE
     project_context = read_file('CLAUDE.md') or ''
@@ -52,6 +68,12 @@ def main():
         for agent, content in summaries.items()
     )
 
+    planner_block = (
+        f'## Planner Summary (from incoming-requests/{plan_issue}/work/planner-summary.md)\n{planner_summary}'
+        if planner_summary else
+        '## Planner Summary\n(not available — standalone feature with no plan)'
+    )
+
     user_message = f"""Feature name: {feature_name}
 
 ## Project Context
@@ -59,6 +81,8 @@ def main():
 
 ## Existing Global Findings
 {existing_findings}
+
+{planner_block}
 
 ## Agent Summaries for This Feature
 {summaries_text}
