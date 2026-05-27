@@ -80,10 +80,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** prompt-gap
 - **Agent:** developer
-- **Seen:** 2
-- **Features:** runner-dataset-with-consistent-improvement, visual-theme-overhaul
+- **Seen:** 3
+- **Features:** runner-dataset-with-consistent-improvement, visual-theme-overhaul, collapsed-week-trend-summary
 - **Status:** open
-- **Description:** The developer summary across both features states zero TDD cycles because the implementation was already present and green. In `visual-theme-overhaul` the summary states "TDD iterations: 0 — pre-existing green suite satisfies the spec" and "No source/test changes." The developer's role collapses to verification with no record of whether the implementation was independently derived from the Gherkin or whether the tests were ever red. There is no record of whether the existing tests were red-then-green at any point.
+- **Description:** Across three features the developer summary reports minimal or zero TDD cycles because the implementation was already substantially present. In `visual-theme-overhaul` the summary states "TDD iterations: 0 — pre-existing green suite satisfies the spec." In `collapsed-week-trend-summary` the summary states "TDD cycles: 1 — implementation was largely pre-existing; primary work was verifying/writing fixture data values." There is no record of whether the existing tests were ever red, nor whether the implementation was independently derived from the Gherkin.
 - **Suggested improvement:** Clarify in the developer prompt how to behave when the implementation already exists in the repository. Options: (a) require the developer to delete pre-existing implementation and re-derive it under TDD, (b) require an explicit "pre-existing implementation accepted" justification with a checklist confirming each Gherkin scenario was traced back through the existing tests, or (c) flag pre-existing implementation to the calibrator/PO as a workflow anomaly. Currently the agent silently downgrades its own role.
 
 ---
@@ -116,10 +116,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** spec-gap
 - **Agent:** product-owner
-- **Seen:** 2
-- **Features:** visual-theme-overhaul, enforce-visual-theme
+- **Seen:** 3
+- **Features:** visual-theme-overhaul, enforce-visual-theme, collapsed-week-trend-summary
 - **Status:** open
-- **Description:** The product-owner pinned the base URL to `http://localhost:3000/` without consulting `next.config.js`. In `visual-theme-overhaul` the tester flagged: "The real page URL is `http://localhost:3000/health-sdlc-playground/` (basePath from `next.config.js`), NOT bare `http://localhost:3000/`." In `enforce-visual-theme` the tester again had to rewrite the navigation URL in step definitions to include the basePath. The Gherkin Background URL is technically incorrect in both features; testers must silently correct it in step definitions.
+- **Description:** The product-owner pinned the base URL to `http://localhost:3000/` without consulting `next.config.js`. In `visual-theme-overhaul` the tester flagged: "The real page URL is `http://localhost:3000/health-sdlc-playground/`." In `enforce-visual-theme` the tester again rewrote the navigation URL in step definitions. In `collapsed-week-trend-summary` the tester again noted: "The Gherkin navigation step uses `http://localhost:3000/` — the step definition rewrites this URL to include the basePath." Three consecutive features required the tester to silently correct the Gherkin URL in step definitions.
 - **Suggested improvement:** Instruct the product-owner to read `next.config.js` (and equivalent framework-config files) before pinning a base URL in a Gherkin Background. The URL in the Background must be the effective URL a browser would reach, including any `basePath`, reverse-proxy prefix, or port-forwarding convention in use.
 
 ---
@@ -140,10 +140,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** tester
-- **Seen:** 3
-- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, home-page-structure-step-1
+- **Seen:** 4
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, home-page-structure-step-1, collapsed-week-trend-summary
 - **Status:** applied
-- **Description:** The tester noted that `run-e2e.sh` at the repo root references `runner-dataset-with-consistent-improvement` step definitions and feature files in `visual-theme-overhaul`, and the code reviewer in `improve-weekly-aggregates-and-prepare-for-more-insights` again confirmed `run-e2e.sh` still references `visual-theme-overhaul`. In `home-page-structure-step-1`, the code reviewer again explicitly noted that `run-e2e.sh` references the prior feature (`make-weekly-dashboard-the-home-page`) and accepted this as "expected per review rules." No agent was prompted to detect or resolve the collision: the repo-root `run-e2e.sh` cannot correctly run E2E tests for both the prior and current features simultaneously if it only references one feature's paths.
+- **Description:** In `visual-theme-overhaul`, `improve-weekly-aggregates-and-prepare-for-more-insights`, and `home-page-structure-step-1`, the tester overwrote `run-e2e.sh` referencing only the current feature. In `collapsed-week-trend-summary`, the tester explicitly noted "Read the existing file; appended `collapsed-week-trend-summary` step and feature paths alongside the three existing feature paths" — demonstrating the correct behavior. The count is incremented because the same systemic risk was observed again and documented as a conscious decision, confirming the pattern is still active even when correctly handled.
 - **Suggested improvement:** Instruct the tester to always read the existing `run-e2e.sh` before writing a new one, and to update it to reference all accumulated E2E feature step paths rather than overwriting with only the current feature. Alternatively, define a convention (e.g., one `run-e2e.sh` per feature directory) so the root script does not need updating each time.
 
 ---
@@ -152,10 +152,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** spec-gap
 - **Agent:** developer
-- **Seen:** 1
-- **Features:** visual-theme-overhaul
+- **Seen:** 2
+- **Features:** visual-theme-overhaul, collapsed-week-trend-summary
 - **Status:** open
-- **Description:** The UX spec explicitly names MUI components throughout (`<Paper>`, `<Collapse>`, `<Stack>`, `<ThemeProvider>`, etc.) and the UX reviewer confirmed full coverage. The developer deferred the MUI rewrite with the rationale that the Gherkin does not mandate MUI. No agent (developer, code-reviewer, or UX-reviewer) recorded this divergence as a tracked debt item or flagged it for follow-up. The UX spec and Gherkin spec now permanently diverge on implementation technology with no resolution path documented.
+- **Description:** In `visual-theme-overhaul` the developer deferred the MUI component rewrite with the rationale that Gherkin does not mandate MUI. In `collapsed-week-trend-summary` the developer and code reviewer both explicitly noted that the UX spec requires MUI `Stack` + `Typography` components but the implementation uses plain `<div>` and `<span>`. The code reviewer accepted this as "acceptable for MVP" without flagging the UX-reviewer-confirmed requirement as deferred debt. No agent recorded either divergence as a tracked item requiring follow-up.
 - **Suggested improvement:** When the developer defers a UX spec requirement that is explicitly named and reviewed, the developer summary should include a "deferred UX requirements" section listing each deferred item and the justification. The code-reviewer should be instructed to flag any deferred UX requirement that is confirmed-passing by the UX reviewer but absent from the implementation, and to require either a Gherkin scenario covering the requirement or an explicit PO sign-off on the deferral.
 
 ---
@@ -164,10 +164,10 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 
 - **Category:** assumption-risk
 - **Agent:** developer
-- **Seen:** 3
-- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, enforce-visual-theme
+- **Seen:** 4
+- **Features:** visual-theme-overhaul, improve-weekly-aggregates-and-prepare-for-more-insights, enforce-visual-theme, collapsed-week-trend-summary
 - **Status:** applied
-- **Description:** The tester flagged a blocking gap in `visual-theme-overhaul` that `data-testid='activity-row'` was not explicitly confirmed in the developer summary. In `improve-weekly-aggregates-and-prepare-for-more-insights` the tester listed 13 assumed `data-testid` values as assumptions. In `enforce-visual-theme` the tester was forced to use `{ hasText: 'Week 8' }` text-content matching to distinguish between week rows because the developer did not document (and the implementation does not provide) a unique per-row `data-testid` discriminator — all week rows share the same `data-testid="week-row"`. Without a published testid inventory specifying per-row identifiers, the tester must rely on fragile text-content matching to target specific rows in a list.
+- **Description:** In `visual-theme-overhaul` the tester flagged that `data-testid='activity-row'` was not confirmed in the developer summary. In `improve-weekly-aggregates-and-prepare-for-more-insights` the tester listed 13 assumed `data-testid` values. In `enforce-visual-theme` the tester used text-content matching because all week rows shared `data-testid="week-row"` without per-row discriminators. In `collapsed-week-trend-summary` the tester again explicitly flagged: "No `data-testid` uniquely identifies a specific week row by number. This gap was identified in the `enforce-visual-theme` tester summary and remains unfixed." The developer in `collapsed-week-trend-summary` published a data-testid inventory table but omitted per-row discriminators — the specific sub-gap persists across two consecutive features.
 - **Suggested improvement:** Instruct the developer to include a complete `data-testid` inventory table in their summary, listing every `data-testid` attribute present in the implementation with the element type, parent context, and any per-instance discriminators (e.g., `data-week-number` for list rows). For list-of-items components where Gherkin scenarios target specific items, the developer should document how individual items are uniquely addressable by the tester.
 
 ---
@@ -241,5 +241,17 @@ _Accumulated across all features. Each finding describes a recurring pattern in 
 - **Status:** open
 - **Description:** In `enforce-visual-theme` Scenario 4 (consistency across weeks), the tester used `.first()` on the `week-activities` locator after clicking Week 7, under the assumption the accordion is single-open (i.e., clicking Week 7 collapses Week 8). The tester explicitly flagged this: "If the accordion keeps both panels open simultaneously, `week-activities` returns two elements; `.first()` would return the Week 8 panel rather than Week 7's — a potential false pass." The tester did not read the `RunnerDashboard.tsx` implementation to verify whether the accordion is single-open or multi-open before writing the step definition.
 - **Suggested improvement:** Instruct the tester to read the implementation file(s) for any accordion, tab, or collapsible widget before writing multi-step E2E sequences that rely on a single-open assumption. When the open mode is not confirmed by the developer summary or UX spec, the tester should scope locators to the clicked parent element rather than using a global positional selector (e.g., scope `week-activities` lookup to within the clicked `week-row` element). Document the open-mode assumption explicitly and flag it as a potential false-pass risk if it cannot be confirmed.
+
+---
+
+## Finding: Colour token application silently deferred by developer — code reviewer accepts incomplete UX spec implementation without tracking
+
+- **Category:** spec-gap
+- **Agent:** code-reviewer
+- **Seen:** 1
+- **Features:** collapsed-week-trend-summary
+- **Status:** open
+- **Description:** The UX spec (§3.2, §3.3) explicitly requires colour tokens (`--color-trend-up`, `--color-trend-down`, `--color-trend-stable`, `--color-text-muted`) to be applied to trend indicators via `sx` props on MUI `Stack`. The UX reviewer confirmed this requirement (§D, §F). The developer's implementation omits all colour token application. The code reviewer accepted this with: "Not explicitly applied in RunnerDashboard.tsx — component renders text only. Implementation leaves colour application to future CSS/Tailwind. ✓ Acceptable for MVP." No debt item was created, no Gherkin scenario covers colour application, and no UX reviewer sign-off on the deferral exists.
+- **Suggested improvement:** Instruct the code-reviewer to flag any UX-reviewer-confirmed requirement that is absent from the implementation as a non-trivial deferral requiring explicit justification in the developer summary. "Acceptable for MVP" is not a sufficient rationale when the UX reviewer has confirmed the requirement as part of the design system. The code reviewer should either (a) require the developer to implement the requirement, (b) require a Gherkin scenario covering the requirement, or (c) require an explicit PO sign-off noting the deferral. Silent deferral of reviewed design system requirements creates permanent divergence between the UX spec and the implementation.
 
 ---
