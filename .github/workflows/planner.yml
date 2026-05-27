@@ -24,8 +24,13 @@ jobs:
         run: |
           BRANCH="plan/issue-${{ github.event.issue.number }}"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          git checkout -b "$BRANCH"
-          git push -u origin "$BRANCH"
+          git fetch origin "$BRANCH" 2>/dev/null || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git checkout -b "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+            git push -u origin "$BRANCH"
+          fi
 
       - name: Save issue and pipeline context
         run: |
