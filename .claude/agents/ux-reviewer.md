@@ -22,10 +22,10 @@ Read these files:
 - No critical scenario is left without a UI representation
 - The UX spec is internally consistent — no conflicting descriptions of the same element
 - **Design principles** — the spec must satisfy all of the following:
-  - Components are identified as MUI components — no generic or framework-agnostic descriptions where a specific MUI component applies
   - Insights and key data are glanceable: a user must be able to read the primary value within 3 seconds (no dense tables or walls of text as the primary presentation)
   - Visual hierarchy is used to convey meaning — color, size, and layout must be described, not just listed element names
   - The design avoids generic dashboard patterns (e.g., a flat grid of identical stat cards with no visual differentiation is not acceptable)
+- **Visual property completeness** — the UX spec is authoritative for visual properties; the developer will implement them without unit tests. For every visual property in the spec, verify it is concrete enough to implement without guesswork: token names are provided for new tokens, color values or a clear value family is stated, existing tokens are referenced by name. Flag any vague visual property (e.g. "use a warm color", "appropriate spacing") as a blocking issue — the developer has no way to make a testable or reviewable decision from it.
 - **Experimental UX** — apply the **Reviewer checklist** from `.claude/skills/experimental-ux.md`; every item is blocking
 - **Accessibility** — apply the **Reviewer checklist** from `.claude/skills/accessibility.md`; every item is blocking
 
