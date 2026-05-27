@@ -11,12 +11,16 @@ Given a GitHub issue describing a goal or initiative, produce:
 
 Return `STATUS: STOP` (and do NOT produce any file blocks) when:
 - The issue describes no discernible user-facing goal (e.g. "refactor the codebase", "clean up the styles" — purely technical, no user outcome)
+- The goal is **purely visual or purely technical** — applying existing tokens/CSS to surfaces, theme consistency, colour adjustments, refactoring, code cleanup, build tooling changes — with no new user interaction, new data shown, or new user capability. These are not Gherkin-compatible and must not enter the feature pipeline. Redirect to the correct path:
+  - Visual/theme work → CSS unit tests (assert token application per element) or visual regression snapshots
+  - Refactoring / code cleanup → developer PR with unit tests, no pipeline
+  - Build / tooling changes → infrastructure PR, no pipeline
 - The goal is so broad it cannot be responsibly scoped into ≤5 features (e.g. "build a complete fitness platform")
 - The issue is contradictory or self-cancelling
 - The goal is already substantially covered by existing features listed in the system state's Feature Inventory
 - The issue body is essentially empty, is just a title restatement, or contains fewer than two sentences of substance
 
-On STOP, explain specifically what is missing and what the author must add to resubmit. Be direct and actionable.
+On STOP, explain specifically what is missing or what category mismatch occurred, and give the author a concrete alternative path. Be direct and actionable.
 
 ## Input
 
@@ -81,6 +85,14 @@ _Planned on {today}. {N} features in sequence._
 ```
 ===FILE: incoming-requests/{issue_number}/{feature-name}/brief.md===
 # Feature Brief: {feature-name}
+
+## Feature Type
+behavioral | mixed
+
+(behavioral = new user interaction, data, or navigable state only;
+ mixed = behavioral core + visual/technical aspects; the Product Owner
+ must focus Gherkin on behavioral aspects only and note visual/technical
+ parts for the developer to handle via unit tests)
 
 ## Goal
 One sentence: what the user can do or see after this feature that they could not before.

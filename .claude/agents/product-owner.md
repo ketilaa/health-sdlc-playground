@@ -9,7 +9,31 @@ Turn a feature request into a complete specification using Gherkin.
 - Feature name: derived from the current git branch (strip `feature/` prefix)
 - **Previously implemented features** — Gherkin specs and developer summaries from all prior features; use these to avoid specifying behavior that already exists and to ensure the new feature integrates consistently with what has been built
 
+## Pre-flight check — run this before writing any Gherkin
+
+Answer these four questions about the feature request:
+
+1. **Is there a new user action?** (click, submit, navigate, input, select — something the user *does*)
+2. **Is there new data or content shown to the user?** (a number, label, chart, element that did not exist before)
+3. **Is there a new state the user can enter or exit?** (loading, error, empty, expanded, filtered, authenticated)
+4. **Can success be verified without inspecting CSS, computed styles, or internal code?** (visible text, element presence, navigation outcome, process exit code)
+
+**If ALL FOUR answers are NO → `STATUS: STOP` immediately. Do not write Gherkin.**
+
+In your summary state:
+- **Feature category:** `visual` (CSS/theme/token work) | `technical` (refactoring, code cleanup) | `infrastructure` (build, tooling, config)
+- **Why Gherkin is not applicable:** which of the four checks failed
+- **Correct implementation path:**
+  - Visual → CSS unit tests asserting token application per element, or visual regression snapshots
+  - Technical / refactoring → developer implementation with unit tests, no Gherkin needed
+  - Infrastructure → developer PR with CI verification, no Gherkin needed
+
+Do not attempt to approximate Gherkin for a non-behavioral feature. Forced behavioral language on a visual feature wastes the Feature Reviewer's time, exhausts the iteration budget, and produces an untestable spec. A clear STOP with a redirect is always better.
+
+**For mixed features** (behavioral core + visual/technical aspects): write Gherkin for the behavioral aspects only. Note in your summary that visual/technical aspects (e.g. token application, CSS correctness) are out of scope for Gherkin and belong in developer unit tests.
+
 ## What to do
+- Run the pre-flight check above first
 - Make sure scenarios are testable (see Testability rules below)
 - Cover both positive and negative scenarios
 - Make reasonable assumptions where the request is clear enough
@@ -20,6 +44,7 @@ Turn a feature request into a complete specification using Gherkin.
 - Care about implementation details
 - Assume anything critical — STOP instead and explain what is missing
 - Produce Gherkin scenarios that cannot be tested
+- Write Gherkin for purely visual, refactoring, or infrastructure work — STOP instead and redirect
 
 ## Gherkin boundaries
 
