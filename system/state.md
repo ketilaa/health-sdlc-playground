@@ -10,28 +10,28 @@ _Bootstrapped on 2026-05-27. Updated automatically after each feature lands._
 
 | Path | Purpose |
 |---|---|
-| `/` | Home page — renders `HomePage` component (top bar + two-column layout with `RunnerDashboard` / `WeeklyDashboard` in left column and Insights placeholder in right column) |
-| `/weekly-dashboard` | Issues a permanent 308 redirect to `/` |
-| `*` (unmatched) | Next.js `not-found.tsx` — renders a centred 404 page with a "Go to Dashboard" link |
+| `/` | Root page — renders `HomePage` component (dataset selector, two-column layout with WeeklyDashboard in left column and Insights placeholder in right column) |
+| `/weekly-dashboard` | 308 permanent redirect → `/` (redirect implemented via Next.js route handler) |
+| `*` (unmatched) | Next.js `not-found.tsx` — renders 404 page with "Page Not Found" and a link back to `/` |
 
 ### Key Components
 
 | Component | Role |
 |---|---|
-| `HomePage` | Full-page layout shell: sticky `AppBar` top bar, two-column flex content area, wires together all section panels |
-| `TopBar` | App bar sub-component — displays "Health Playground" title and `DatasetSelector`; `data-testid="top-bar"` |
-| `DatasetSelector` | MUI `Select` dropdown for choosing the active dataset; `data-testid="dataset-selector"`; at present renders the half-marathon fixture as the only non-test option |
-| `RunnerDashboard` | Accordion-style weekly list; renders `WeekRow` items, expands to show `ActivityRow` / `SkippedActivity`; `data-testid="runner-dashboard"` |
-| `WeekRow` | Single week summary row: total distance, total duration, activity count; `data-testid="week-row"` |
-| `WeeklyDashboard` | Weekly drill-down panel: week selector, weekly summary card (VO2max, resting HR, avg HR, avg cadence, intensity balance, trend indicators), activity list, activity detail; `data-testid="weekly-dashboard-container"` |
-| `ActivityRow` | Single activity row within an expanded week; carries `data-activity-type` attribute for CSS colour-coding; `data-testid="activity-row"` |
-| `SkippedActivity` | Marker rendered in weeks with a skipped session; carries `data-activity-type="skipped"`; `data-testid="skipped-activity"` |
-| `LoadingState` | Loading skeleton/spinner shown before dataset renders; `data-testid="dataset-loading"` |
-| `ColorProbe` | Hidden utility element used in tests to resolve CSS custom properties to canonical `rgb(...)` values |
+| `HomePage.tsx` | Top-level page layout: sticky AppBar (TopBar), two-column content area (`left-column` / `right-column`), dataset selector, Training Overview placeholder, WeeklyDashboard, Insights placeholder |
+| `TopBar.tsx` | App bar component (stub / partially used; AppBar logic also inline in HomePage) |
+| `RunnerDashboard.tsx` | Accordion-style weekly list; renders `week-row` elements, expands to show `week-activities`, `activity-row` (with `data-activity-type`), and `skipped-activity` marker |
+| `WeeklyDashboard.tsx` | Weekly summary card view; week selector (`week-selector`), activity list (`activity-list`), activity detail (`activity-detail`), aggregate metrics (avg HR, cadence, VO2max, resting HR, intensity balance), week-over-week trend indicators |
+| `WeekRow.tsx` | Single week row in the RunnerDashboard accordion |
+| `ActivityRow.tsx` | Single activity row within an expanded week; carries `data-activity-type` attribute for CSS token application |
+| `SkippedActivity.tsx` | Renders the skipped-activity marker with `data-activity-type="skipped"` |
+| `DatasetSelector.tsx` | MUI Select dropdown for choosing a dataset; isolates test fixture from selectable options |
+| `LoadingState.tsx` | Loading/skeleton state shown before dataset renders (`data-testid="dataset-loading"`) |
+| `ColorProbe.tsx` | Hidden probe element used to resolve CSS custom property values to canonical `rgb(...)` strings for theme verification |
 
 ### State Management
 
-Local React component state only (`useState`, `useEffect`). No global state library. Dataset selection is managed in `HomePage` / `DatasetSelector` and passed down as props. No server state or async data fetching — all data is synchronous in-module mock data.
+No external state management library. State is managed locally via React `useState` and `useEffect` hooks within components. Dataset selection and week selection are component-local state. No Redux, Zustand, or Context API in use _(unconfirmed for Context — not observed in source)_.
 
 ### Key Libraries
 
@@ -50,7 +50,7 @@ Local React component state only (`useState`, `useEffect`). No global state libr
 
 ## Backend
 
-No backend is present. All data is static mock data bundled with the frontend.
+No backend is present. The application is entirely frontend — all data is mock/fixture data served from static TypeScript modules bundled with the frontend. There is no API server, database, or server-side data-fetching layer.
 
 ---
 
@@ -59,30 +59,33 @@ No backend is present. All data is static mock data bundled with the frontend.
 ### Hosting / Deployment
 
 - **Platform:** GitHub Pages (static hosting)
-- **Build output:** Next.js static export (`output: 'export'`); build artefact written to `frontend/out/`
-- **Deployment trigger:** Push to `main` branch or manual `workflow_dispatch`
+- **Build output:** `frontend/out/` — Next.js static export (`output: 'export'` required in `next.config.js`)
+- **Trigger:** Push to `main` branch, or manual `workflow_dispatch`
+- **Node version:** 24
 
 ### CI/CD Pipelines
 
 | Workflow file | Name | Trigger | Purpose |
 |---|---|---|---|
-| `ci.yml` | CI | Pull request → `main` | Installs deps, audits for high-severity vulns, runs Jest tests; auto-merges Dependabot patch/minor PRs |
-| `deploy.yml` | Deploy to GitHub Pages | Push to `main`, `workflow_dispatch` | Builds Next.js static export and deploys to GitHub Pages |
-| `codeql.yml` | CodeQL | Push/PR → `main`, weekly schedule (Mon 06:00 UTC) | SAST analysis for JavaScript/TypeScript and Python |
-| `bootstrap-system-state.yml` | Bootstrap System State | `workflow_dispatch` | Runs the System State Bootstrap agent and commits `system/state.md` |
-| `feature-specification.yml` | Feature Specification | Issue opened with label `direct-feature` | Creates feature branch, runs Feature Specification agent, triggers `[NEXT:ux-design]` |
-| `calibrator.yml` | Calibrator | Push to `feature/**` with `[NEXT:calibrate]` in commit message | Runs Calibrator agent; triggers `[NEXT:create-pr]` |
-| `create-pr.yml` | Create PR | Push to `feature/**` with `[NEXT:create-pr]` in commit message | Opens/updates a pull request; triggers `[NEXT:update-system-state]` |
-
-_(Additional pipeline workflow files exist but were truncated in input; the above covers all fully-visible files.)_
+| `ci.yml` | CI | Pull request → `main` | Install deps, audit (`--audit-level=high`), run tests (`run-tests.sh` or `npm test`); auto-merge Dependabot patch/minor PRs |
+| `deploy.yml` | Deploy to GitHub Pages | Push to `main`, `workflow_dispatch` | Build Next.js static export, upload `frontend/out/`, deploy to GitHub Pages |
+| `codeql.yml` | CodeQL | Push/PR to `main`, weekly schedule (Mon 06:00 UTC) | Static security analysis for JavaScript/TypeScript and Python |
+| `feature-specification.yml` | Feature Specification | Issue opened (label: `direct-feature`) | AI agent pipeline: create feature branch, run feature specification agent, trigger UX Design stage |
+| `ux-design.yml` | UX Design | Push to `feature/**` with `[NEXT:ux-design]` in commit | AI agent: generate UX spec; trigger Implementation and Test stage |
+| `implement-and-test.yml` | Implement and Test | Push to `feature/**` with `[NEXT:implementation-and-test]` in commit | AI agent: implement feature, run tests (unit + optional E2E); trigger Calibrator stage |
+| `calibrator.yml` | Calibrator | Push to `feature/**` with `[NEXT:calibrate]` in commit | AI agent: calibration step; trigger Create PR stage |
+| `create-pr.yml` | Create PR | Push to `feature/**` with `[NEXT:create-pr]` in commit | Opens or updates a pull request; triggers system state update |
+| `update-system-state.yml` | Update System State | Push to `feature/**` with `[NEXT:update-system-state]` in commit | AI agent: update `system/state.md` after feature lands |
+| `bootstrap-system-state.yml` | Bootstrap System State | `workflow_dispatch` only | One-time bootstrap of `system/state.md` from codebase snapshot |
+| `planner.yml` | Planner | Issue opened (no `direct-feature` label) | AI agent: decompose issue into feature backlog, open planning PR |
 
 ### Secrets / Environment Variables
 
 | Name | Used in |
 |---|---|
-| `ANTHROPIC_API_KEY` | `bootstrap-system-state.yml`, `feature-specification.yml`, `calibrator.yml` |
-| `GH_PAT` | `bootstrap-system-state.yml`, `feature-specification.yml`, `calibrator.yml`, `create-pr.yml` |
-| `NEXT_TELEMETRY_DISABLED` | `deploy.yml` (set to `1` to suppress Next.js telemetry) |
+| `ANTHROPIC_API_KEY` | All AI agent workflows |
+| `GH_PAT` | All workflows that write to repo or create PRs (checkout with write token, PR creation) |
+| `NEXT_TELEMETRY_DISABLED` | `deploy.yml` (set to `1` at build time) |
 
 ---
 
@@ -90,52 +93,59 @@ _(Additional pipeline workflow files exist but were truncated in input; the abov
 
 ### Color Tokens
 
-Defined in `frontend/src/theme/tokens.ts` and injected as CSS custom properties on `:root` via `layout.tsx`.
+Defined in `frontend/src/theme/tokens.ts` as `const` object; injected as CSS custom properties on `:root` via `layout.tsx`.
 
-| Token | Resolved value | Semantic role |
+| Token | Value | Semantic Role |
 |---|---|---|
-| `--color-background` | `rgb(18, 20, 24)` | Page background (very dark near-black) |
-| `--color-activity-long-run` | `rgb(56, 132, 196)` | Accent colour for long-run activity rows |
-| `--color-activity-restorative-run` | `rgb(94, 164, 122)` | Accent colour for restorative/recovery run rows |
-| `--color-activity-intervals` | `rgb(224, 138, 64)` | Accent colour for interval session rows |
-| `--color-activity-skipped` | `rgb(120, 124, 132)` | Muted colour for skipped-activity markers |
+| `--color-background` | `rgb(18, 20, 24)` | Page background — near-black dark theme base |
+| `--color-activity-long-run` | `rgb(56, 132, 196)` | Accent for long run activity rows |
+| `--color-activity-restorative-run` | `rgb(94, 164, 122)` | Accent for restorative/recovery run rows |
+| `--color-activity-intervals` | `rgb(224, 138, 64)` | Accent for interval session rows |
+| `--color-activity-skipped` | `rgb(120, 124, 132)` | Muted accent for skipped activity markers |
 
-All four activity colours are pairwise distinct. CSS selectors `[data-activity-type="<value>"]` apply the corresponding token as `background-color`.
+All four activity tokens are pairwise distinct. Token values are stored as canonical `rgb(...)` strings so `getComputedStyle` returns them verbatim (enabling exact string equality in tests).
+
+CSS attribute selectors wire tokens to DOM:
+```css
+[data-activity-type="long_run"]        { background-color: var(--color-activity-long-run); }
+[data-activity-type="restorative_run"] { background-color: var(--color-activity-restorative-run); }
+[data-activity-type="intervals"]       { background-color: var(--color-activity-intervals); }
+[data-activity-type="skipped"]         { background-color: var(--color-activity-skipped); }
+```
 
 ### Typography Scale
 
-- **System font stack:** `system-ui, -apple-system, sans-serif` applied globally on `body`
-- **Body text:** `color: rgb(255, 255, 255)` (white on dark background)
-- **Section headings:** MUI `Typography` at `h2` variant within section panels
-- **Page / app title ("Health Playground"):** MUI `h6` variant rendered semantically as `<h1>` in the top bar
-- **404 page numerals:** `72px`, `fontWeight: 700`; "Page Not Found" heading: `28px`
+- **Base font:** `system-ui, -apple-system, sans-serif` (set on `<body>`)
+- **Base text color:** `rgb(255, 255, 255)` (white on dark background)
+- **Heading hierarchy (MUI-based):** `h6` variant in AppBar for app title (rendered as `<h1>`); `h2` for section headings (Training Overview, Insights, Weekly Dashboard)
+- **404 page:** 72px / weight 700 for the "404" display number; 28px for the "Page Not Found" heading
 
 ### Spacing Conventions
 
-- Inline styles and MUI `sx` prop used throughout; no custom spacing scale defined — relies on MUI default 8px grid
-- Top bar clears below AppBar to avoid content hiding
-- Content area uses flexbox layout for the two-column split
-- 404 page uses `padding: 24px`
+- MUI default spacing scale (8px base unit) via `sx` props and MUI component defaults
+- Layout uses flexbox `Box` components (not MUI Grid) to avoid v5 Grid API version concerns
+- Top bar clears content area via padding/margin on the content wrapper
+- Global reset: `html, body { margin: 0; padding: 0; }`
 
 ### Key Reusable Component Patterns
 
-- **Week accordion row:** `WeekRow` renders a summary line; clicking expands an inline `week-activities` region showing `ActivityRow` children — expand/collapse interaction pattern used consistently
-- **Activity row with colour attribute:** Every `ActivityRow` carries `data-activity-type` (snake_case); CSS targeting that attribute applies the token colour — no inline colour styles on individual rows
-- **Section card/panel:** MUI `Paper` with `component="section"` used for Training Overview and Insights placeholders; `data-testid` on each for testability
-- **Dataset selector:** `FormControl` + `InputLabel` + `Select` pattern, wrapped in a `data-testid="dataset-selector"` div
+- **Accordion / expand-collapse rows:** `WeekRow` / `RunnerDashboard` — click a week row to expand `week-activities` panel; each row carries `data-testid="week-row"` and expands to show activity rows
+- **Data attribute color coding:** `data-activity-type` attribute on `activity-row` and `skipped-activity` elements; CSS tokens applied via attribute selectors — color is supplemented by visible text labels (accessibility requirement)
+- **MUI Paper sections:** Used for `training-overview` and `insights` panel placeholders with `component="section"` and `role="region"`
+- **Metric display pattern:** `data-testid`-keyed elements for each metric (e.g. `weekly-vo2max`, `weekly-avg-hr`, `weekly-resting-hr`, `intensity-balance`, `trend-training-load`) enabling targeted test assertions and screen reader access
+- **Loading state pattern:** `LoadingState` component shown before data renders; gated by async data availability
 
 ### Accessibility Baseline
 
-- `lang="en"` on `<html>`
-- Landmark structure: `<header>` for top bar, `<main>` for content area, `role="region"` with `aria-labelledby` on section panels
-- Heading hierarchy: `<h1>` (app title) → `<h2>` (section headings)
-- `data-activity-type` is a CSS hook only — not an ARIA attribute; activity type communicated via visible text label
-- `aria-label` on intensity balance element (e.g. `"Intensity balance: 3 low-intensity sessions, 1 high-intensity session"`)
-- Dataset selector has associated visible label ("Dataset") and `aria-label="Select dataset"`
-- Colour is never the sole differentiator — activity type label text always present alongside colour accent
-- Keyboard navigation: week rows expandable via Enter/Space; tab order follows DOM order (left-before-right columns, training-overview before weekly-dashboard)
-- `role="main"` on the 404 page `<main>` element
-- `aria-hidden="true"` on the decorative `404` numeral
+- `<html lang="en">` set on root layout
+- `<header>` wraps top bar; `<main>` wraps content area
+- Section cards use `role="region"` with `aria-labelledby` pointing to heading
+- `data-activity-type` is a CSS hook only — not semantic; activity type is always conveyed via visible text or `aria-label`
+- `intensity-balance` element carries `aria-label` with full description (e.g. "Intensity balance: 3 low-intensity sessions, 1 high-intensity session")
+- Keyboard navigation: week rows expandable via Enter/Space; dataset selector keyboard-accessible (MUI Select)
+- Color is never the sole differentiator — text labels accompany all color-coded elements
+- WCAG AA contrast target for text (4.5:1 normal, 3:1 large text) — dark background with white text
+- 404 page uses `role="main"` and `aria-hidden="true"` on decorative "404" number display
 
 ---
 
@@ -143,55 +153,57 @@ All four activity colours are pairwise distinct. CSS selectors `[data-activity-t
 
 ### Entities and Shapes
 
-**`Activity`** (inferred from `datasets.ts`, `halfMarathonFixture.ts`, developer summaries):
+**`Activity`** _(inferred from developer summaries and Gherkin)_:
 ```
 {
-  name: string           // display name, e.g. "Long run"
+  name: string           // display name, e.g. "Morning Run"
   type: string           // display label, e.g. "Long run" | "Restorative run" | "Intervals"
-  date: string           // ISO date string
-  distance_km: number
   duration_min: number
-  avgHr?: number         // optional; average heart rate
-  cadence?: number       // optional; steps per minute
+  distance_km: number
+  avgHr?: number         // optional; em-dash shown if absent
+  cadence?: number       // optional; em-dash shown if absent
+  date?: string          // ISO date string _(unconfirmed field name)_
 }
 ```
 
-**`WeekData`** (inferred from `weeklyDashboardData.ts` and developer summaries):
+**`WeekData`** _(inferred; exact shape unconfirmed)_:
 ```
 {
+  weekLabel: string      // e.g. "Week 8"
   weekId: string         // e.g. "2024-W10"
-  label: string          // e.g. "Week 8"
   activities: Activity[]
-  skipped?: boolean      // true for weeks with a skipped session
+  skipped?: boolean      // true for weeks with a skipped entry (e.g. Week 4 — sickness)
   skippedReason?: string // e.g. "Skipped due to sickness"
-  vo2max?: number        // weekly VO2max estimate
-  restingHrAvg?: number  // weekly average resting HR
-  trainingLoad: number   // numeric load value for trend computation
+  vo2max?: number        // weekly VO2max value
+  restingHrAvg?: number  // average resting HR for the week
+  trainingLoad?: number  // numeric training load for trend computation
 }
 ```
 
-**`Dataset`** (from `domain/dataset.ts`):
+**Computed / derived per week** (calculated at render time, not stored):
+- `weeklyAvgHr`: mean of `activity.avgHr` values (rounded), ignoring nulls
+- `weeklyAvgCadence`: mean of `activity.cadence` values (rounded), ignoring nulls
+- `intensityBalance`: count of high-intensity (`type === 'intervals'`) vs low-intensity activities
+- Trend indicators (`↑ Increasing` / `↓ Decreasing` / `→ Stable` / `—`): computed by `computeTrend()` comparing current vs previous week; threshold >±2% for directional change
+
+**`Dataset`** _(inferred from `domain/dataset.ts` and developer summaries)_:
 ```
 {
-  id: string
-  name: string
+  name: string           // e.g. "Half-Marathon Build-Up — 8 Week Consistent Plan"
   weeks: WeekData[]
-  isTestFixture?: boolean  // true → excluded from user-selectable dropdown
+  isTestFixture?: boolean // true → excluded from selectable datasets in UI
 }
 ```
-
-**Computed / derived values** (calculated in `WeeklyDashboard` or data helpers):
-- `weeklyAvgHr` — mean of `activity.avgHr` values across the week (rounded)
-- `weeklyAvgCadence` — mean of `activity.cadence` values across the week (rounded)
-- `intensityBalance` — count of low-intensity vs high-intensity sessions (high = `type === 'intervals'`)
-- `trend` — week-over-week change: `> +2%` → "↑ Increasing", `< -2%` → "↓ Decreasing", `±2%` → "→ Stable", no prior week → "—"
-
-**`activityTypeAttr()`** (`RunnerDashboard.tsx`) — maps display label to snake_case DOM attribute value:
-- `"Long run"` → `"long_run"`, `"Restorative run"` → `"restorative_run"`, `"Intervals"` → `"intervals"`
 
 ### Mock vs Real Data
 
-**All data is mocked.** The production fixture is the "Half-Marathon Build-Up — 8 Week Consistent Plan" dataset defined in `halfMarathonFixture.ts` — 8 weeks, Week 4 has 0 activities (skipped/sickness), all other weeks have 3 activities (Long run, Restorative run, Intervals). This fixture is loaded synchronously; no network requests are made. `isTestFixture: true` datasets are hidden from the user-facing selector.
+All data is **mocked**. Two data modules serve mock data:
+
+- `frontend/src/data/datasets.ts` — exports the half-marathon fixture dataset (`isTestFixture: true`) and `getSelectableDatasets()` (returns non-fixture datasets for the UI dropdown; currently empty or stub). Contains 8 weeks: Weeks 1–8, Week 4 has no activities and a skipped marker.
+- `frontend/src/data/weeklyDashboardData.ts` — exports typed weekly data used by `WeeklyDashboard.tsx`; includes at least W08, W09, W10 with full activity and aggregate data.
+- `frontend/src/data/halfMarathonFixture.ts` — fixture data file for the 8-week plan.
+
+`frontend/src/data/loader.ts` is intentionally empty (stub); data loading is handled inline via `getDefaultDataset()`.
 
 ---
 
@@ -199,34 +211,36 @@ All four activity colours are pairwise distinct. CSS selectors `[data-activity-t
 
 | Feature | What it added |
 |---|---|
-| `scaffolding-attempt-7` | Next.js app scaffold; top bar with "Health Playground" title and dataset-selector-placeholder; 404 handling; build pipeline |
-| `home-page-structure-step-1` | `HomePage` component with sticky `AppBar`, two-column flex layout; `training-overview` and `insights` placeholder panels; `weekly-dashboard` wrapper in left column; `DatasetSelector` MUI `Select` in top bar |
-| `visual-theme-overhaul` | Dark background (`rgb(18, 20, 24)`); CSS custom property token system (`--color-background`, `--color-activity-*`); activity-type `data-activity-type` attribute → CSS background colour; `ColorProbe` utility |
-| `runner-dataset-with-consistent-improvement` | `halfMarathonFixture.ts` — 8-week half-marathon build-up dataset; `RunnerDashboard` with accordion week list; `WeekRow`, `ActivityRow`, `SkippedActivity` components; `LoadingState`; `datasets.ts` with `getDefaultDataset()` / `getSelectableDatasets()` |
-| `make-weekly-dashboard-the-home-page` | Root `/` route renders `WeeklyDashboard` as primary content; `/weekly-dashboard` → 308 permanent redirect to `/`; removed `TrainingOverview.tsx`; `weekly-dashboard-container` testid; 404 page confirmed |
-| `enforce-visual-theme` | `data-activity-type` attribute wired on every `activity-row` (snake_case values: `long_run`, `restorative_run`, `intervals`) and `skipped-activity` (`data-activity-type="skipped"`); attribute hook contract between DOM and CSS token system formalised |
-| `improve-weekly-aggregates-and-prepare-for-more-insights` | `weeklyDashboardData.ts` data module; `WeeklyDashboard` enriched with: weekly VO2max, resting HR, computed avg HR and avg cadence, intensity balance indicator (with `aria-label`), week-over-week trend indicators (training load, avg HR, resting HR); activity detail panel with `avgHr` / `cadence` fields (em-dash fallback); responsive layout at 375px |
+| `scaffolding-attempt-7` | Next.js app scaffold; root route returning 200; TopBar with "Health Playground" title and dataset selector placeholder; 404 for unknown routes; build passing |
+| `home-page-structure-step-1` | Two-column `HomePage` layout (left: Training Overview + WeeklyDashboard, right: Insights); sticky AppBar with dataset selector (`DatasetSelector`); MUI Paper section placeholders; landmark/heading accessibility structure |
+| `visual-theme-overhaul` | Dark theme (`rgb(18,20,24)` background); CSS custom property token system on `:root` for 5 color tokens; `data-activity-type` CSS attribute selectors; `ColorProbe` component for computed-style testing; skipped-activity marker distinct visual treatment |
+| `runner-dataset-with-consistent-improvement` | Half-marathon 8-week fixture dataset; `RunnerDashboard` accordion with 8 `week-row` elements sorted newest-first; drill-down to `week-activities`; `ActivityRow` and `SkippedActivity` components; `LoadingState`; week aggregate display (distance, duration, activity count); test fixture isolated from UI picker |
+| `enforce-visual-theme` | `data-activity-type` attribute wired to every `activity-row` (snake_case values: `long_run`, `restorative_run`, `intervals`) and `skipped-activity` (`data-activity-type="skipped"`); CSS tokens now structurally applied via DOM attribute contract |
+| `make-weekly-dashboard-the-home-page` | Root `/` now renders `WeeklyDashboard` directly (Training Overview removed from page); `/weekly-dashboard` → 308 redirect to `/`; `weekly-dashboard-container` no horizontal overflow at 390px; `TrainingOverview.tsx` deleted |
+| `improve-weekly-aggregates-and-prepare-for-more-insights` | Activity-level `avgHr` and `cadence` fields with em-dash fallback; weekly metrics: `weekly-vo2max`, `weekly-resting-hr`, `weekly-avg-hr`, `weekly-avg-cadence`; intensity balance indicator with `aria-label`; week-over-week trend indicators (↑/↓/→/—) for training load, avg HR, resting HR; `weeklyDashboardData.ts` data module; `week-selector` navigation; `activity-list` → `activity-detail` drill-down; responsive at 375px |
 
 ---
 
 ## Known Constraints
 
 ### Architectural
-- **Static export only** — `next.config.js` must keep `output: 'export'`; no server-side rendering, no API routes, no `getServerSideProps`. Any data must be bundled at build time or fetched client-side.
-- **No backend** — all data is in-module mock data. Adding a backend would require new CI steps, secrets, and deployment infrastructure.
-- **`isTestFixture: true`** — the test fixture dataset must never appear in `getSelectableDatasets()` results; this is load-bearing for the "test dataset is isolated from live datasets" Gherkin scenario.
-- **`data-activity-type` attribute contract** — CSS selectors in `layout.tsx` target `[data-activity-type="long_run"]` etc. Renaming these values or removing the attribute will silently break colour-coding. The snake_case values (`long_run`, `restorative_run`, `intervals`, `skipped`) are normative.
-- **`dangerouslySetInnerHTML` in `layout.tsx`** — used only for injecting hardcoded CSS custom property declarations from `themeTokens`. The string is entirely build-time constant; do not introduce any runtime or user-derived content into this string.
-- **`theme.ts` is an empty stub** — intentionally kept as `export {}` to avoid breaking stray imports during an MUI theme transition. Do not restore MUI theme config here without updating all consumers.
+- **Static export only:** Next.js is configured with `output: 'export'` — no server-side rendering, no API routes, no `getServerSideProps`. All data must be bundled statically.
+- **No backend:** The system is entirely client-side. Adding a backend requires infrastructure changes (hosting, CORS, secrets, deploy pipeline updates).
+- **`/weekly-dashboard` → 308 redirect is load-bearing:** The redirect from `/weekly-dashboard` to `/` is a permanent redirect; any route handler implementing it must preserve the 308 status code (not 301 or 307).
+- **`TrainingOverview.tsx` has been deleted:** Do not recreate this file. Its removal is a completed spec requirement (`make-weekly-dashboard-the-home-page`).
+- **`theme.ts` (root) is intentionally empty:** `frontend/src/theme.ts` exports nothing — it is a stub kept only to avoid breaking stray imports. Do not add MUI theme configuration here; theme tokens live in `frontend/src/theme/tokens.ts`.
 
 ### Design System Non-Negotiables
-- CSS custom property token names (`--color-background`, `--color-activity-long-run`, etc.) must remain stable — they are referenced in both `layout.tsx` (CSS injection) and `theme/tokens.ts` (TypeScript constants).
-- All four activity token colours must remain pairwise distinct (enforced by Gherkin scenario "All four activity-related theme colours resolve to pairwise distinct values").
-- Colour alone must never be the sole differentiator for activity type — visible text labels are required alongside accent colours (WCAG / accessibility constraint).
+- **Token values are canonical `rgb(...)` strings:** `themeTokens` values must remain in `rgb(r, g, b)` integer format — tests use exact string equality against `getComputedStyle` output.
+- **`data-activity-type` attribute contract:** Values must be snake_case (`long_run`, `restorative_run`, `intervals`, `skipped`). CSS selectors in `layout.tsx` depend on these exact strings.
+- **Color is never the sole differentiator:** Every color-coded element must also carry a text label or `aria-label`. This is both an accessibility requirement and a Gherkin-tested constraint.
+- **Four activity token colors are pairwise distinct:** All four `--color-activity-*` tokens must remain unique (tested by `visual-theme-overhaul` scenarios).
 
-### Performance-Sensitive Areas
-- No identified performance bottlenecks at current scale (8-week static dataset). If dataset size grows significantly, the synchronous in-module load and full re-render on week selection may need optimisation.
+### Performance-Sensitive
+- **`weekly-dashboard-container` horizontal overflow:** The weekly dashboard must not cause horizontal scrollbar at 390px viewport width — this is a regression-tested constraint.
+- **Test fixture isolation:** `isTestFixture: true` datasets must never appear in the `DatasetSelector` dropdown. `getSelectableDatasets()` filters them out — do not bypass this filter.
 
-### DOM Order Constraints
-- `training-overview` node must appear before `weekly-dashboard` node in document order (keyboard/screen-reader reading order constraint, tested via `compareDocumentPosition`).
-- Columns must be ordered left-before-right in DOM to match visual order.
+### CI/CD
+- **`npm audit --audit-level=high` runs in CI:** All production dependencies must pass a high-severity audit on every PR. New dependencies must not introduce high/critical vulnerabilities.
+- **AI agent pipeline chaining:** Workflow stages are triggered by specific commit message tokens (`[NEXT:ux-design]`, `[NEXT:implementation-and-test]`, etc.). Commit messages must not include these tokens outside of intentional pipeline triggers — they are edge-triggered.
+- **`[no-trigger]` suffix:** Commits that should not trigger downstream pipelines must include `[no-trigger]` in the message.
