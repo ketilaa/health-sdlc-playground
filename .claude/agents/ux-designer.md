@@ -33,7 +33,8 @@ Determine `<feature-name>` from the directory listing under `features/`.
 - Cover all edge cases described in the feature spec
 
 ## What not to do
-- Prescribe HTML, CSS, or framework-specific implementation
+- Prescribe HTML, CSS, or framework-specific implementation — in particular, do not name specific MUI components (`Stack`, `Typography`, `Box`) as requirements; instead describe the layout intent (e.g. "horizontally arranged items with a small gap" rather than "MUI Stack with spacing=1"). The developer chooses the component.
+- When specifying compound text elements made of multiple parts (e.g. an icon or symbol followed by a label), explicitly state whether a space separates them and what the full combined string should read (e.g. "the indicator reads `↑ Increasing` with a space between the arrow and the word"). Omitting this causes test assertion mismatches.
 - Invent behavior not present in the Gherkin spec
 - Omit loading, empty, or error states — these are required
 - Abandon or contradict the established visual design system (color tokens, typography, spacing, component patterns) introduced by prior features — if the current feature requires a design system change, state it explicitly in your summary with a rationale
