@@ -1,6 +1,6 @@
 # System State
 
-_Bootstrapped on 2026-05-27. Last updated 2026-05-27 (collapsed-week-trend-summary)._
+_Bootstrapped on 2026-05-27. Last updated 2026-05-27 (icon-based-trend-indicators)._
 
 ---
 
@@ -21,8 +21,12 @@ _Bootstrapped on 2026-05-27. Last updated 2026-05-27 (collapsed-week-trend-summa
 | `HomePage.tsx` | Top-level page layout: sticky AppBar (TopBar), two-column content area (`left-column` / `right-column`), dataset selector, Training Overview placeholder, WeeklyDashboard, Insights placeholder |
 | `TopBar.tsx` | App bar component (stub / partially used; AppBar logic also inline in HomePage) |
 | `RunnerDashboard.tsx` | Accordion-style weekly list; renders `week-row` elements, expands to show `week-activities`, `activity-row` (with `data-activity-type`), and `skipped-activity` marker; each collapsed `week-row` includes `week-vo2max-trend` and `week-resting-hr-trend` passive trend indicators |
-| `TrendIndicator` (inline in `RunnerDashboard.tsx`) | Passive display element rendered inside each `week-row`; `role="img"`, `aria-label`, decorative arrow `aria-hidden="true"`; shows `↑ Increasing`, `↓ Decreasing`, `→ Stable`, or `—`; non-interactive, not in tab order |
-| `computeTrend` (inline in `RunnerDashboard.tsx`) | Pure function computing trend direction from two numeric values; threshold >±2% (exclusive) for directional change; returns `TrendDirection`, `arrow`, and `label` |
+| `TrendIndicator` (inline in `RunnerDashboard.tsx`) | Passive display element rendered inside each `week-row`; `role="img"`, `aria-label`, two SVG icons: a metric icon (always present, `aria-hidden="true"`) and a trend direction icon (only present for Weeks 2–8, `aria-hidden="true"`); no text labels; non-interactive, not in tab order |
+| `Vo2maxMetricIcon` (inline in `RunnerDashboard.tsx`) | Inline SVG — running figure path; `data-testid="week-vo2max-metric-icon"`; `aria-hidden="true"`; always rendered |
+| `HrMetricIcon` (inline in `RunnerDashboard.tsx`) | Inline SVG — heart path; `data-testid="week-resting-hr-metric-icon"`; `aria-hidden="true"`; always rendered |
+| `TrendDirectionIcon` (inline in `RunnerDashboard.tsx`) | Inline SVG — up/down/right arrow path selected by `TrendDirection`; `data-testid="week-vo2max-trend-icon"` or `"week-resting-hr-trend-icon"`; `aria-hidden="true"`; rendered only when a prior week exists (DOM absent for Week 1) |
+| `computeTrend` (inline in `RunnerDashboard.tsx`) | Pure function computing trend direction from two numeric values; threshold >±2% (exclusive) for directional change; returns `TrendDirection`, `arrow`, and `label` string |
+| `getTrendColor` (inline in `RunnerDashboard.tsx`) | Pure function resolving the CSS token string for a trend direction icon; applies inverted semantics for HR (lower HR = improvement = `--color-trend-up`); parameters: `direction: TrendDirection`, `isImprovedWhenLower: boolean` |
 | `WeeklyDashboard.tsx` | Weekly summary card view; week selector (`week-selector`), activity list (`activity-list`), activity detail (`activity-detail`), aggregate metrics (avg HR, cadence, VO2max, resting HR, intensity balance), week-over-week trend indicators |
 | `WeekRow.tsx` | Single week row in the RunnerDashboard accordion |
 | `ActivityRow.tsx` | Single activity row within an expanded week; carries `data-activity-type` attribute for CSS token application |
@@ -106,6 +110,11 @@ Defined in `frontend/src/theme/tokens.ts` as `const` object; injected as CSS cus
 | `--color-activity-restorative-run` | `rgb(94, 164, 122)` | Accent for restorative/recovery run rows |
 | `--color-activity-intervals` | `rgb(224, 138, 64)` | Accent for interval session rows |
 | `--color-activity-skipped` | `rgb(120, 124, 132)` | Muted accent for skipped activity markers |
+| `--color-metric-vo2max` | Blue family | Accent color for VO2max metric icon in collapsed week rows |
+| `--color-metric-hr` | Red/pink family | Accent color for resting HR metric icon in collapsed week rows |
+| `--color-trend-up` | Green family | Improving trend direction icon (also used for decreasing HR — inverted semantics) |
+| `--color-trend-down` | Red/muted family | Declining trend direction icon |
+| `--color-trend-stable` | Neutral family | Stable trend direction icon |
 
 All four activity tokens are pairwise distinct. Token values are stored as canonical `rgb(...)` strings so `getComputedStyle` returns them verbatim (enabling exact string equality in tests).
 
@@ -138,7 +147,7 @@ CSS attribute selectors wire tokens to DOM:
 - **MUI Paper sections:** Used for `training-overview` and `insights` panel placeholders with `component="section"` and `role="region"`
 - **Metric display pattern:** `data-testid`-keyed elements for each metric (e.g. `weekly-vo2max`, `weekly-avg-hr`, `weekly-resting-hr`, `intensity-balance`, `trend-training-load`) enabling targeted test assertions and screen reader access
 - **Loading state pattern:** `LoadingState` component shown before data renders; gated by async data availability
-- **Trend indicator pattern:** Passive `<div role="img">` with `aria-label`; decorative arrow in `<span aria-hidden="true">`; direction label in a sibling `<span>`; non-interactive and absent from tab order; used in both `WeeklyDashboard` (weekly aggregate section) and `RunnerDashboard` (collapsed `week-row`)
+- **Trend indicator pattern (icon-based):** Passive `<div role="img">` container with `aria-label`; contains two inline SVG children — a metric icon (always present, `aria-hidden="true"`) and a conditional trend direction icon (present only for Weeks 2–8, absent from DOM for Week 1, `aria-hidden="true"`); non-interactive and absent from tab order; used in collapsed `week-row` elements of `RunnerDashboard`
 
 ### Accessibility Baseline
 
@@ -151,7 +160,7 @@ CSS attribute selectors wire tokens to DOM:
 - Color is never the sole differentiator — text labels accompany all color-coded elements
 - WCAG AA contrast target for text (4.5:1 normal, 3:1 large text) — dark background with white text
 - 404 page uses `role="main"` and `aria-hidden="true"` on decorative "404" number display
-- Trend indicators use `role="img"` + `aria-label` (e.g. `"VO2max trend: Increasing"`, `"Resting HR trend: No comparison available"`); raw arrow characters are `aria-hidden="true"`; indicators are not in the tab order
+- Trend indicators use `role="img"` + `aria-label`; exact format: `"VO2max trend: increasing"` / `"Resting HR trend: decreasing"` / `"VO2max trend: no data"` etc. (lowercase state word, colon-space separator, `VO2max` and `Resting HR` retain standard casing); all icon SVGs are `aria-hidden="true"`; indicators are not in the tab order; trend icon element is absent from DOM (not CSS-hidden) when no prior week exists
 
 ---
 
@@ -190,14 +199,15 @@ CSS attribute selectors wire tokens to DOM:
 - `weeklyAvgHr`: mean of `activity.avgHr` values (rounded), ignoring nulls
 - `weeklyAvgCadence`: mean of `activity.cadence` values (rounded), ignoring nulls
 - `intensityBalance`: count of high-intensity (`type === 'intervals'`) vs low-intensity activities
-- Trend indicators (`↑ Increasing` / `↓ Decreasing` / `→ Stable` / `—`): computed by `computeTrend()` comparing current vs previous week; threshold >±2% (exclusive) for directional change; returns `TrendDirection` (`'increasing' | 'decreasing' | 'stable' | 'none'`), `arrow` character, and `label` string
+- Trend direction (`'increasing' | 'decreasing' | 'stable' | 'none'`): computed by `computeTrend()` comparing current vs previous week; threshold >±2% (exclusive) for directional change
+- Trend icon color: resolved by `getTrendColor(direction, isImprovedWhenLower)` — applies inverted semantics for HR (decreasing HR = improvement = `--color-trend-up`); VO2max uses standard semantics (increasing = `--color-trend-up`)
 
 **`TrendResult`** _(defined in `RunnerDashboard.tsx`)_:
 ```
 {
   direction: TrendDirection   // 'increasing' | 'decreasing' | 'stable' | 'none'
-  arrow: string               // '↑' | '↓' | '→' | '—'
-  label: string               // 'Increasing' | 'Decreasing' | 'Stable' | ''
+  arrow: string               // '↑' | '↓' | '→' | '—'  (retained for internal use; not rendered as text)
+  label: string               // 'Increasing' | 'Decreasing' | 'Stable' | ''  (retained; not rendered as text)
 }
 ```
 
@@ -234,6 +244,7 @@ All data is **mocked**. Two data modules serve mock data:
 | `make-weekly-dashboard-the-home-page` | Root `/` now renders `WeeklyDashboard` directly (Training Overview removed from page); `/weekly-dashboard` → 308 redirect to `/`; `weekly-dashboard-container` no horizontal overflow at 390px; `TrainingOverview.tsx` deleted |
 | `improve-weekly-aggregates-and-prepare-for-more-insights` | Activity-level `avgHr` and `cadence` fields with em-dash fallback; weekly metrics: `weekly-vo2max`, `weekly-resting-hr`, `weekly-avg-hr`, `weekly-avg-cadence`; intensity balance indicator with `aria-label`; week-over-week trend indicators (↑/↓/→/—) for training load, avg HR, resting HR; `weeklyDashboardData.ts` data module; `week-selector` navigation; `activity-list` → `activity-detail` drill-down; responsive at 375px |
 | `collapsed-week-trend-summary` | `week-vo2max-trend` and `week-resting-hr-trend` passive trend indicators added to each collapsed `week-row` in `RunnerDashboard`; `TrendIndicator` inline component and `computeTrend` pure function; `role="img"` + `aria-label` accessibility pattern; fixture data values locked to satisfy trend assertions for W1 (—), W3 (→ Stable), W8 (↑ Increasing VO2max / ↓ Decreasing resting HR); `datasets.test.ts` fixture integrity tests added |
+| `icon-based-trend-indicators` | Replaced text-based trend labels with SVG icon pairs in collapsed `week-row` elements; metric icon (always present: running figure for VO2max, heart for HR) + trend direction icon (up/down/right arrow, present only for Weeks 2–8; absent from DOM for Week 1); `getTrendColor()` helper with inverted HR semantics; 5 new color tokens (`--color-metric-vo2max`, `--color-metric-hr`, `--color-trend-up`, `--color-trend-down`, `--color-trend-stable`); aria-labels updated to lowercase state word format (`"VO2max trend: increasing"`, `"Resting HR trend: no data"` etc.); supersedes text-label pattern from `collapsed-week-trend-summary` |
 
 ---
 
@@ -252,6 +263,10 @@ All data is **mocked**. Two data modules serve mock data:
 - **Color is never the sole differentiator:** Every color-coded element must also carry a text label or `aria-label`. This is both an accessibility requirement and a Gherkin-tested constraint.
 - **Four activity token colors are pairwise distinct:** All four `--color-activity-*` tokens must remain unique (tested by `visual-theme-overhaul` scenarios).
 - **`computeTrend` threshold is >±2% exclusive:** The `collapsed-week-trend-summary` and `improve-weekly-aggregates-and-prepare-for-more-insights` features both rely on `change > 0.02` / `change < -0.02` as the boundary for directional trend. Fixture data values in `datasets.ts` are set to specific numeric values (W7: `vo2max=44.0`, `restingHrAvg=55`; W8: `vo2max=45.5`, `restingHrAvg=53`; W2: `vo2max=42.5`, `restingHrAvg=57`; W3: `vo2max=42.6`, `restingHrAvg=57`) that satisfy Gherkin assertions — do not change these values without re-validating all trend scenarios.
+- **Trend icon DOM absence for Week 1:** The trend direction icon (`week-vo2max-trend-icon`, `week-resting-hr-trend-icon`) must be absent from the DOM (not CSS-hidden) when no prior week exists. This is a Gherkin-tested constraint (`icon-based-trend-indicators` Scenario 3). Use conditional rendering (`&&`), not `display:none` or `visibility:hidden`.
+- **Trend indicator aria-label format:** Must use lowercase state word with colon-space separator: `"VO2max trend: increasing"`, `"Resting HR trend: no data"`, etc. The metric name portion (`VO2max`, `Resting HR`) retains its standard casing. The old format with capitalized state words (`"VO2max trend: Increasing"`, `"No comparison available"`) is superseded and must not be reintroduced.
+- **`getTrendColor` inverted HR semantics:** Decreasing resting HR is an improvement; `getTrendColor(direction, isImprovedWhenLower=true)` returns `--color-trend-up` when `direction === 'decreasing'`. This logic must be preserved to correctly color the resting HR trend icon.
+- **No `@mui/icons-material` dependency:** Icons in `RunnerDashboard.tsx` are implemented as inline SVG paths. Do not add `@mui/icons-material` to `package.json` — it was explicitly ruled out to avoid a large new dependency.
 
 ### Performance-Sensitive
 - **`weekly-dashboard-container` horizontal overflow:** The weekly dashboard must not cause horizontal scrollbar at 390px viewport width — this is a regression-tested constraint.
