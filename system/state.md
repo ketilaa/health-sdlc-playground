@@ -1,6 +1,6 @@
 # System State
 
-_Bootstrapped on 2026-05-27. Updated automatically after each feature lands._
+_Bootstrapped on 2026-05-27. Last updated 2026-05-27 (MUI dark theme)._
 
 ---
 
@@ -28,6 +28,7 @@ _Bootstrapped on 2026-05-27. Updated automatically after each feature lands._
 | `DatasetSelector.tsx` | MUI Select dropdown for choosing a dataset; isolates test fixture from selectable options |
 | `LoadingState.tsx` | Loading/skeleton state shown before dataset renders (`data-testid="dataset-loading"`) |
 | `ColorProbe.tsx` | Hidden probe element used to resolve CSS custom property values to canonical `rgb(...)` strings for theme verification |
+| `AppThemeProvider.tsx` | Client component wrapping the app with MUI `ThemeProvider` (dark `muiTheme`), `CssBaseline`, and `AppRouterCacheProvider` for Next.js App Router cache |
 
 ### State Management
 
@@ -97,7 +98,8 @@ Defined in `frontend/src/theme/tokens.ts` as `const` object; injected as CSS cus
 
 | Token | Value | Semantic Role |
 |---|---|---|
-| `--color-background` | `rgb(18, 20, 24)` | Page background — near-black dark theme base |
+| `--color-background` | `rgb(18, 20, 24)` | Page / body background — near-black dark theme base |
+| `--color-surface` | `rgb(28, 30, 36)` | Elevated surfaces — MUI Paper and AppBar background |
 | `--color-activity-long-run` | `rgb(56, 132, 196)` | Accent for long run activity rows |
 | `--color-activity-restorative-run` | `rgb(94, 164, 122)` | Accent for restorative/recovery run rows |
 | `--color-activity-intervals` | `rgb(224, 138, 64)` | Accent for interval session rows |
@@ -228,7 +230,7 @@ All data is **mocked**. Two data modules serve mock data:
 - **No backend:** The system is entirely client-side. Adding a backend requires infrastructure changes (hosting, CORS, secrets, deploy pipeline updates).
 - **`/weekly-dashboard` → 308 redirect is load-bearing:** The redirect from `/weekly-dashboard` to `/` is a permanent redirect; any route handler implementing it must preserve the 308 status code (not 301 or 307).
 - **`TrainingOverview.tsx` has been deleted:** Do not recreate this file. Its removal is a completed spec requirement (`make-weekly-dashboard-the-home-page`).
-- **`theme.ts` (root) is intentionally empty:** `frontend/src/theme.ts` exports nothing — it is a stub kept only to avoid breaking stray imports. Do not add MUI theme configuration here; theme tokens live in `frontend/src/theme/tokens.ts`.
+- **`theme.ts` is the canonical MUI theme:** `frontend/src/theme.ts` exports `muiTheme` — a MUI v5 dark-mode theme built from `tokens.ts` values. `AppThemeProvider.tsx` wraps the app with `ThemeProvider` + `CssBaseline` + `AppRouterCacheProvider`. Do not hardcode MUI palette colours in components; extend `muiTheme` instead. Token values in `tokens.ts` are the single source of truth — `muiTheme` reads from them directly.
 
 ### Design System Non-Negotiables
 - **Token values are canonical `rgb(...)` strings:** `themeTokens` values must remain in `rgb(r, g, b)` integer format — tests use exact string equality against `getComputedStyle` output.

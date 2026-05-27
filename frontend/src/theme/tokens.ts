@@ -1,6 +1,7 @@
 // Theme tokens — canonical rgb(...) strings so getComputedStyle returns them verbatim.
 export const themeTokens = {
   '--color-background': 'rgb(18, 20, 24)',
+  '--color-surface': 'rgb(28, 30, 36)',
   '--color-activity-long-run': 'rgb(56, 132, 196)',
   '--color-activity-restorative-run': 'rgb(94, 164, 122)',
   '--color-activity-intervals': 'rgb(224, 138, 64)',
