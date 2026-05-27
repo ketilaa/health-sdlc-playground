@@ -31,6 +31,7 @@ Determine `<feature-name>` from the directory listing under `features/`.
 - Include accessibility requirements: ARIA labels, keyboard navigation, focus management, screen reader text
 - Ensure every Gherkin scenario maps to at least one UI state or user flow
 - Cover all edge cases described in the feature spec
+- **Specify all visual properties with enough precision for a developer to implement without guesswork.** The UX spec is authoritative for visual properties — the developer will implement everything specified here even when no Gherkin scenario asserts it. This means: name every new token (`--color-metric-hr`), provide concrete values or a clear value family (e.g. `rgb(220, 50, 47)` — red family), and reference existing tokens by name. Vague guidance like "use a warm color" will be rejected by the UX reviewer.
 
 ## What not to do
 - Prescribe HTML, CSS, or framework-specific implementation — in particular, do not name specific MUI components (`Stack`, `Typography`, `Box`) as requirements; instead describe the layout intent (e.g. "horizontally arranged items with a small gap" rather than "MUI Stack with spacing=1"). The developer chooses the component.
