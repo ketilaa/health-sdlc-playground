@@ -1,0 +1,89 @@
+name: Planner
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  planner:
+    if: "!contains(github.event.issue.labels.*.name, 'direct-feature')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Create plan branch
+        id: branch
+        run: |
+          BRANCH="plan/issue-${{ github.event.issue.number }}"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          git checkout -b "$BRANCH"
+          git push -u origin "$BRANCH"
+
+      - name: Save issue and pipeline context
+        run: |
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          mkdir -p "incoming-requests/$ISSUE_NUM/work"
+          printf '%s' "$ISSUE_BODY" > "incoming-requests/$ISSUE_NUM/request.txt"
+          printf '{"issue_number":%s,"issue_title":"%s","issue_author":"%s"}\n' \
+            "$ISSUE_NUM" \
+            "$ISSUE_TITLE" \
+            "${{ github.event.issue.user.login }}" \
+            > "incoming-requests/$ISSUE_NUM/.context.json"
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+
+      - run: pip install -r requirements.txt
+
+      - name: Run Planner
+        id: agent
+        run: python -u .claude/scripts/run_planner.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+      - name: Comment on issue (STOP)
+        if: failure()
+        run: |
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          SUMMARY=$(cat "incoming-requests/$ISSUE_NUM/work/planner-summary.md" 2>/dev/null \
+            | head -40 \
+            || echo "See workflow logs for details.")
+          BODY=$(printf '**Planner STOP**\n\nThis request could not be decomposed into a feature backlog.\n\n%s\n\nPlease revise the issue and resubmit.' "$SUMMARY")
+          gh issue comment "$ISSUE_NUM" --body "$BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit planning artifacts
+        if: success()
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai@bot.com"
+          git add incoming-requests/
+          git diff --staged --quiet || git commit -m "plan: add feature backlog for issue #${{ github.event.issue.number }} [no-trigger]"
+          git pull --rebase origin "${{ steps.branch.outputs.branch }}" || true
+          git push
+
+      - name: Open review PR
+        if: success()
+        run: |
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          BACKLOG=$(cat "incoming-requests/$ISSUE_NUM/backlog.md" 2>/dev/null || echo "(backlog not generated)")
+          BODY=$(printf 'Planned feature backlog for issue #%s.\n\nReview the backlog and per-feature briefs in `incoming-requests/%s/`, then merge to approve and hand off to the Product Owner pipeline.\n\n---\n\n%s' \
+            "$ISSUE_NUM" "$ISSUE_NUM" "$BACKLOG")
+          gh pr create \
+            --title "plan: Issue #$ISSUE_NUM — ${{ github.event.issue.title }}" \
+            --body "$BODY" \
+            --base main \
+            --head "${{ steps.branch.outputs.branch }}" \
+            --label "planning"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}

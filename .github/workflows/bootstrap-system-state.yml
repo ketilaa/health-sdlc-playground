@@ -1,0 +1,32 @@
+name: Bootstrap System State
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - run: pip install -r requirements.txt
+
+      - name: Run System State Bootstrap
+        run: python -u .claude/scripts/run_system_state_bootstrap.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit system state
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai@bot.com"
+          git add system/
+          git diff --staged --quiet || git commit -m "chore: initialize system state document [no-trigger]"
+          git pull --rebase origin main
+          git push

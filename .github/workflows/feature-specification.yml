@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   feature-specification:
+    if: contains(github.event.issue.labels.*.name, 'direct-feature')
     runs-on: ubuntu-latest
 
     steps:
