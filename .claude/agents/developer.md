@@ -62,8 +62,11 @@ set -e
 cd frontend
 npm ci
 npm audit --audit-level=high
+npx tsc --noEmit
 npm test -- --watchAll=false --forceExit
 ```
+
+`npx tsc --noEmit` must always be included for TypeScript projects — Jest uses Babel/SWC and strips types without checking them, so type errors are invisible to the test suite but will fail `next build` at deploy time.
 
 Python backend:
 ```bash
