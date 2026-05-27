@@ -1,0 +1,3 @@
+On a collapsed week in the runner dashboard, expose trend information for vo2max and rest HR, and the total number of activities in the week. Trend information is compared to the previous week, and a climbing or descending arrow is ok. Add sensible theme color variables for vo2max and HR to use for coloring. E.g. HR is red. We want users to understand what he is seeing at a glance, so also consider established color schemes in the health/training domain.
+
+Consider using TendingUp and TrendingDown from the Material Icon library.
