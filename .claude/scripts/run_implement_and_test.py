@@ -97,8 +97,9 @@ def run_developer_phase(feature_name, messages, outer_iter):
         print('  Unit tests failed.')
         if tdd_iter < MAX_TDD_ITERATIONS:
             messages.append({'role': 'user', 'content': (
-                'Tests failed. Fix the code. '
-                'Output only changed files using ===FILE: path=== blocks.\n\n'
+                'Tests failed. Fix the code and return STATUS: OK. '
+                'Do NOT return STATUS: STOP — the spec is sufficient and this is a fixable implementation issue. '
+                'Output only the corrected files using ===FILE: path=== blocks.\n\n'
                 f'Test output:\n{format_test_output(test_output)}'
             )})
 
