@@ -21,50 +21,6 @@ jobs:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Create next feature issue if plan has remaining features
-        run: |
-          python3 - <<'PYEOF'
-import re, json, subprocess, sys, os
-
-ctx_path = 'features/.pipeline_context.json'
-if not os.path.exists(ctx_path):
-    print('No pipeline context — not a planned feature.')
-    sys.exit(0)
-
-ctx = json.load(open(ctx_path))
-plan_n = ctx.get('plan_issue_number')
-feature_index = ctx.get('feature_index')
-
-if plan_n is None or feature_index is None:
-    print('No plan metadata — standalone feature, nothing to chain.')
-    sys.exit(0)
-
-backlog_path = f'incoming-requests/{plan_n}/backlog.md'
-if not os.path.exists(backlog_path):
-    print(f'Backlog not found at {backlog_path}')
-    sys.exit(0)
-
-features = re.findall(r'^## Feature \d+: ([\w-]+)', open(backlog_path).read(), re.MULTILINE)
-print(f'Plan #{plan_n} backlog: {features}')
-print(f'Completed: index {feature_index} ({features[feature_index] if feature_index < len(features) else "?"})')
-
-next_index = feature_index + 1
-if next_index >= len(features):
-    print('All features in this plan have been completed.')
-    sys.exit(0)
-
-next_feature = features[next_index]
-brief_path = f'incoming-requests/{plan_n}/{next_feature}/brief.md'
-body = open(brief_path).read() if os.path.exists(brief_path) else f'Feature: {next_feature}\n\nSee incoming-requests/{plan_n}/backlog.md for details.'
-body += f'\n\n<!-- plan:{json.dumps({"n": plan_n, "i": next_index})} -->'
-
-print(f'Chaining next feature: {next_feature} (index {next_index} of {len(features) - 1})')
-r = subprocess.run(
-    ['gh', 'issue', 'create', '--title', next_feature, '--body', body, '--label', 'direct-feature'],
-    capture_output=True, text=True
-)
-if r.returncode != 0:
-    print(r.stderr); sys.exit(1)
-print(f'Created: {r.stdout.strip()}')
-PYEOF
+        run: python3 .github/scripts/chain_next_feature.py
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}

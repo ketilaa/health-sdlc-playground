@@ -42,23 +42,7 @@ jobs:
           FEATURE="${{ steps.branch.outputs.feature_name }}"
           mkdir -p "features/$FEATURE"
           printf '%s' "$ISSUE_BODY" > "features/$FEATURE/feature.txt"
-          python3 -c "
-import re, json, os
-feature = os.environ['FEATURE']
-body = open(f'features/{feature}/feature.txt').read()
-ctx = {
-    'issue_number': int(os.environ['ISSUE_NUMBER']),
-    'feature_name': feature,
-    'issue_author': os.environ['ISSUE_AUTHOR'],
-}
-m = re.search(r'<!-- plan:(\{.*?\}) -->', body)
-if m:
-    meta = json.loads(m.group(1))
-    ctx['plan_issue_number'] = meta.get('n')
-    ctx['feature_index'] = meta.get('i')
-    print(f'Plan metadata found: issue {meta.get(\"n\")}, feature index {meta.get(\"i\")}')
-json.dump(ctx, open('features/.pipeline_context.json', 'w'))
-"
+          python3 .github/scripts/save_pipeline_context.py
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
           FEATURE: ${{ steps.branch.outputs.feature_name }}
