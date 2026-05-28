@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 import React from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HomePage from './HomePage'
 
@@ -69,7 +69,7 @@ describe('Top Bar Navigation Menu — Gherkin Scenarios', () => {
   })
 
   // Scenario 4: Selecting "Home" from the navigation menu navigates to the root page
-  test('Scenario 4: clicking nav-menu-item-home calls router.push("/") and content-area remains visible', async () => {
+  test('Scenario 4: clicking Home item closes menu, navigates to root, and content-area is visible', async () => {
     const user = userEvent.setup()
     render(<HomePage />)
     // Open the menu
@@ -77,6 +77,8 @@ describe('Top Bar Navigation Menu — Gherkin Scenarios', () => {
     expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
     // Click Home
     await user.click(screen.getByTestId('nav-menu-item-home'))
+    // Menu closes after navigation (UX spec Section 4.4)
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
     // Navigation was triggered
     expect(mockPush).toHaveBeenCalledWith('/')
     // content-area is still in the DOM (same page component)
@@ -153,6 +155,88 @@ describe('Top Bar Navigation Menu — additional behavior', () => {
     await user.click(screen.getByTestId('nav-menu-trigger'))
     expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
     await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+  })
+
+  // ---- Auto-focus on open (UX spec: first item receives focus) ----
+
+  test('first menu item receives focus automatically when menu opens', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu-item-home')).toHaveFocus()
+  })
+
+  // ---- Arrow-key navigation (UX spec Section 9) ----
+  // Events fired on the focused menu item (which bubbles to the menu container handler)
+
+  test('ArrowDown on focused menu item keeps focus on the Home item (single item stays on same)', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    // Item is auto-focused; fire ArrowDown on the focused item (bubbles to menu container)
+    homeItem.focus()
+    fireEvent.keyDown(homeItem, { key: 'ArrowDown', code: 'ArrowDown' })
+    expect(homeItem).toHaveFocus()
+  })
+
+  test('ArrowUp on focused menu item keeps focus on the Home item (single item stays on same)', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    homeItem.focus()
+    fireEvent.keyDown(homeItem, { key: 'ArrowUp', code: 'ArrowUp' })
+    expect(homeItem).toHaveFocus()
+  })
+
+  // ---- Tab key behavior (UX spec Section 9) ----
+
+  test('Tab key on the focused menu item closes the menu', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    homeItem.focus()
+    fireEvent.keyDown(homeItem, { key: 'Tab', code: 'Tab' })
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+  })
+
+  // ---- Escape key behavior ----
+
+  test('Escape key closes the menu and returns focus to trigger', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveFocus()
+  })
+
+  // ---- Enter/Space activates the Home item ----
+
+  test('pressing Enter on nav-menu-item-home triggers navigation to "/" and closes menu', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    homeItem.focus()
+    await user.keyboard('{Enter}')
+    expect(mockPush).toHaveBeenCalledWith('/')
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+  })
+
+  test('pressing Space on nav-menu-item-home triggers navigation to "/" and closes menu', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    homeItem.focus()
+    await user.keyboard('{ }')
+    expect(mockPush).toHaveBeenCalledWith('/')
     expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
   })
 })

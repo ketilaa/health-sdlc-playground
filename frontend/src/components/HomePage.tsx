@@ -58,6 +58,7 @@ export default function HomePage() {
   const [isNavOpen, setIsNavOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const firstItemRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   const closeMenu = useCallback(() => {
@@ -69,6 +70,13 @@ export default function HomePage() {
   const toggleMenu = useCallback(() => {
     setIsNavOpen((prev) => !prev)
   }, [])
+
+  // Auto-focus first menu item when menu opens (UX spec: focus moves to first item on open)
+  useEffect(() => {
+    if (isNavOpen) {
+      firstItemRef.current?.focus()
+    }
+  }, [isNavOpen])
 
   // Close menu on Escape key or click outside
   useEffect(() => {
@@ -104,6 +112,27 @@ export default function HomePage() {
     setIsNavOpen(false)
     router.push('/')
   }, [router])
+
+  /**
+   * Keyboard handler for the menu panel container.
+   *
+   * Per UX spec Section 9:
+   * - ArrowDown / ArrowUp: cycle through menu items (with one item, stay on same item)
+   * - Tab: close menu, allow focus to move forward in page order
+   */
+  const handleMenuKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        // With only one item, focus stays on it — move focus to the first (and only) menuitem
+        firstItemRef.current?.focus()
+      } else if (e.key === 'Tab') {
+        // Close menu; do NOT preventDefault so Tab moves focus forward naturally
+        setIsNavOpen(false)
+      }
+    },
+    []
+  )
 
   return (
     <>
@@ -180,6 +209,8 @@ export default function HomePage() {
           id="nav-menu"
           role="menu"
           aria-label="Main navigation"
+          onKeyDown={handleMenuKeyDown}
+          tabIndex={-1}
           style={{
             position: 'fixed',
             top: 64, // below AppBar
@@ -197,6 +228,7 @@ export default function HomePage() {
         >
           {/* Home menu item */}
           <div
+            ref={firstItemRef}
             data-testid="nav-menu-item-home"
             role="menuitem"
             tabIndex={0}
