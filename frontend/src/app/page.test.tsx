@@ -3,6 +3,18 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import Page from './page'
 
+// HomePage uses useRouter — mock next/navigation so it works outside App Router
+const mockPush = jest.fn()
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+}))
+
 // Scenario: Root route renders the Home Page with Health Playground layout
 // HTTP 200 status assertion deferred to E2E (requires a running server)
 

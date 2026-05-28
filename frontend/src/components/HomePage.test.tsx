@@ -1,7 +1,20 @@
 import '@testing-library/jest-dom'
 import React from 'react'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import HomePage from './HomePage'
+
+// Mock next/navigation (useRouter) for all tests
+const mockPush = jest.fn()
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+  }),
+}))
 
 // Suppress MUI SSR/client mismatch warnings in jsdom
 beforeAll(() => {
@@ -19,6 +32,134 @@ beforeAll(() => {
 afterAll(() => {
   jest.restoreAllMocks()
 })
+
+beforeEach(() => {
+  mockPush.mockClear()
+})
+
+// ============================================================
+// top-bar-navigation-menu — 4 Gherkin scenarios
+// ============================================================
+
+describe('Top Bar Navigation Menu — Gherkin Scenarios', () => {
+  // Scenario 1: Navigation menu is not visible before the trigger is activated
+  test('Scenario 1: nav-menu is not in the DOM before trigger is clicked', () => {
+    render(<HomePage />)
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+  })
+
+  // Scenario 2: Clicking the navigation menu trigger opens the menu
+  test('Scenario 2: clicking nav-menu-trigger makes nav-menu visible', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    const trigger = screen.getByTestId('nav-menu-trigger')
+    await user.click(trigger)
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+  })
+
+  // Scenario 3: The open navigation menu contains a "Home" item
+  test('Scenario 3: after opening menu, nav-menu-item-home is visible and contains "Home"', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+    const homeItem = screen.getByTestId('nav-menu-item-home')
+    expect(homeItem).toBeInTheDocument()
+    expect(homeItem).toHaveTextContent('Home')
+  })
+
+  // Scenario 4: Selecting "Home" from the navigation menu navigates to the root page
+  test('Scenario 4: clicking nav-menu-item-home calls router.push("/") and content-area remains visible', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    // Open the menu
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+    // Click Home
+    await user.click(screen.getByTestId('nav-menu-item-home'))
+    // Navigation was triggered
+    expect(mockPush).toHaveBeenCalledWith('/')
+    // content-area is still in the DOM (same page component)
+    expect(screen.getByTestId('content-area')).toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// Additional nav menu behavior tests
+// ============================================================
+
+describe('Top Bar Navigation Menu — additional behavior', () => {
+  test('nav-menu-trigger is always visible (before and after menu open)', async () => {
+    render(<HomePage />)
+    expect(screen.getByTestId('nav-menu-trigger')).toBeInTheDocument()
+    const user = userEvent.setup()
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu-trigger')).toBeInTheDocument()
+  })
+
+  test('nav-menu-trigger has aria-expanded="false" initially', () => {
+    render(<HomePage />)
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('nav-menu-trigger has aria-expanded="true" when menu is open', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('nav-menu-trigger has aria-controls="nav-menu"', () => {
+    render(<HomePage />)
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveAttribute('aria-controls', 'nav-menu')
+  })
+
+  test('nav-menu-trigger has aria-label "Open navigation menu" when closed', () => {
+    render(<HomePage />)
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveAttribute('aria-label', 'Open navigation menu')
+  })
+
+  test('nav-menu-trigger has aria-label "Close navigation menu" when open', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu-trigger')).toHaveAttribute('aria-label', 'Close navigation menu')
+  })
+
+  test('nav-menu has role="menu"', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toHaveAttribute('role', 'menu')
+  })
+
+  test('nav-menu has id="nav-menu" (matches aria-controls on trigger)', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toHaveAttribute('id', 'nav-menu')
+  })
+
+  test('nav-menu-item-home has role="menuitem"', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu-item-home')).toHaveAttribute('role', 'menuitem')
+  })
+
+  test('clicking trigger again closes the menu (toggle behavior)', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.getByTestId('nav-menu')).toBeInTheDocument()
+    await user.click(screen.getByTestId('nav-menu-trigger'))
+    expect(screen.queryByTestId('nav-menu')).not.toBeInTheDocument()
+  })
+})
+
+// ============================================================
+// Home Page Structure — prior Gherkin scenarios (preserved)
+// ============================================================
 
 describe('Home Page Structure — Gherkin Scenarios', () => {
   // Scenario: Top bar displays the application title
@@ -66,7 +207,6 @@ describe('Home Page Structure — Gherkin Scenarios', () => {
     render(<HomePage />)
     const trainingOverview = screen.getByTestId('training-overview')
     const weeklyDashboard = screen.getByTestId('weekly-dashboard')
-    // Node.DOCUMENT_POSITION_FOLLOWING means weeklyDashboard comes after trainingOverview
     const position = trainingOverview.compareDocumentPosition(weeklyDashboard)
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
