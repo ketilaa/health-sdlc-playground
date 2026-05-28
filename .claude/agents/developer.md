@@ -48,6 +48,8 @@ Stack conventions are injected below by the pipeline. Apply any skill marked as 
 
 `run-tests.sh` is the single entry point the pipeline uses to verify your work. It must:
 - Be placed at `run-tests.sh` in the repo root
+- Be executable (`chmod +x run-tests.sh`) — run this immediately after writing the file; a non-executable script is a blocking code review failure
+- Always appear in a `===FILE: run-tests.sh===` block in your output, even if the file already exists — the code reviewer reads the implementation files you emit, not the prior version on disk
 - Install all required dependencies
 - Run the full test suite
 - Exit 0 on success, non-zero on failure
